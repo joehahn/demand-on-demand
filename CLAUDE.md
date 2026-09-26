@@ -23,7 +23,25 @@ GitHub: https://github.com/joehahn/demand-on-demand (not yet created)
 
 - Python 3.12 venv at `.venv/` (Dropbox-ignored): `.venv/bin/python`
 - Postgres 17 via Homebrew, database `iowa_liquor`: `/opt/homebrew/opt/postgresql@17/bin/psql -d iowa_liquor`
-- Settings in `.env` (copy `.env.example`); never commit `.env`
+  (DBA login `joehahn`, password in `~/.pgpass`)
+- Settings and secrets in `.env` (chmod 600, gitignored; template in `.env.example`)
+
+## Database access (small-business style)
+
+- Password auth only (`scram-sha-256` in `pg_hba.conf`; the Homebrew `trust` default is backed up
+  as `pg_hba.conf.bak-trust`). Listens on localhost only.
+- Roles:
+  - `joehahn`: superuser / DBA, for admin only.
+  - `dod_owner`: owns the database and the schemas `raw`, `sales`, `ref`, `meta`. Used by the loader.
+  - `dod_agent`: SELECT on `sales`, `ref`, `meta` only (default privileges cover future tables).
+    No access to `raw`, no temp tables. Role defaults: read-only transactions, 60s statement
+    timeout, search_path `sales, ref, meta`, max 5 connections.
+- The LLM never sees credentials. DSNs are read from `.env` by Python tool code only; never put
+  a DSN, password, or connection error text containing them into a prompt or tool result.
+- Defense in depth: sqlglot SELECT-only validation in the tool, then Postgres grants
+  (verified 2026-09-26: INSERT, DROP, CREATE, temp tables, pg_authid, pg_read_file all denied,
+  even with read-only mode switched off in the session).
+- Never print `.env` or `~/.pgpass` contents, including in Claude Code sessions.
 - Raw downloads go to `$DOD_DATA_DIR` (default `~/data/demand-on-demand`), never into this Dropbox folder
 
 ## Data
