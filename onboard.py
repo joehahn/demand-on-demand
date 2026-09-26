@@ -178,6 +178,7 @@ def draft(evidence):
         fallbacks="default",  # if a safety classifier declines, the API retries on a recommended model
     ) as stream:
         msg = stream.get_final_message()
+    (OUT / "raw_response.json").write_text(msg.to_json())  # keep what we paid for before any parsing
     if msg.stop_reason == "refusal":
         sys.exit(f"Claude declined the request ({msg.stop_details}); nothing drafted.")
     if msg.stop_reason == "max_tokens":
@@ -187,7 +188,7 @@ def draft(evidence):
     usage = {"model": msg.model, "seconds": round(time.time() - t0, 1),
              "input_tokens": msg.usage.input_tokens, "output_tokens": msg.usage.output_tokens,
              "est_cost_usd": round((msg.usage.input_tokens * pin + msg.usage.output_tokens * pout) / 1e6, 4),
-             "request_id": msg._request_id}
+             "message_id": msg.id}
     return json.loads(text)["issues"], usage
 
 
@@ -266,8 +267,14 @@ CREATE TABLE IF NOT EXISTS meta.known_issues (
 def approve(which):
     doc = json.loads((OUT / "proposed_register.json").read_text())
     chosen = [i for i in doc["issues"] if i["level"] == "warehouse" and (which == "all" or i["issue_id"] in which)]
-    # an issue whose evidence query failed or was rejected is not approved, even with --approve all
-    blocked = [i["issue_id"] for i in chosen if i["evidence_check"]["status"] in ("rejected", "error")]
+    # evidence that failed, was rejected, or came back empty never rides along with --approve all;
+    # an empty result can still be approved by naming the issue explicitly
+    def ok(i):
+        chk = i["evidence_check"]
+        if chk["status"] in ("rejected", "error"):
+            return False
+        return which != "all" or not (chk["status"] == "ran" and chk["rows"] == 0)
+    blocked = [i["issue_id"] for i in chosen if not ok(i)]
     chosen = [i for i in chosen if i["issue_id"] not in blocked]
     with psycopg.connect(os.environ["DOD_OWNER_DSN"], autocommit=True) as conn:
         conn.execute(REGISTER_DDL)
