@@ -106,7 +106,14 @@ Known source issues (found while loading):
    First results (test error relative to seasonal naive): Tito's Polk 0.97, Tito's minis by item 1.01,
    American vodka top-5 counties 1.07. These series are very regular since 2023, so last year is a
    strong baseline; report that honestly.
-4. Agent: tools, SQL validator, spec parser, cleaning/feature schemas
+4. Agent (done): `python -m dod.agent "<request>" [--interactive] [--spec-only]`. Model DOD_AGENT_MODEL,
+   default claude-sonnet-5; about $0.03-0.20 and 30-90 s of agent time per request, plus ~1.5 min harness.
+   The agent resolves words with find_values, previews the spec (register + slice findings), decides each
+   finding (fix an artifact, or flag_only naming the check when it is real demand), submits; a second call
+   writes the dashboard summary from precomputed facts only. Probe results 2026-09-26: found the held-out
+   Tito's mini renumbering and the MT/MOUNT PLEASANT spelling (after abbreviation-aware search), handled the
+   2016 category trap via the register, refused Chicago and a 24-month horizon. Known variance: the 4-pack
+   late_start was fixed in one run and left in another; per-finding defaults added to the prompt.
 5. Golden-set evals, cost and latency logging
 6. Showcase runs to GitHub Pages, README
 7. Blog and LinkedIn series
