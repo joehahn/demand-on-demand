@@ -1,0 +1,1709 @@
+[
+ {
+  "id": "titos_polk",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "register proposal",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0501,
+  "seconds": 24.1,
+  "tool_calls": 5,
+  "tools": [
+   "find_values",
+   "find_values",
+   "preview_spec",
+   "preview_spec",
+   "submit_spec"
+  ],
+  "spec": {
+   "title": "Tito's Vodka, Polk County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38177",
+     "38176",
+     "38178",
+     "38174",
+     "38179",
+     "38194",
+     "38185",
+     "38180",
+     "102747",
+     "38449",
+     "938180"
+    ],
+    "label": "Tito's Handmade Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153"
+    ],
+    "label": "Polk County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings/closings in Polk County (223 opened, 107 closed) are real market dynamics affecting total demand, not a data artifact; left as-is.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [],
+  "message": ""
+ },
+ {
+  "id": "titos_polk",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "register proposal",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0525,
+  "seconds": 27.4,
+  "tool_calls": 5,
+  "tools": [
+   "find_values",
+   "find_values",
+   "preview_spec",
+   "preview_spec",
+   "submit_spec"
+  ],
+  "spec": {
+   "title": "Tito's vodka, Polk County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38177",
+     "38176",
+     "38178",
+     "38174",
+     "38179",
+     "38194",
+     "38185",
+     "38180",
+     "102747",
+     "38449",
+     "938180"
+    ],
+    "label": "Tito's Handmade Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153"
+    ],
+    "label": "Polk County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings/closings in Polk County reflect real market dynamics (store count growth), not a data artifact; leaving as is.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "\"Tito's vodka\" means the full Tito's Handmade Vodka product line, all bottle sizes (750ml, 1L, 1.75L, 375ml, 200ml, 50ml minis and mini 4-packs), not just one size.",
+   "Included every item number ever used for this product, including renumbered/successor codes (38180->38194, 938180->38194, 38449->102747), so the history is complete.",
+   "Forecast is a single total series for Polk County (no breakdown requested), in bottles.",
+   "Item renumbering has no effect on this spec since series_by is \"none\" and all related codes are already summed into one series.",
+   "Store churn (net growth in number of active stores in Polk County) is treated as real demand dynamics, not a data artifact, and left unmodified.",
+   "Used the standard register mitigations (price derivation, zero-line exclusion, reference data carry-forward) as applied automatically by the harness."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_minis_by_item",
+  "run": 1,
+  "tags": [
+   "held_out",
+   "renumbering",
+   "dev"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"38180\", \"to\": \"38194\"}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"938180\", \"to\": \"38194\"}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation min_date {\"date\": \"2024-04\", \"series\": [\"38185\"]}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "register proposal",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.161,
+  "seconds": 93.7,
+  "tool_calls": 7,
+  "tools": [
+   "find_values",
+   "preview_spec",
+   "run_select",
+   "preview_spec",
+   "run_select",
+   "preview_spec",
+   "submit_spec"
+  ],
+  "spec": {
+   "title": "Tito's mini items, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38180",
+     "38194",
+     "38185",
+     "938180"
+    ],
+    "label": "Tito's Handmade Vodka Mini (50ml, all pack variants)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "38180",
+      "to": "38194"
+     },
+     "reason": "Item 38180 was renumbered to 38194 (last sale 2020-07-27, successor first sale 2020-07-31); merge to keep continuous history for this item family.",
+     "source": "agent"
+    },
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "938180",
+      "to": "38194"
+     },
+     "reason": "938180 is a short-lived transitional code (132 bottles, 2020-07 to 2020-08) overlapping the 38180->38194 renumbering; merge into the successor.",
+     "source": "agent"
+    },
+    {
+     "rule": "min_date",
+     "params": {
+      "date": "2024-04-01",
+      "series": [
+       "38185"
+      ]
+     },
+     "reason": "38185 (4-pack) launched 2024-04; earlier zeros are not real demand.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "38185"
+      ]
+     },
+     "reason": "2.3x jump around 2025-05 reflects real demand growth/distribution expansion for the newly launched 4-pack, not a recoding.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "38180"
+      ]
+     },
+     "reason": "Checked monthly totals: growth from 2018 to 2020 is gradual month over month, not an abrupt jump; real demand ramp for a popular product.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "38180"
+      ]
+     },
+     "reason": "High months have hundreds of lines with modest max single-line values (25-150 bottles); broad-based real growth, not a single erroneous line.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "zero_months",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "Single mid-history zero month (2022-02), real gap, not worth excluding.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "Checked monthly totals: line counts and bottle totals both climb steadily from 2021 through 2023 (hundreds of lines/month growing to 900+); real demand growth, not an abrupt recoding.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "High months (e.g. 2021-08, 2022-07/08, 2023-05/07) are broad-based across hundreds of lines, not single erroneous orders; real seasonal/growth demand.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": []
+     },
+     "reason": "Statewide store entry/exit is a structural feature of the panel, not specific to this product; left as is per register guidance.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Tito's minis means the 50 ml bottle size, across all pack configurations (single, 5-pack, 4-pack) and all item numbers ever used for it, including the discontinued 38180 code and the short-lived 938180 code.",
+   "Item 38180 was renumbered to 38194 in mid-2020 (last/first sale dates are back to back), so its history was stitched into 38194 to give one continuous series for that product line under series_by=item.",
+   "938180 is a tiny (132-bottle), 6-week transitional code overlapping the 38180-to-38194 changeover, treated as part of the same renumbering and stitched into 38194.",
+   "38185 (4-pack) is a genuinely separate, more recently launched item number, kept as its own series with its zeros before its 2024-04 launch excluded.",
+   "The final result will show two forecast series: 38194 (the continuing single/5-pack mini, with full 2016-2026 history after stitching) and 38185 (the 4-pack mini, launched 2024).",
+   "Level shifts and outlier months observed in both series were checked against monthly line counts and largest single lines; they reflect broad-based, gradual real demand growth (not single erroneous orders or recodings), so they were left as reviewed/flagged rather than capped or truncated.",
+   "Statewide store entry and exit noted by the register is a structural, store-count effect on the trend, not specific to Tito's minis, and was left as is per the default guidance."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_minis_by_item",
+  "run": 2,
+  "tags": [
+   "held_out",
+   "renumbering",
+   "dev"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"38180\", \"to\": \"38194\"}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"938180\", \"to\": \"38194\"}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation min_date {\"date\": \"2024-04\", \"series\": [\"38185\"]}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "register proposal",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.1524,
+  "seconds": 86.6,
+  "tool_calls": 8,
+  "tools": [
+   "find_values",
+   "preview_spec",
+   "run_select",
+   "run_select",
+   "preview_spec",
+   "run_select",
+   "preview_spec",
+   "submit_spec"
+  ],
+  "spec": {
+   "title": "Tito's mini items, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38180",
+     "38185",
+     "38194",
+     "938180"
+    ],
+    "label": "Tito's Handmade Vodka Mini (50ml), all item codes"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "38180",
+      "to": "38194"
+     },
+     "reason": "Item renumbered: 38180 last sold 2020-07-27, successor 38194 first sold 2020-07-31, same pack/size/vendor product.",
+     "source": "agent"
+    },
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "938180",
+      "to": "38194"
+     },
+     "reason": "938180 is a short-lived transitional code (2020-07 to 2020-08, only 132 bottles) overlapping the 38180->38194 changeover; same product, merge into successor.",
+     "source": "agent"
+    },
+    {
+     "rule": "min_date",
+     "params": {
+      "date": "2024-04-01",
+      "series": [
+       "38185"
+      ]
+     },
+     "reason": "38185 (4-pack mini) launched 2024-04; earlier zeros are not real demand.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "38185"
+      ]
+     },
+     "reason": "Reviewed: 2025 step-up has proportional line-count growth (not one big line), consistent with real demand growth for the 4-pack format.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "zero_months",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "Single mid-history zero month, isolated gap in ordering, not a data artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "Reviewed 2022 level change: line counts scale with bottle volume, consistent with real demand growth/dip, not a data error.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "Peak months (mostly 2026, recent) have max single line under 15% of month total and proportional line counts; this reflects real growth/bulk orders, not a data error.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": []
+     },
+     "reason": "General statewide store entry/exit noted per register guidance; not item-specific, no fix needed.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Tito's mini means the 50 ml bottle size of Tito's Handmade Vodka (brand and size both matched via find_values).",
+   "Item 38180 (2016-2020) was renumbered to 38194 (2020-2026): the last sale date of 38180 (2020-07-27) precedes the first sale of 38194 (2020-07-31), same product/pack/vendor family, so they are stitched into one series.",
+   "Item 938180 (pack=1, only sold 2020-07 to 2020-08, 132 bottles) is a short-lived transitional/temp code overlapping the 38180-to-38194 changeover and is stitched into 38194 as well.",
+   "Item 38185 (4-pack mini, launched 2024-04) is a distinct, currently-selling product configuration and is forecast as its own series, starting at its real launch date.",
+   "All level-shift and outlier-month findings were reviewed by checking monthly line counts and largest single lines; in every case the volume was spread across many lines proportionally, so they were judged to be real demand growth or bulk ordering, not data errors, and were left as is (flagged).",
+   "Store churn (entry/exit) affecting the statewide total is a known general pattern and needs no item-specific fix.",
+   "Series are per remaining item code (38185 and merged 38194) statewide, forecasting bottles for the next 6 months."
+  ],
+  "message": ""
+ },
+ {
+  "id": "crown_mount_pleasant",
+  "run": 1,
+  "tags": [
+   "held_out",
+   "spelling",
+   "dev"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "register proposal",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.1576,
+  "seconds": 79.2,
+  "tool_calls": 9,
+  "tools": [
+   "find_values",
+   "find_values",
+   "run_select",
+   "run_select",
+   "preview_spec",
+   "run_select",
+   "run_select",
+   "preview_spec",
+   "submit_spec"
+  ],
+  "spec": {
+   "title": "Crown Royal, Mount Pleasant, next 4 months (liters)",
+   "target": "sales_liters",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "100208",
+     "100209",
+     "100264",
+     "100501",
+     "100639",
+     "100700",
+     "100865",
+     "100944",
+     "101181",
+     "102040",
+     "102187",
+     "102188",
+     "102286",
+     "102339",
+     "102340",
+     "10255",
+     "102814",
+     "102815",
+     "10646",
+     "10647",
+     "10649",
+     "10775",
+     "10776",
+     "10777",
+     "10778",
+     "10779",
+     "10781",
+     "10784",
+     "10785",
+     "10786",
+     "10787",
+     "10788",
+     "10789",
+     "10790",
+     "10791",
+     "10792",
+     "10793",
+     "10797",
+     "10802",
+     "10803",
+     "10804",
+     "10805",
+     "10807",
+     "10808",
+     "10809",
+     "10812",
+     "10818",
+     "10826",
+     "10828",
+     "10830",
+     "10834",
+     "10835",
+     "10836",
+     "10838",
+     "10840",
+     "10842",
+     "10852",
+     "10856",
+     "10858",
+     "11285",
+     "11287",
+     "11290",
+     "11294",
+     "11296",
+     "11297",
+     "11298",
+     "11299",
+     "11300",
+     "11301",
+     "11302",
+     "11303",
+     "11356",
+     "11357",
+     "11363",
+     "11366",
+     "115",
+     "13062",
+     "1400",
+     "359",
+     "558",
+     "56721",
+     "56722",
+     "58555",
+     "86599",
+     "902415",
+     "910776",
+     "910807",
+     "910821",
+     "910831",
+     "910839",
+     "956721",
+     "980505",
+     "994807"
+    ],
+    "label": "Crown Royal (all variants and sizes)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "MOUNT PLEASANT",
+     "MT PLEASANT"
+    ],
+    "label": "Mount Pleasant, IA"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Monthly totals rise gradually through 2017 (line counts climb from 13 to 42 across the year) in step with new Mount Pleasant stores opening, not an abrupt recoding; treated as real demand growth.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Highest months (Oct/Dec, and Apr 2025) have 35-86 order lines each with plausible per-line volumes (max ~160-315 L), consistent with real seasonal/holiday bulk ordering rather than a single bad line; no cap applied beyond the automatic implausible-bottle-volume rule.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "region"
+      ]
+     },
+     "reason": "8 of 13 Mount Pleasant stores opened and 3 closed during the window; this is real store entry/exit contributing to the trend, not a data problem.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "item_discontinued",
+      "series": [
+       "100208",
+       "100209",
+       "100264",
+       "100501",
+       "100639",
+       "100700",
+       "100865",
+       "100944",
+       "101181",
+       "102040",
+       "102187",
+       "102188",
+       "102339",
+       "102340",
+       "10255",
+       "10779",
+       "10781",
+       "10786",
+       "10787",
+       "10797",
+       "10812",
+       "10818",
+       "10830",
+       "10835",
+       "10840",
+       "10842",
+       "10852",
+       "10856",
+       "11285",
+       "11366",
+       "115",
+       "13062",
+       "1400",
+       "359",
+       "558",
+       "86599",
+       "902415",
+       "910807",
+       "910821",
+       "910831",
+       "980505",
+       "994807"
+      ]
+     },
+     "reason": "Many Crown Royal SKUs are limited-edition gift packs and one-off packaging variants that naturally cycle out; normal product turnover within a continuously-sold brand, already summed into the total series.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "\"Crown Royal\" means the whole brand family: every size and flavor variant (original, Regal Apple, Vanilla, Peach, Blackberry, Black, XO, XR, Noble Collection, RTD cocktails, gift-set/temporary packagings, minis, etc.), including discontinued and renumbered item numbers, so the history is complete.",
+   "\"Mount Pleasant\" refers to the city (Henry County), covering both stored spellings MOUNT PLEASANT and MT PLEASANT; no metro or county-wide aggregation was applied.",
+   "Target is liters since the user asked for volume; horizon is 4 months as requested.",
+   "The 2017 level shift and the highest-volume months are treated as real demand growth (new store openings, seasonal/holiday bulk orders) rather than data artifacts, based on gradual line-count growth and plausible per-line volumes.",
+   "Discontinued Crown Royal specialty/gift-pack SKUs are normal product turnover and are left in the summed total series unmodified."
+  ],
+  "message": ""
+ },
+ {
+  "id": "crown_mount_pleasant",
+  "run": 2,
+  "tags": [
+   "held_out",
+   "spelling",
+   "dev"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "register proposal",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.1127,
+  "seconds": 72.9,
+  "tool_calls": 7,
+  "tools": [
+   "find_values",
+   "find_values",
+   "preview_spec",
+   "run_select",
+   "run_select",
+   "preview_spec",
+   "submit_spec"
+  ],
+  "spec": {
+   "title": "Crown Royal, Mount Pleasant, next 4 months",
+   "target": "sales_liters",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "10807",
+     "11296",
+     "11297",
+     "10805",
+     "10802",
+     "11294",
+     "10808",
+     "10804",
+     "11298",
+     "10785",
+     "10803",
+     "11290",
+     "11299",
+     "10791",
+     "10809",
+     "10784",
+     "10777",
+     "10836",
+     "10790",
+     "100639",
+     "10779",
+     "10789",
+     "10647",
+     "10778",
+     "10788",
+     "10775",
+     "1400",
+     "10792",
+     "10834",
+     "56722",
+     "11366",
+     "102286",
+     "10646",
+     "13062",
+     "10793",
+     "10826",
+     "100700",
+     "10828",
+     "102188",
+     "11356",
+     "10818",
+     "10781",
+     "102340",
+     "102814",
+     "558",
+     "11301",
+     "10838",
+     "115",
+     "10797",
+     "101181",
+     "11285",
+     "11287",
+     "11300",
+     "11302",
+     "11303",
+     "100944",
+     "100501",
+     "102040"
+    ],
+    "label": "Crown Royal (all sizes and flavors)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "MOUNT PLEASANT",
+     "MT PLEASANT"
+    ],
+    "label": "Mount Pleasant, IA"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Monthly totals ramp gradually from Jan 2017 (42L) to Dec 2017 (713L) with rising line counts; this is real growth (new stores and rising Crown Royal demand), not a recoding, so no min_date is applied.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Largest single lines are legitimate 750ml bulk/holiday orders (e.g. 315-bottle order on 2020-12-24); these are real bulk demand, not data errors, so left uncapped beyond the automatic implausible_bottle_volumes register cap.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "item_discontinued",
+      "series": [
+       "100501",
+       "100639",
+       "100700",
+       "100944",
+       "101181",
+       "102040",
+       "102188",
+       "102340",
+       "10779",
+       "10781",
+       "10797",
+       "10818",
+       "11285",
+       "11366",
+       "115",
+       "13062",
+       "1400",
+       "558"
+      ]
+     },
+     "reason": "These are discontinued or temporary Crown Royal packagings (gift sets, seasonal bag/glass bundles); their end-of-life is a real assortment change, not a data artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "region"
+      ]
+     },
+     "reason": "Some of the 13 Mount Pleasant stores opened or closed during the window; this reflects real retail footprint changes, left as is per default.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Crown Royal means the full brand: every item number whose description starts with CROWN ROYAL, across all sizes, flavors and temporary/gift packagings, including discontinued items, so history is complete.",
+   "Mount Pleasant refers to the city of Mount Pleasant, Iowa (Henry County), including both stored spellings MOUNT PLEASANT and MT PLEASANT; not the wider county or metro.",
+   "Target is sales_liters since the user asked for liters.",
+   "No series breakdown requested, so one combined monthly total series is forecast (series_by = none).",
+   "The 2017 level shift is treated as real, gradual demand growth (store openings, rising sales) rather than a data artifact, based on inspecting monthly totals and line counts around that date.",
+   "The single outlier month's largest lines are legitimate large bulk/holiday orders in normal 750ml bottles, not data errors, so left as real demand beyond the automatic register-level bottle-volume cap.",
+   "Item discontinuations and store churn in Mount Pleasant are treated as real assortment/retail-footprint changes per the default rule, and flagged rather than excluded or capped."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_100_by_item",
+  "run": 1,
+  "tags": [
+   "held_out",
+   "renumbering",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"38449\", \"to\": \"102747\"}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "register proposal",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0702,
+  "seconds": 45.1,
+  "tool_calls": 7,
+  "tools": [
+   "find_values",
+   "find_values",
+   "run_select",
+   "preview_spec",
+   "preview_spec",
+   "preview_spec",
+   "submit_spec"
+  ],
+  "spec": {
+   "title": "Tito's 100 ml items, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38449",
+     "102747"
+    ],
+    "label": "Tito's Handmade Vodka 100 ml"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "38449",
+      "to": "102747"
+     },
+     "reason": "Item 38449 (pack of 1) stopped 2026-06-03 exactly as item 102747 (pack of 12) launched 2026-05-18, same product description (Titos Handmade Vodka 100 ml); treated as a mid-2026 renumbering so history is continuous.",
+     "source": "agent"
+    },
+    {
+     "rule": "min_date",
+     "params": {
+      "date": "2025-11-01",
+      "series": [
+       "102747"
+      ]
+     },
+     "reason": "The 100 ml product (under either code) first sold 2025-11-10; zeros before that reflect the product not existing yet, not zero demand.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "38449"
+      ]
+     },
+     "reason": "The one elevated month (2025-11, the launch month) is real launch demand, not a data error, so it is left uncapped.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": []
+     },
+     "reason": "Statewide store entry and exit over the window is real market structure, not a data artifact affecting this item-level forecast.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "The only Tito's items at 100 ml are item_no 38449 (pack of 1) and 102747 (pack of 12); the standard 750/1000/1750/375/200/50 ml Tito's items were excluded as out of scope.",
+   "38449 and 102747 are the same underlying product across a mid-2026 pack/code change (identical description, back-to-back sale dates, one code ending exactly as the other begins), so I stitched them into one series rather than treating 38449 as discontinued.",
+   "The combined series' true start is 2025-11-10 (first sale of 38449); earlier months are excluded as pre-launch zeros, not demand.",
+   "'Statewide' means all of Iowa with no place restriction.",
+   "Target metric is bottles since the user did not ask for dollars or liters.",
+   "'Each Tito's 100 ml item' was read as wanting one forecast series per item number (series_by item), which after stitching collapses to a single combined series representing that product."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_100_by_item",
+  "run": 2,
+  "tags": [
+   "held_out",
+   "renumbering",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"38449\", \"to\": \"102747\"}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "register proposal",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0743,
+  "seconds": 44.1,
+  "tool_calls": 7,
+  "tools": [
+   "find_values",
+   "find_values",
+   "run_select",
+   "preview_spec",
+   "preview_spec",
+   "preview_spec",
+   "submit_spec"
+  ],
+  "spec": {
+   "title": "Tito's 100 ml items, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38449",
+     "102747"
+    ],
+    "label": "Tito's Handmade Vodka 100 ml"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "38449",
+      "to": "102747"
+     },
+     "reason": "Item 38449 (pack 1) was renumbered to 102747 (pack 12) with a near-continuous handoff (last sale 38449 2026-06-03, first sale 102747 2026-05-18); this is the same product, not two demand streams.",
+     "source": "agent"
+    },
+    {
+     "rule": "min_date",
+     "params": {
+      "date": "2025-11-01",
+      "series": [
+       "102747"
+      ]
+     },
+     "reason": "Product launched 2025-11; zeros before that date are not real demand.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "102747"
+      ]
+     },
+     "reason": "The single high month is the launch month (Nov 2025), real demand ramp, not a data error.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Reviewed: statewide store entry/exit is part of real market growth over the window, no fix applied.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Tito's 100 ml only has ever been sold under two item numbers: 38449 (pack of 1, launched 2025-11) and 102747 (pack of 12, launched 2026-05); these are the same product renumbered, so they are stitched into one series.",
+   "Bottles are the target since no dollar/liter measure was requested.",
+   "The product launched in Nov 2025; there is no earlier real demand for a 100 ml Tito's item, so history before that date is excluded.",
+   "Statewide means all of Iowa, no county/city/store filter.",
+   "'each item' means one forecast series per item_no (series_by = item); after stitching there is one combined series for the 100 ml product."
+  ],
+  "message": ""
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "run": 1,
+  "tags": [
+   "held_out",
+   "recode",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "register proposal",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0756,
+  "seconds": 57.6,
+  "tool_calls": 8,
+  "tools": [
+   "find_values",
+   "run_select",
+   "preview_spec",
+   "run_select",
+   "run_select",
+   "preview_spec",
+   "propose_register_issue",
+   "submit_spec"
+  ],
+  "spec": {
+   "title": "Ready-to-drink cocktails, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1071100",
+     "1071000",
+     "1070000"
+    ],
+    "label": "Cocktails/RTD (all category code variants)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Level shift around 2020-02/03 coincides with COVID-19 demand surge for RTD cocktails (gradual ramp across many lines, not a recoding), so this is real demand and left unmodified.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Peak months (2020-04 to 2020-06) are broad-based across roughly 10,000 lines with no single dominating line, consistent with real pandemic-driven demand rather than a data error, so no capping applied.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Store openings/closings over the 10-year window reflect normal market entry/exit, not a data artifact.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Ready-to-drink cocktails means the category named COCKTAILS/RTD, which spans three category codes over time (1071100 through 2022-07-15, 1071000 from 2022-07-18, and 1070000 in parallel 2016-2022). I included all three so the series is continuous, since evidence shows 1071000 picked up right where 1071100 stopped at a comparable volume, i.e. a category code reassignment, not a real discontinuation. I flagged this to the register as a general issue since it would mislead any other request that used only code 1071100.",
+   "No place was named, so this is statewide (all of Iowa).",
+   "No 'by' or 'per' was requested, so this is one combined total series, not broken out by county, city, item or sub-category.",
+   "Bottles was used as the target since no dollars/liters wording was given.",
+   "The 2020 level shift and the 2020 peak-month outlier are both treated as real pandemic-era demand (broad-based across thousands of order lines), not data errors, so left unmodified.",
+   "The known 2016-08-29 category reassignment mitigation (series start 2016-09-01) is applied automatically by the register since this request groups by category_code.",
+   "Store entry/exit and closures over the window are normal market churn, not something to fix."
+  ],
+  "message": ""
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "run": 2,
+  "tags": [
+   "held_out",
+   "recode",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "register proposal",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0807,
+  "seconds": 56.3,
+  "tool_calls": 8,
+  "tools": [
+   "find_values",
+   "run_select",
+   "propose_register_issue",
+   "preview_spec",
+   "run_select",
+   "run_select",
+   "preview_spec",
+   "submit_spec"
+  ],
+  "spec": {
+   "title": "Ready-to-drink cocktails, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1071100",
+     "1071000",
+     "1070000"
+    ],
+    "label": "Cocktails/RTD"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "The ~3x jump around 2020-02 to 2020-04 is a gradual ramp coinciding with COVID-19 (broad-based across thousands of lines per month, not a single item/category recoding), so it is real demand, not an artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "The flagged month (2020-04) has its largest single line at only ~1% of the month total with thousands of contributing lines, so the spike is broad-based real demand (COVID RTD surge), not a data error.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Store openings/closings are normal market entry/exit across the state; not something to exclude from a statewide total.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [],
+  "message": ""
+ }
+]

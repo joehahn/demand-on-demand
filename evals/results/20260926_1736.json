@@ -1,0 +1,134 @@
+[
+ {
+  "id": "chicago",
+  "run": 1,
+  "tags": [
+   "refusal"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0312,
+  "seconds": 9.6,
+  "tool_calls": 2,
+  "spec": null,
+  "assumptions": null,
+  "message": "This request cannot be served as asked. The warehouse only contains Iowa liquor sales data (from Iowa retailers), and there is no city named \"Chicago\" in it, Chicago, Illinois is simply not part of this dataset. I checked the city lookup and found no matches at all. If you'd like, I can forecast Tito's vodka sales for an actual Iowa city or county, or statewide Iowa, instead."
+ },
+ {
+  "id": "bottled_in_bond",
+  "run": 1,
+  "tags": [
+   "register"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0838,
+  "seconds": 52.9,
+  "tool_calls": 8,
+  "spec": {
+   "title": "Bottled in Bond Bourbon, Iowa statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011500"
+    ],
+    "label": "Bottled in Bond Bourbon"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Growth from 2019 to 2021 is a gradual ramp across many months, not an abrupt jump at a single cutover date; monthly totals rise steadily (700-1000 in mid-2019 to 1500-3800 by mid-2020) consistent with real demand growth in the bottled-in-bond bourbon category, not a recoding artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Checked line counts and max single-line bottle counts in the highest-volume months (post 2016-09): no line is implausibly large (max 144-450 bottles per line vs hundreds of lines per month), so the highs are real seasonal/demand spikes (e.g. December, mid-year) not data errors.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "region"
+      ]
+     },
+     "reason": "Store openings and closings across the statewide panel are a real feature of the Iowa retailer base over this 10-year window, not a data problem specific to this category.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Bottled in Bond Bourbon refers to category_code 1011500, which is the code that currently carries this name (it held a different meaning, STRAIGHT RYE, before the 2016-08-29 category reassignment); the register's automatic min_date of 2016-09-01 for category-code series correctly excludes the pre-reassignment period.",
+   "The request is for bottle counts (sales_bottles), the default target, not dollars or liters.",
+   "Statewide means all of Iowa with no per-region breakout, and no series_by breakout was requested (no each/by/per language).",
+   "The 2019-2021 level increase and the handful of high-volume months are treated as real demand growth and seasonal spikes, not data errors, based on checking that monthly growth was gradual and that no single order line was implausibly large in the high months.",
+   "Store churn (openings/closings) across the statewide store panel is left as real structural change, not corrected, per the register guidance."
+  ],
+  "message": ""
+ }
+]

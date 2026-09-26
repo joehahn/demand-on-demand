@@ -114,6 +114,11 @@ Known source issues (found while loading):
    Tito's mini renumbering and the MT/MOUNT PLEASANT spelling (after abbreviation-aware search), handled the
    2016 category trap via the register, refused Chicago and a 24-month horizon. Known variance: the 4-pack
    late_start was fixed in one run and left in another; per-finding defaults added to the prompt.
-5. Golden-set evals, cost and latency logging
+5. Evals (done): `python evals/run_evals.py [--runs N] [--only ids]` (spec-only agent runs scored against
+   evals/cases.json -> evals/report.md) and `python evals/grounding.py` (every number in dashboard summaries
+   must trace to saved facts -> evals/grounding.md). 2026-09-26: 38/38 runs correct (14 fresh cases 28/28,
+   5 dev cases 10/10), $0.06 per run, median 40 s; 9/9 summaries grounded; Cocktails/RTD register error
+   found and proposed (Act 3). Caveats: 5 cases were used while tuning the prompt; a perfect score means the
+   set needs harder cases. Item search reads lifetime stats added to sales.item (load_data "item stats").
 6. Showcase runs to GitHub Pages, README
 7. Blog and LinkedIn series

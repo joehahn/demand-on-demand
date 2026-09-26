@@ -1,0 +1,502 @@
+[
+ {
+  "id": "titos_polk",
+  "tags": [
+   "resolution",
+   "fresh"
+  ],
+  "request": "Monthly forecast of Tito's vodka bottles in Polk County for the next 5 months",
+  "expect": {
+   "status": "ok",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "series_by": "none",
+   "product": {
+    "kind": "item",
+    "must": [
+     "38174",
+     "38176",
+     "38177",
+     "38178",
+     "38179",
+     "38194"
+    ]
+   },
+   "region": {
+    "kind": "county",
+    "must": [
+     "19153"
+    ],
+    "forbid": []
+   },
+   "proposes_register_issue": false
+  }
+ },
+ {
+  "id": "titos_minis_by_item",
+  "tags": [
+   "held_out",
+   "renumbering",
+   "dev"
+  ],
+  "request": "How many bottles of each Tito's mini item will sell statewide over the next 6 months?",
+  "expect": {
+   "status": "ok",
+   "horizon": 6,
+   "series_by": "item",
+   "product": {
+    "kind": "item",
+    "must": [
+     "38180",
+     "38194",
+     "938180",
+     "38185"
+    ]
+   },
+   "region": {
+    "kind": "statewide"
+   },
+   "mitigations": [
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "from": "38180",
+      "to": "38194"
+     }
+    },
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "from": "938180",
+      "to": "38194"
+     }
+    },
+    {
+     "rule": "min_date",
+     "params": {
+      "date": "2024-04",
+      "series": [
+       "38185"
+      ]
+     }
+    }
+   ],
+   "proposes_register_issue": false
+  }
+ },
+ {
+  "id": "titos_minis_des_moines",
+  "tags": [
+   "resolution",
+   "restraint",
+   "dev"
+  ],
+  "request": "monthly forecast of Tito's minis in Des Moines for the next 5 months",
+  "expect": {
+   "status": "ok",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "must": [
+     "38180",
+     "38194"
+    ]
+   },
+   "region": {
+    "kind": "city",
+    "must": [
+     "DES MOINES"
+    ],
+    "forbid": [
+     "WEST DES MOINES"
+    ]
+   },
+   "forbidden_rules": [
+    "cap_outliers"
+   ]
+  }
+ },
+ {
+  "id": "crown_mount_pleasant",
+  "tags": [
+   "held_out",
+   "spelling",
+   "dev"
+  ],
+  "request": "Monthly liters of Crown Royal in Mount Pleasant for the next 4 months",
+  "expect": {
+   "status": "ok",
+   "target": "sales_liters",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "must": [
+     "11294",
+     "11296",
+     "11297"
+    ]
+   },
+   "region": {
+    "kind": "city",
+    "must": [
+     "MOUNT PLEASANT",
+     "MT PLEASANT"
+    ]
+   },
+   "proposes_register_issue": false
+  }
+ },
+ {
+  "id": "tennessee_whiskey",
+  "tags": [
+   "register",
+   "fresh"
+  ],
+  "request": "Forecast Tennessee whiskey bottles across Iowa for the next 3 months",
+  "expect": {
+   "status": "ok",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "must": [
+     "1011400"
+    ]
+   },
+   "region": {
+    "kind": "statewide"
+   }
+  }
+ },
+ {
+  "id": "vodka_top_counties",
+  "tags": [
+   "resolution",
+   "breakout",
+   "fresh"
+  ],
+  "request": "American vodka sales dollars for each of the five largest counties, next 6 months",
+  "expect": {
+   "status": "ok",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "series_by": "county",
+   "product": {
+    "kind": "category",
+    "must": [
+     "1031100"
+    ]
+   },
+   "region": {
+    "kind": "county",
+    "must": [
+     "19153",
+     "19113",
+     "19163",
+     "19103",
+     "19013"
+    ]
+   }
+  }
+ },
+ {
+  "id": "chicago",
+  "tags": [
+   "refusal",
+   "dev"
+  ],
+  "request": "Forecast Tito's vodka sales in Chicago for the next 5 months",
+  "expect": {
+   "status": "no_forecast"
+  }
+ },
+ {
+  "id": "horizon_24",
+  "tags": [
+   "refusal",
+   "dev"
+  ],
+  "request": "Forecast total Iowa liquor sales dollars for the next 24 months",
+  "expect": {
+   "status": "no_forecast"
+  }
+ },
+ {
+  "id": "jack_iowa_city",
+  "tags": [
+   "resolution",
+   "fresh"
+  ],
+  "request": "Forecast Jack Daniel's bottle sales in Iowa City for the next 4 months",
+  "expect": {
+   "status": "ok",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "must": [
+     "26826",
+     "26827",
+     "26828"
+    ]
+   },
+   "region": {
+    "kind": "city",
+    "must": [
+     "IOWA CITY"
+    ]
+   }
+  }
+ },
+ {
+  "id": "fireball_linn_revenue",
+  "tags": [
+   "resolution",
+   "target",
+   "fresh"
+  ],
+  "request": "What revenue should we expect from Fireball in Linn County next quarter?",
+  "expect": {
+   "status": "ok",
+   "target": "sales_dollars",
+   "horizon": 3,
+   "product": {
+    "kind": "item",
+    "must": [
+     "64870",
+     "64864",
+     "64866"
+    ]
+   },
+   "region": {
+    "kind": "county",
+    "must": [
+     "19113"
+    ]
+   }
+  }
+ },
+ {
+  "id": "statewide_liters",
+  "tags": [
+   "resolution",
+   "target",
+   "fresh"
+  ],
+  "request": "Total liters of liquor sold statewide over the next 6 months",
+  "expect": {
+   "status": "ok",
+   "target": "sales_liters",
+   "horizon": 6,
+   "product": {
+    "kind": "all"
+   },
+   "region": {
+    "kind": "statewide"
+   }
+  }
+ },
+ {
+  "id": "diageo_scott",
+  "tags": [
+   "resolution",
+   "vendor",
+   "fresh"
+  ],
+  "request": "Monthly bottle sales for all Diageo products in Scott County, next 6 months",
+  "expect": {
+   "status": "ok",
+   "horizon": 6,
+   "product": {
+    "kind": "vendor",
+    "must": [
+     "260"
+    ]
+   },
+   "region": {
+    "kind": "county",
+    "must": [
+     "19163"
+    ]
+   }
+  }
+ },
+ {
+  "id": "titos_st_ansgar",
+  "tags": [
+   "held_out",
+   "spelling",
+   "fresh"
+  ],
+  "request": "Tito's bottles in St. Ansgar for the next 4 months",
+  "expect": {
+   "status": "ok",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "must": [
+     "38176",
+     "38177"
+    ]
+   },
+   "region": {
+    "kind": "city",
+    "must": [
+     "SAINT ANSGAR",
+     "ST ANSGAR"
+    ]
+   }
+  }
+ },
+ {
+  "id": "bottled_in_bond",
+  "tags": [
+   "register",
+   "fresh"
+  ],
+  "request": "Bottled in bond bourbon bottles statewide, next 3 months",
+  "expect": {
+   "status": "ok",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "must": [
+     "1011500"
+    ]
+   },
+   "region": {
+    "kind": "statewide"
+   }
+  }
+ },
+ {
+  "id": "titos_100_by_item",
+  "tags": [
+   "held_out",
+   "renumbering",
+   "fresh"
+  ],
+  "request": "Forecast each Tito's 100 ml item statewide for the next 6 months",
+  "expect": {
+   "status": "ok",
+   "horizon": 6,
+   "series_by": "item",
+   "product": {
+    "kind": "item",
+    "must": [
+     "38449",
+     "102747"
+    ]
+   },
+   "region": {
+    "kind": "statewide"
+   },
+   "mitigations": [
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "from": "38449",
+      "to": "102747"
+     }
+    }
+   ],
+   "proposes_register_issue": false
+  }
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "tags": [
+   "held_out",
+   "recode",
+   "fresh"
+  ],
+  "request": "Forecast ready-to-drink cocktail bottles statewide for the next 6 months",
+  "expect": {
+   "status": "ok",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "must": [
+     "1071000",
+     "1071100"
+    ]
+   },
+   "region": {
+    "kind": "statewide"
+   },
+   "proposes_register_issue": true
+  }
+ },
+ {
+  "id": "hawkeye_johnson",
+  "tags": [
+   "resolution",
+   "fresh"
+  ],
+  "request": "Hawkeye Vodka bottles in Johnson County, next 5 months",
+  "expect": {
+   "status": "ok",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "must": [
+     "36302",
+     "36304",
+     "36305",
+     "36306",
+     "36307",
+     "36308"
+    ]
+   },
+   "region": {
+    "kind": "county",
+    "must": [
+     "19103"
+    ]
+   }
+  }
+ },
+ {
+  "id": "ames_whiskey",
+  "tags": [
+   "resolution",
+   "vague",
+   "fresh"
+  ],
+  "request": "How many bottles of whiskey will Ames stores order next month?",
+  "expect": {
+   "status": "ok",
+   "horizon": 1,
+   "product": {
+    "kind": "category",
+    "must": [
+     "1011400"
+    ]
+   },
+   "region": {
+    "kind": "city",
+    "must": [
+     "AMES"
+    ]
+   }
+  }
+ },
+ {
+  "id": "vague_vodka",
+  "tags": [
+   "vague",
+   "fresh"
+  ],
+  "request": "Forecast vodka",
+  "expect": {
+   "status": "ok",
+   "product": {
+    "kind": "category",
+    "must": [
+     "1031100"
+    ]
+   },
+   "region": {
+    "kind": "statewide"
+   }
+  }
+ }
+]

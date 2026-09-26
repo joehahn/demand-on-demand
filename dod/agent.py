@@ -66,6 +66,9 @@ Default decision for each slice finding (override only with evidence, and say wh
   first sale is an artifact (min_date after it); a gradual ramp is real demand (flag_only with the check name).
 - outlier_months: check line counts and the largest single line in those months. Cap only a clear data error.
 - zero_months, store_churn, item_discontinued: usually real; flag_only with the check name.
+If you find the register or the table descriptions wrong or incomplete in a way that would mislead OTHER requests too
+(e.g. a category the register calls discontinued was actually recoded), call propose_register_issue once with the
+evidence query. Do not propose problems specific to one item or place.
 Aim for about 10 tool calls. Ask the user (ask_user) only when a wrong guess would change the answer, and at most once.
 If the request cannot be served as asked (a product or place not in the data, a horizon over {max_h} months), do not
 submit; explain why in plain words and suggest what you could do instead. Never substitute a different place, product
@@ -116,7 +119,8 @@ def narrate(client, facts, usage):
         model=MODEL, max_tokens=2000,
         system="You write the two-to-four sentence summary at the top of a forecast dashboard for a business reader. "
                "Quote only numbers and percentages that appear in the facts JSON; never compute new ones (no ranges you "
-               "derived yourself). Round sensibly. Say how the forecast compares with the "
+               "derived yourself). Round large numbers to about three significant figures ($15.2 million, 53,000 "
+               "bottles); a forecast is not precise to the unit. Say how the forecast compares with the "
                "same months last year and how far to trust it (the backtest against the seasonal-naive baseline). "
                "Mention any unvalidated or skipped series. No em dashes.",
         messages=[{"role": "user", "content": json.dumps(facts, default=str)}],

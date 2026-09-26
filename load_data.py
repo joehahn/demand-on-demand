@@ -188,6 +188,14 @@ CURATE_SQL = [
         FROM raw.liquor_sales WHERE NULLIF(trim(category_code), '') IS NOT NULL
         ORDER BY trim(category_code), ordered_on DESC, invoice_id DESC"""),
 
+    # lifetime stats on the item dimension, like first/last order on store: cheap lookups for search
+    ("item stats", """
+        ALTER TABLE sales.item ADD COLUMN first_order_on date, ADD COLUMN last_order_on date, ADD COLUMN total_bottles bigint;
+        UPDATE sales.item i SET first_order_on = s.first_on, last_order_on = s.last_on, total_bottles = s.bottles
+        FROM (SELECT item_no, min(ordered_on) AS first_on, max(ordered_on) AS last_on, sum(sales_bottles) AS bottles
+              FROM sales.invoice_line GROUP BY 1) s
+        WHERE s.item_no = i.item_no"""),
+
     ("keys", """
         ALTER TABLE sales.invoice_line ADD PRIMARY KEY (line_id);
         ALTER TABLE sales.store    ADD PRIMARY KEY (store_no);
@@ -331,6 +339,8 @@ COLUMN_NOTES = {
     "sales.item": {
         "item_no": "Item number.", "item_desc": "Product description.", "vendor_no": "Vendor; joins sales.vendor.",
         "category_code": "Category; joins sales.category.", "pack": "Bottles per case.", "bottle_volume_ml": "Bottle volume in milliliters.",
+        "first_order_on": "Date of the item's first order.", "last_order_on": "Date of the item's latest order.",
+        "total_bottles": "Bottles ordered over the item's lifetime.",
     },
     "sales.vendor": {"vendor_no": "Vendor number.", "vendor_name": "Vendor name."},
     "sales.category": {"category_code": "Category code.", "category_name": "Category name."},

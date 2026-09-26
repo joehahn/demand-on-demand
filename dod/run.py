@@ -32,6 +32,8 @@ def facts_for(spec, p, res, findings):
             "forecast_by_series": {p.labels.get(c, c): round(float(v)) for c, v in fc.groupby("series").pred.sum().items()},
             "model": res["best"].get("model"), "test_window": [f"{d:%Y-%m}" for d in res["test_window"]],
             "error_relative_to_seasonal_naive": round(res["test_rel_mae"], 3),
+            "accuracy_vs_baseline": (f"{(1 - res['test_rel_mae']) * 100:.0f}% more accurate" if res["test_rel_mae"] < 1
+                                     else f"{(res['test_rel_mae'] - 1) * 100:.0f}% less accurate"),
             "by_months_ahead": [{"months_ahead": r["step"], "model_error_pct": round(100 * r["wape"], 1),
                                  "baseline_error_pct": round(100 * r["wape_naive"], 1), "verdict": r["reliability"]}
                                 for r in res["per_step"].to_dict("records")],
@@ -52,8 +54,9 @@ def run(spec, out_root=OUT, usage=None, agent=None, narrate=None, log=print):
     findings = checks.run(spec, p)
     log(f"  slice checks: {len(findings)} finding(s), {sum(f['addressed'] for f in findings)} addressed by the spec")
     res = model.run(p.series, p.exog, p.future_index, spec.horizon, spec.features, log=log, actuals=p.actuals)
+    facts = facts_for(spec, p, res, findings)
     if narrate:
-        agent["summary"] = narrate(facts_for(spec, p, res, findings))
+        agent["summary"] = narrate(facts)
     out = out_root / spec.slug
     out.mkdir(parents=True, exist_ok=True)
     (out / "dashboard.html").write_text(dashboard.build(spec, p, decisions, findings, res, usage, agent))
@@ -63,7 +66,8 @@ def run(spec, out_root=OUT, usage=None, agent=None, narrate=None, log=print):
                "feature_groups": res["feature_groups"], "test_rel_mae": res["test_rel_mae"],
                "per_step": res["per_step"].to_dict("records"), "findings": findings, "register": decisions,
                "forecast_total": float(res["forecast"].pred.sum()), "seconds": round(time.time() - t0, 1),
-               "agent": {k: v for k, v in (agent or {}).items()}, "dashboard": str(out / "dashboard.html")}
+               "agent": {k: v for k, v in (agent or {}).items()}, "dashboard": str(out / "dashboard.html"),
+               "facts": facts}
     (out / "summary.json").write_text(json.dumps(summary, indent=2, default=str))
     log(f"  wrote {out}/dashboard.html in {time.time() - t0:.0f}s")
     return summary

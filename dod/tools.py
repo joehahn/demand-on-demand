@@ -42,21 +42,24 @@ def _canonical(col):
     return expr
 
 
+# Search the small dimension tables; per-code dates come from index lookups (min/max on (code, date)).
 FIND_SQL = {
     "item": """
         SELECT i.item_no, i.item_desc, i.bottle_volume_ml AS ml, i.pack, c.category_name, v.vendor_name,
-               min(l.ordered_on) AS first_order, max(l.ordered_on) AS last_order, sum(l.sales_bottles) AS bottles
-        FROM sales.item i
-        LEFT JOIN sales.category c USING (category_code) LEFT JOIN sales.vendor v USING (vendor_no)
-        LEFT JOIN sales.invoice_line l ON l.item_no = i.item_no
-        WHERE {match} GROUP BY 1, 2, 3, 4, 5, 6 ORDER BY bottles DESC NULLS LAST LIMIT 60""",
+               i.first_order_on AS first_order, i.last_order_on AS last_order, i.total_bottles AS bottles
+        FROM sales.item i LEFT JOIN sales.category c USING (category_code) LEFT JOIN sales.vendor v USING (vendor_no)
+        WHERE {match} ORDER BY i.total_bottles DESC NULLS LAST LIMIT 60""",
     "category": """
-        SELECT c.category_code, c.category_name, min(l.ordered_on) AS first_order, max(l.ordered_on) AS last_order,
-               count(*) AS lines
-        FROM sales.category c JOIN sales.invoice_line l USING (category_code)
-        WHERE {match} GROUP BY 1, 2 ORDER BY lines DESC LIMIT 40""",
+        WITH m AS (SELECT c.category_code, c.category_name FROM sales.category c WHERE {match})
+        SELECT m.*, (SELECT count(*) FROM sales.item i WHERE i.category_code = m.category_code) AS items,
+               (SELECT min(ordered_on) FROM sales.invoice_line l WHERE l.category_code = m.category_code) AS first_order,
+               (SELECT max(ordered_on) FROM sales.invoice_line l WHERE l.category_code = m.category_code) AS last_order
+        FROM m ORDER BY items DESC LIMIT 40""",
     "vendor": """
-        SELECT vendor_no, vendor_name FROM sales.vendor WHERE {match} ORDER BY vendor_name LIMIT 40""",
+        WITH m AS (SELECT vendor_no, vendor_name FROM sales.vendor WHERE {match})
+        SELECT m.*, (SELECT count(*) FROM sales.item i WHERE i.vendor_no = m.vendor_no) AS items,
+               (SELECT max(ordered_on) FROM sales.invoice_line l WHERE l.vendor_no = m.vendor_no) AS last_order
+        FROM m ORDER BY items DESC LIMIT 40""",
     "city": """
         SELECT city, county_name, county_fips, count(*) AS stores, min(first_order_on) AS first_order,
                max(last_order_on) AS last_order

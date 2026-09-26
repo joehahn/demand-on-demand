@@ -1,0 +1,4468 @@
+[
+ {
+  "id": "titos_polk",
+  "run": 1,
+  "tags": [
+   "resolution"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0354,
+  "seconds": 33.4,
+  "tool_calls": 5,
+  "spec": {
+   "title": "Tito's Vodka, Polk County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38177",
+     "38176",
+     "38178",
+     "38174",
+     "38179",
+     "38194",
+     "38185",
+     "38180",
+     "102747",
+     "38449",
+     "938180"
+    ],
+    "label": "Tito's Handmade Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153"
+    ],
+    "label": "Polk County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "region"
+      ]
+     },
+     "reason": "Store openings/closings in Polk County are real market dynamics (store count changes), not a data artifact; left as-is.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Tito's vodka means the whole product line (all bottle sizes: 50ml minis, 200ml, 375ml, 750ml, 1L, 1.75L, and the 100ml/4-pack mini variants), since the user did not specify a single size.",
+   "Included every item number for Tito's Handmade Vodka, including renumbered/successor codes (e.g. 38180->38194, 938180->38194, 38449->102747) and a low-volume temporary code (938180), so the full product history is captured.",
+   "No 'by/per/each' was used in the request, so this is a single combined series for Polk County, not broken out by item, city, etc.",
+   "Polk County resolved to county_fips 19153 (the Des Moines area county), 411 stores.",
+   "Bottles is the requested unit (no mention of dollars or liters), so target = sales_bottles.",
+   "Item renumbering findings have no effect here since series_by is 'none' and all successor/predecessor codes are already included and summed together.",
+   "Store churn (net store openings) in Polk County over the window is treated as real market dynamics, not a data artifact, and is flagged for the dashboard rather than corrected.",
+   "All applicable warehouse-wide register rules (zero-value line exclusion, reference data carry-forward, etc.) are applied automatically as per the known-issues register."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_polk",
+  "run": 2,
+  "tags": [
+   "resolution"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0247,
+  "seconds": 22.1,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Tito's Vodka, Polk County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38177",
+     "38176",
+     "38178",
+     "38174",
+     "38179",
+     "38194",
+     "38185",
+     "38180",
+     "102747",
+     "38449",
+     "938180"
+    ],
+    "label": "Tito's Handmade Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153"
+    ],
+    "label": "Polk County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings/closings in Polk County over the window are real market dynamics, not a data artifact; left as is per default guidance.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Tito's vodka means all package sizes (no size specified in the request), so every item number for Tito's Handmade Vodka is included, including renumbered/discontinued codes (38180->38194->938180 mini renumbering, 38449->102747 100ml renumbering); since series_by is none these are summed together anyway.",
+   "Polk County means the county (FIPS 19153), not a specific city.",
+   "Forecast target is bottles since no dollar/revenue or liters/volume was requested.",
+   "No series-level breakdown was requested, so series_by is none (one combined monthly total for Polk County).",
+   "Store churn (stores opening/closing in Polk County) is treated as real demand dynamics, not a data error, so it is flagged only and not mitigated."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_minis_by_item",
+  "run": 1,
+  "tags": [
+   "held_out",
+   "renumbering"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"38180\", \"to\": \"38194\"}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"938180\", \"to\": \"38194\"}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation min_date {\"date\": \"2024-04\", \"series\": [\"38185\"]}",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.1404,
+  "seconds": 91.9,
+  "tool_calls": 8,
+  "spec": {
+   "title": "Tito's mini items, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38180",
+     "38194",
+     "938180",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Mini (all item codes)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "38180",
+      "to": "38194"
+     },
+     "reason": "Item 38180 was renumbered to 38194 (last sale of 38180 on 2020-07-27, first sale of 38194 on 2020-07-31); same product, merge for a continuous history.",
+     "source": "agent"
+    },
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "938180",
+      "to": "38194"
+     },
+     "reason": "938180 is a short-lived temporary/duplicate code (only 2020-07 to 2020-08, 132 bottles) used during the 38180->38194 renumbering; same product.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "2022-07 jump follows an unusually low-volume Jan-Jun 2022 stretch (likely a supply disruption) then recovery and continued organic growth; not linked to any recoding or renumbering, so treated as real demand.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "zero_months",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "Single mid-history zero month is an isolated real gap, not a data artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "Peak months have max single lines up to 750 bottles (150 cases), a plausible large bulk retailer order, and totals climb gradually over years; treated as real demand growth, not a data error.",
+     "source": "agent"
+    },
+    {
+     "rule": "min_date",
+     "params": {
+      "date": "2024-04-01",
+      "series": [
+       "38185"
+      ]
+     },
+     "reason": "38185 (4-pack format) launched 2024-04; zeros before that are not real demand.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "38185"
+      ]
+     },
+     "reason": "Gradual ramp-up in demand for the newer 4-pack format since its 2024 launch; real growth, not an artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": []
+     },
+     "reason": "Statewide store entry/exit is a general market feature, not a product-specific data problem.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "'Tito's mini' means Tito's Handmade Vodka in 50 ml bottles, including every item code ever used for it: 38180 and 938180 (both renumbered/merged into the current code 38194) and 38185, the newer 4-pack-of-minis SKU, which is a distinct still-active item and is reported as its own series.",
+   "'Each item' means the forecast is broken out per current item code (series_by item); after merging renumbered codes there are two live series: 38194 (single mini bottles) and 38185 (4-pack minis).",
+   "Statewide means all of Iowa, no region filter.",
+   "Bottles means sales_bottles (the user asked how many bottles, not dollars or liters).",
+   "Level shifts and outlier months found in 38194 and 38185 were checked against line counts and dates; they line up with gradual growth and recovery patterns, not recodings, so they are left as real demand and only flagged for the dashboard.",
+   "938180 and 38180 are treated as pure predecessors of 38194 with no independent forecasting value once merged."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_minis_by_item",
+  "run": 2,
+  "tags": [
+   "held_out",
+   "renumbering"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"38180\", \"to\": \"38194\"}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"938180\", \"to\": \"38194\"}",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation min_date {\"date\": \"2024-04\", \"series\": [\"38185\"]}",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.1414,
+  "seconds": 95.9,
+  "tool_calls": 8,
+  "spec": {
+   "title": "Tito's mini items, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185",
+     "38180",
+     "938180"
+    ],
+    "label": "Tito's Handmade Vodka Mini (all item numbers)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa statewide"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "38180",
+      "to": "38194"
+     },
+     "reason": "38180 renumbered to 38194 (last sale of 38180 2020-07-27, first sale of 38194 2020-07-31); merge into one continuous series",
+     "source": "agent"
+    },
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "938180",
+      "to": "38194"
+     },
+     "reason": "938180 is a short-lived temporary code (2020-07-10 to 2020-08-20, 132 bottles, pack=1) overlapping the 38180->38194 transition; treat as part of the same product's continuous series",
+     "source": "agent"
+    },
+    {
+     "rule": "min_date",
+     "params": {
+      "date": "2024-04-01",
+      "series": [
+       "38185"
+      ]
+     },
+     "reason": "38185 (4-pack) launched 2024-04; earlier zeros are not real demand",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "38180"
+      ]
+     },
+     "reason": "monthly totals show a gradual ramp through 2018-2019 (e.g. 291 in 2018-02 to 732 in 2019-03), not an abrupt artifact-driven jump; real demand growth",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "38185"
+      ]
+     },
+     "reason": "monthly totals rise gradually with a jump in 2025-06 that persists afterward (no recoding around that date); consistent with real demand growth for a newly launched item",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "monthly totals around 2022-07 show a dip then recovery to a sustained higher level with no recoding or renumbering event; real demand growth",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "38180"
+      ]
+     },
+     "reason": "checked line counts and max single-line quantities in flagged months; large totals come from many normal-sized lines, not one implausible line; real bulk/seasonal demand",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "top volume months (mostly 2025-2026) have max single-line quantities up to 750 bottles (150 cases of 5), consistent with genuine large retailer orders during a growth period, not a data error",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "zero_months",
+      "series": [
+       "38194"
+      ]
+     },
+     "reason": "single mid-history zero month, real gap in ordering, not an artifact",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": []
+     },
+     "reason": "store panel growth/churn is expected background context, not a data artifact affecting this item's demand",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Tito's minis means the 50 ml bottle size, covering every item number ever used for it: 38180 (2016-2020, original code), 938180 (a brief overlapping temporary code, 2020-07 to 2020-08), 38194 (current code since 2020-07), and 38185 (a distinct 4-pack-of-minis product launched 2024-04, kept as its own series since it is a different pack configuration, not a renumbering).",
+   "38180 and 938180 are the same physical product as 38194 under old/temporary codes, so they are stitched into 38194 to form one continuous history; the forecast reports two final series: 38194 (the merged single mini) and 38185 (the 4-pack).",
+   "'Each item' was read as series_by item, so the dashboard will show a separate forecast line per surviving item code, statewide, for bottles (not dollars or liters).",
+   "Level shifts and outlier months found in both series were checked against monthly totals and line-level detail and judged to be real demand growth and genuine bulk orders, not data errors, so they were flagged and left in the training data rather than capped or truncated.",
+   "38185's pre-launch zeros (before 2024-04) were excluded as not real demand."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_minis_des_moines",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "restraint"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.forbid",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "no cap_outliers",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0605,
+  "seconds": 39.4,
+  "tool_calls": 7,
+  "spec": {
+   "title": "Tito's minis, Des Moines, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38180",
+     "38194",
+     "938180",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "DES MOINES"
+    ],
+    "label": "Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift"
+     },
+     "reason": "Growth from 2016-2017 is a gradual ramp (roughly 20 to 100+ bottles/month over several months), consistent with early product growth after launch, not an abrupt recoding artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months"
+     },
+     "reason": "High months have 70-110 distinct order lines each, not one dominant line; these are genuine seasonal/growth demand peaks (spring-summer), not data errors.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "zero_months"
+     },
+     "reason": "Only 2 zero months mid-history for a low-volume mini-size product; treated as real low-demand months.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings/closures in Des Moines are real market dynamics, not a data artifact.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Tito's minis means the 50ml bottle size of Tito's Handmade Vodka, including all its item codes over time: 38180 (2016-2020), 38194 (2020-2026, its renumbered successor), 938180 (a brief overlapping temporary code in mid-2020), and 38185 (a 4-pack case SKU of the same 50ml bottle introduced 2024).",
+   "Des Moines means the city of Des Moines itself (stores whose city field is 'DES MOINES'), not West Des Moines or all of Polk County.",
+   "Since the forecast is a single total (series_by = none), item renumbering has no effect because both old and new codes are already summed together.",
+   "The 2016-2017 growth and the recurring high-volume months (spring/summer) are treated as real demand (early product ramp and seasonal/promotional demand), not data errors, since they involve many distinct order lines rather than one implausible line, and the growth is gradual rather than a sudden jump tied to any recoding event.",
+   "Store openings and closures in Des Moines over the window are treated as real market dynamics affecting the series, not a data artifact."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_minis_des_moines",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "restraint"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.forbid",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "no cap_outliers",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0559,
+  "seconds": 37.5,
+  "tool_calls": 7,
+  "spec": {
+   "title": "Tito's Handmade Vodka Minis, Des Moines, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185",
+     "38180",
+     "938180"
+    ],
+    "label": "Tito's Handmade Vodka Mini (50ml)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "DES MOINES"
+    ],
+    "label": "Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift"
+     },
+     "reason": "Monthly totals rise gradually from ~20 to over 100 bottles across 2016-2017, a real organic growth ramp after launch, not an abrupt recoding artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months"
+     },
+     "reason": "High months contain large but plausible single-store bulk order lines (500-750 bottles), consistent with bulk/promotional ordering, not data errors.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "zero_months"
+     },
+     "reason": "Two zero-sales months are within normal low-volume early history, not a data artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings/closures in Des Moines over the window are real market structure changes, not data errors.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Tito's minis means the 50ml Tito's Handmade Vodka mini bottle; included all four item codes covering this product across its history (regular code, its 2020 renumbering, a brief 2020 transitional code, and the 2024 4-pack SKU), since series_by is none they are summed into one total.",
+   "Des Moines means the city of Des Moines itself (store city = 'DES MOINES'), not West Des Moines or all of Polk County.",
+   "Forecast target is bottles sold (no dollars/liters mentioned).",
+   "The 2017 ramp-up in volume and the large bulk-order months are treated as real demand, not data errors, so no capping or truncation was applied.",
+   "Item renumbering (38180 -> 38194, 938180 -> 38194) has no effect here since all codes are summed into a single total series."
+  ],
+  "message": ""
+ },
+ {
+  "id": "crown_mount_pleasant",
+  "run": 1,
+  "tags": [
+   "held_out",
+   "spelling"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.1743,
+  "seconds": 99.6,
+  "tool_calls": 8,
+  "spec": {
+   "title": "Crown Royal family, Mount Pleasant, next 4 months (liters)",
+   "target": "sales_liters",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "100208",
+     "100209",
+     "100264",
+     "100501",
+     "100639",
+     "100700",
+     "100865",
+     "100944",
+     "101181",
+     "102040",
+     "102187",
+     "102188",
+     "102286",
+     "102339",
+     "102340",
+     "10255",
+     "102814",
+     "102815",
+     "10646",
+     "10647",
+     "10649",
+     "10775",
+     "10776",
+     "10777",
+     "10778",
+     "10779",
+     "10781",
+     "10784",
+     "10785",
+     "10786",
+     "10787",
+     "10788",
+     "10789",
+     "10790",
+     "10791",
+     "10792",
+     "10793",
+     "10797",
+     "10802",
+     "10803",
+     "10804",
+     "10805",
+     "10807",
+     "10808",
+     "10809",
+     "10812",
+     "10818",
+     "10826",
+     "10828",
+     "10830",
+     "10834",
+     "10835",
+     "10836",
+     "10838",
+     "10840",
+     "10842",
+     "10852",
+     "10856",
+     "10858",
+     "11285",
+     "11287",
+     "11290",
+     "11294",
+     "11296",
+     "11297",
+     "11298",
+     "11299",
+     "11300",
+     "11301",
+     "11302",
+     "11303",
+     "11356",
+     "11357",
+     "11363",
+     "11366",
+     "115",
+     "13062",
+     "1400",
+     "359",
+     "558",
+     "56721",
+     "56722",
+     "58555",
+     "86599",
+     "902415",
+     "910776",
+     "910807",
+     "910821",
+     "910831",
+     "910839",
+     "956721",
+     "980505",
+     "994807"
+    ],
+    "label": "Crown Royal (all variants and sizes)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "MOUNT PLEASANT",
+     "MT PLEASANT"
+    ],
+    "label": "Mount Pleasant, IA"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "2017 monthly liters rise gradually (Jan 42 to Dec 713) across the year, not an abrupt jump at any single recoding or renumbering date; this matches real growth as the store base and demand ramped up, not a data artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "item_discontinued",
+      "series": [
+       "100208",
+       "100209",
+       "100264",
+       "100501",
+       "100639",
+       "100700",
+       "100865",
+       "100944",
+       "101181",
+       "102040",
+       "102187",
+       "102188",
+       "102339",
+       "102340",
+       "10255",
+       "10779",
+       "10781",
+       "10786",
+       "10787",
+       "10797",
+       "10812",
+       "10818",
+       "10830",
+       "10835",
+       "10840",
+       "10842",
+       "10852",
+       "10856",
+       "11285",
+       "11366",
+       "115",
+       "13062",
+       "1400",
+       "359",
+       "558",
+       "86599",
+       "902415",
+       "910807",
+       "910821",
+       "910831",
+       "980505",
+       "994807"
+      ]
+     },
+     "reason": "Limited-edition packaging and discontinued flavor variants; real product lifecycle events, already summed into the single total series so no adjustment is needed.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "region"
+      ]
+     },
+     "reason": "Mount Pleasant's store base grew and shrank over the window; this is real local retail dynamics, not a data artifact.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Crown Royal was interpreted as the full brand family: the plain expressions (regular, Black, XO, XR, Reserve, Northern Harvest Rye), all flavored spinoffs (Regal Apple, Peach, Vanilla, Blackberry, Salted Caramel, Chocolate, Honey, Maple, Golden Apple, Single Malt, Marquis, etc.), the Noble Collection limited editions, gift-set/temporary packagings (e.g. with glasses, flasks, jerseys), and the RTD whisky-sour cocktail line, across every bottle size and every item_no used for it over time. I could not ask the user to confirm this scope, so I flagged it here: if only the core plain Crown Royal (not the flavor spinoffs) was intended, the forecast level would be materially lower.",
+   "Mount Pleasant means the city (both stored spellings MOUNT PLEASANT and MT PLEASANT, both in Henry County), not the wider Henry County.",
+   "Target is liters per the request for 'monthly liters'.",
+   "No series breakout was requested (no 'by' or 'per' in the request), so this is a single combined series for the place and product family.",
+   "The 2017 ramp-up in volume and the store openings/closures in Mount Pleasant over the window are treated as real demand, not data artifacts, since the growth is gradual rather than a single abrupt jump tied to a recoding or renumbering event.",
+   "Discontinued limited-edition and gift-pack items are real product lifecycle events (packaging promotions that ended), not data errors, and they are already captured correctly since all variants are summed into one total series."
+  ],
+  "message": ""
+ },
+ {
+  "id": "crown_mount_pleasant",
+  "run": 2,
+  "tags": [
+   "held_out",
+   "spelling"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0785,
+  "seconds": 55.2,
+  "tool_calls": 6,
+  "spec": {
+   "title": "Crown Royal, Mount Pleasant, next 4 months (liters)",
+   "target": "sales_liters",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "11296",
+     "11297",
+     "11294",
+     "11298",
+     "11299",
+     "11290"
+    ],
+    "label": "Crown Royal (all sizes)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "MOUNT PLEASANT",
+     "MT PLEASANT"
+    ],
+    "label": "Mount Pleasant"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "normalize_values",
+     "params": {
+      "column": "city",
+      "mapping": {
+       "MT PLEASANT": "MOUNT PLEASANT"
+      }
+     },
+     "reason": "Same city, spelling variant in store table",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift"
+     },
+     "reason": "Monthly totals around 2019-01 show normal noisy variation for a low-volume city series (holiday spikes each December, no recoding or renumbering evident), not a data artifact",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings/closures in Mount Pleasant over the window are real market changes, not a data error",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Crown Royal means the original Crown Royal Canadian whisky product line (item_desc exactly 'CROWN ROYAL') across all its bottle sizes (50ml, 200ml, 375ml, 750ml, 1000ml, 1750ml). Flavored line extensions (Regal Apple, Peach, Vanilla, Black, XO, etc.) are treated as separate named products and excluded since the user did not name them.",
+   "Mount Pleasant refers to the city in Henry County, Iowa. Both stored spellings (MOUNT PLEASANT and MT PLEASANT) are included and normalized to one city since they are the same place.",
+   "Target is sales_liters since the user asked for liters (volume).",
+   "No series_by breakout requested, so all matching sales are summed into one total series.",
+   "The 2019-01 level shift and store churn in Mount Pleasant are left as real demand variation (small-town noise and genuine store openings/closures), not data errors, since no recoding or renumbering coincides with the date."
+  ],
+  "message": ""
+ },
+ {
+  "id": "tennessee_whiskey",
+  "run": 1,
+  "tags": [
+   "register"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0309,
+  "seconds": 25.3,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Tennessee Whiskey bottles, Iowa, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011400"
+    ],
+    "label": "Tennessee Whiskies"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Statewide store entry and exit over a 10-year window is normal market dynamics, not a data artifact; leaving it as real demand context.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "\"Tennessee whiskey\" maps to category_code 1011400, which is the code carrying the name TENNESSEE WHISKIES in the current taxonomy (post 2016-08-29 category reassignment). The pre-reassignment period (up to 2016-08-29), when this same code was named BOTTLED IN BOND BOURBON, is excluded via the register's automatic min_date fix (series starts 2016-09-01) since it is not comparable history for this product.",
+   "Bottles = sales_bottles, statewide = all of Iowa, one total series (no breakout requested).",
+   "Store churn (stores opening and closing over the 10-year window) is treated as real market dynamics, not a data error, so no series exclusion was applied for it."
+  ],
+  "message": ""
+ },
+ {
+  "id": "tennessee_whiskey",
+  "run": 2,
+  "tags": [
+   "register"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0286,
+  "seconds": 24.2,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Tennessee Whiskies, Iowa, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011400"
+    ],
+    "label": "Tennessee Whiskies"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store entry/exit is expected structural turnover statewide, not a data artifact; leaving demand as reported.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "\"Tennessee whiskey\" maps to category_code 1011400, the only code currently named TENNESSEE WHISKIES in sales.category. Note: this code meant BOTTLED IN BOND BOURBON before 2016-08-29 and only became TENNESSEE WHISKIES after the state's 2016-08-29 category reassignment, so the harness's known-issue rule moves the series start to 2016-09-01 to avoid mixing the two meanings.",
+   "Iowa with no place named means statewide, so region is all of Iowa (every county/store).",
+   "No 'by/per/each' in the request, so this is a single total series (series_by = none), not broken out by county, city, or item.",
+   "Bottles requested explicitly, so target = sales_bottles.",
+   "Store openings and closures over the 10-year window are treated as real structural change (flag_only), not a data error, since new/closing licensed retailers are expected market dynamics, not an artifact."
+  ],
+  "message": ""
+ },
+ {
+  "id": "vodka_top_counties",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "breakout"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0499,
+  "seconds": 38.1,
+  "tool_calls": 7,
+  "spec": {
+   "title": "American vodka dollars, top 5 counties, next 6 months",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100"
+    ],
+    "label": "American Vodkas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153",
+     "19113",
+     "19163",
+     "19103",
+     "19013"
+    ],
+    "label": "Polk, Linn, Scott, Johnson, Black Hawk counties"
+   },
+   "series_by": "county",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings and closings across these counties reflect real changes in the retail base, not a data artifact; left as is.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "\"American vodka\" is interpreted as category 1031100 (AMERICAN VODKAS), excluding flavored vodka (1031200) and imported vodka; a legacy code 1031000 that shared the same current name but held only 8 discontinued items was excluded as negligible.",
+   "Category code 1031100 meant \"100 PROOF VODKA\" before 2016-08-29 and was reassigned to \"AMERICAN VODKAS\" on that date; the register's automatic min_date fix (series starting 2016-09-01) handles this so pre-reassignment volume is excluded.",
+   "\"Five largest counties\" is by 2025 resident population: Polk, Linn, Scott, Johnson, and Black Hawk.",
+   "series_by county because the user asked for each of the five counties broken out.",
+   "Store openings and closures within these counties over the 10-year window are treated as real changes in the retail landscape, not a data artifact, and were left unmodified (flagged only)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "vodka_top_counties",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "breakout"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0536,
+  "seconds": 39.3,
+  "tool_calls": 8,
+  "spec": {
+   "title": "American vodka sales dollars, top 5 counties by population, next 6 months",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100",
+     "1031000"
+    ],
+    "label": "American Vodkas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153",
+     "19113",
+     "19163",
+     "19103",
+     "19013"
+    ],
+    "label": "Polk, Linn, Scott, Johnson, Black Hawk counties"
+   },
+   "series_by": "county",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "19153",
+       "19113",
+       "19163",
+       "19103",
+       "19013"
+      ]
+     },
+     "reason": "Store openings and closings across these counties reflect real store-count growth in the licensed retailer base, not a data artifact; leaving the data as is.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "American vodka means the AMERICAN VODKAS category (unflavored), covering both category codes ever used for it: 1031100 (main code, renamed from 100 PROOF VODKA to AMERICAN VODKAS on 2016-08-29) and 1031000 (a small overlapping temporary code used 2016-08-29 to 2022-02-24 under the same name). Flavored American vodka (1031200) is excluded since the user asked for American vodka, not flavored.",
+   "Five largest counties means the five with the highest resident population (2025 estimate): Polk, Linn, Scott, Johnson, and Black Hawk.",
+   "Series start is moved to 2016-09-01 per the standing category-reassignment register rule, since pre-2016-08-29 the code 1031100 meant a different product (100 PROOF VODKA).",
+   "Store churn (openings/closings) within these counties over the window is treated as real market dynamics, not a data defect, so no mitigation beyond flagging it was applied.",
+   "Target is sales_dollars as explicitly requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "chicago",
+  "run": 1,
+  "tags": [
+   "refusal"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.016,
+  "seconds": 11.0,
+  "tool_calls": 2,
+  "spec": null,
+  "assumptions": null,
+  "message": "This request cannot be served as asked. The data warehouse only contains Iowa liquor retail sales, and there is no store, city, or region named \"Chicago\" anywhere in it (I checked). Since Chicago, Illinois is not part of this Iowa-only dataset, I cannot forecast sales there without substituting a different place, which I'm not permitted to do. If you'd like, I can forecast Tito's vodka sales for an actual Iowa city or county, or statewide across Iowa, for the next 5 months instead."
+ },
+ {
+  "id": "chicago",
+  "run": 2,
+  "tags": [
+   "refusal"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0148,
+  "seconds": 9.7,
+  "tool_calls": 2,
+  "spec": null,
+  "assumptions": null,
+  "message": "This request cannot be served as asked: this warehouse contains only Iowa liquor retail sales data (Iowa stores, cities, and counties), and there is no city named \"Chicago\" in the data (a lookup for \"Chicago\" returned zero matches in sales.store). Since the place you asked about does not exist in this dataset, I cannot build a forecast for it, and I won't substitute a different place. If you'd like, I can forecast Tito's vodka sales statewide in Iowa, or for a specific Iowa city or county instead."
+ },
+ {
+  "id": "horizon_24",
+  "run": 1,
+  "tags": [
+   "refusal"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0036,
+  "seconds": 3.2,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "The request asks for a 24-month horizon, but this system only supports forecasts up to 12 months ahead. I can't submit a spec for 24 months.\n\nI'd suggest one of these instead:\n- A 12-month statewide forecast of total sales dollars (the maximum allowed horizon), or\n- Two sequential 12-month forecasts if you truly need a 24-month view, understanding the second year would be built on projected/extrapolated data rather than the harness's own backtested horizon.\n\nWould you like me to proceed with a 12-month statewide sales dollars forecast?"
+ },
+ {
+  "id": "horizon_24",
+  "run": 2,
+  "tags": [
+   "refusal"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0031,
+  "seconds": 2.8,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "The request asks for a 24-month horizon, but I can only forecast up to 12 months ahead per the harness constraints.\n\nI can't submit this as asked. What I can offer instead:\n\n- A 12-month forecast of total Iowa liquor sales dollars (statewide, all products), or\n- The same 24-month view broken into two consecutive 12-month forecasts if that's useful for your planning.\n\nWould you like me to proceed with a 12-month statewide forecast of total sales dollars?"
+ },
+ {
+  "id": "jack_iowa_city",
+  "run": 1,
+  "tags": [
+   "resolution"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.1239,
+  "seconds": 70.2,
+  "tool_calls": 8,
+  "spec": {
+   "title": "Jack Daniel's bottle sales, Iowa City, next 4 months",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "100137",
+     "100148",
+     "100414",
+     "100488",
+     "100744",
+     "100746",
+     "101084",
+     "101299",
+     "102781",
+     "159",
+     "16222",
+     "16620",
+     "21561",
+     "25059",
+     "25683",
+     "25744",
+     "25893",
+     "25915",
+     "25962",
+     "25984",
+     "25988",
+     "26102",
+     "26729",
+     "26800",
+     "26820",
+     "26821",
+     "26822",
+     "26823",
+     "26824",
+     "26826",
+     "26827",
+     "26828",
+     "26892",
+     "26900",
+     "26906",
+     "26939",
+     "27181",
+     "27182",
+     "308",
+     "333",
+     "470",
+     "472",
+     "498",
+     "502",
+     "571",
+     "693",
+     "72902",
+     "74782",
+     "74801",
+     "74802",
+     "74804",
+     "74805",
+     "74807",
+     "76009",
+     "76010",
+     "76011",
+     "804",
+     "86668",
+     "86669",
+     "86670",
+     "86672",
+     "86673",
+     "86691",
+     "86692",
+     "86693",
+     "86694",
+     "86698",
+     "881",
+     "900367",
+     "900407",
+     "904046",
+     "925470",
+     "925915",
+     "926729",
+     "926730",
+     "926751",
+     "926884",
+     "926885",
+     "926886",
+     "926902",
+     "974782",
+     "990506"
+    ],
+    "label": "Jack Daniel's (all sizes/variants)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "IOWA CITY"
+    ],
+    "label": "Iowa City"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Checked monthly totals around 2017-07: variation is noisy month-to-month at this modest volume (700-2500 bottles/month), no clean step coincident with any item recoding, renumbering or launch. Treating as real demand variation, not an artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "item_discontinued",
+      "series": [
+       "100137",
+       "100148",
+       "100414",
+       "100488",
+       "100744",
+       "100746",
+       "101084",
+       "101299",
+       "159",
+       "25059",
+       "25683",
+       "25744",
+       "25893",
+       "25984",
+       "25988",
+       "26102",
+       "26800",
+       "26892",
+       "26900",
+       "26939",
+       "27181",
+       "27182",
+       "308",
+       "333",
+       "470",
+       "472",
+       "498",
+       "502",
+       "571",
+       "693",
+       "74782",
+       "881",
+       "900407",
+       "904046",
+       "925915",
+       "926730",
+       "926751",
+       "926884",
+       "926885",
+       "926886",
+       "926902",
+       "974782",
+       "990506"
+      ]
+     },
+     "reason": "These are individual JD gift-pack/temporary/limited variants that stopped; the total brand series is unaffected since other JD SKUs continue selling and the harness sums across all included items.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "region"
+      ]
+     },
+     "reason": "Normal store entry and exit in Iowa City over the window; real market dynamic, not a data artifact.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Jack Daniel's means the full brand: all sizes and variants (Old No. 7, Tennessee Honey, Fire, Apple, Blackberry, Single Barrel, ryes, minis, and temporary/gift-pack packagings), since no specific size or expression was named.",
+   "Included every item number ever assigned to a Jack Daniel's product, including discontinued and renumbered ones, so the summed history is complete.",
+   "Iowa City means the city of Iowa City (store city = 'IOWA CITY'), not all of Johnson County.",
+   "series_by = none: one combined total series across all Jack Daniel's items for Iowa City, since the user did not ask for a breakdown by item or category.",
+   "Target is bottle counts (sales_bottles) as requested.",
+   "Reviewed the flagged level shift around 2017-07 and found it is month-to-month noise typical of a moderate-volume city-level series, not a data artifact, so left it as real variation.",
+   "Individual discontinued specialty/gift-pack items and normal store churn in Iowa City are left as-is (flagged only) since they are real market dynamics that don't distort the combined brand total."
+  ],
+  "message": ""
+ },
+ {
+  "id": "jack_iowa_city",
+  "run": 2,
+  "tags": [
+   "resolution"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.1726,
+  "seconds": 97.8,
+  "tool_calls": 11,
+  "spec": {
+   "title": "Jack Daniel's, Iowa City, next 4 months",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "100137",
+     "100148",
+     "100414",
+     "100488",
+     "100744",
+     "100746",
+     "101084",
+     "101299",
+     "102781",
+     "159",
+     "16222",
+     "16620",
+     "21561",
+     "25059",
+     "25683",
+     "25744",
+     "25893",
+     "25915",
+     "25962",
+     "25984",
+     "25988",
+     "26102",
+     "26729",
+     "26800",
+     "26820",
+     "26821",
+     "26822",
+     "26823",
+     "26824",
+     "26826",
+     "26827",
+     "26828",
+     "26885",
+     "26892",
+     "26900",
+     "26906",
+     "26939",
+     "27181",
+     "27182",
+     "308",
+     "333",
+     "470",
+     "472",
+     "498",
+     "502",
+     "571",
+     "693",
+     "72902",
+     "74782",
+     "74801",
+     "74802",
+     "74804",
+     "74805",
+     "74807",
+     "76009",
+     "76010",
+     "76011",
+     "804",
+     "86668",
+     "86669",
+     "86670",
+     "86672",
+     "86673",
+     "86691",
+     "86692",
+     "86693",
+     "86694",
+     "86698",
+     "881",
+     "900367",
+     "900407",
+     "904046",
+     "925470",
+     "925915",
+     "925917",
+     "925984",
+     "926102",
+     "926239",
+     "926334",
+     "926352",
+     "926567",
+     "926729",
+     "926730",
+     "926751",
+     "926884",
+     "926885",
+     "926886",
+     "926902",
+     "926908",
+     "928364",
+     "974782",
+     "990506"
+    ],
+    "label": "Jack Daniel's (all sizes/variants)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "IOWA CITY"
+    ],
+    "label": "Iowa City"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Rolling 12-month totals straddling 2017-07 are similar (14,477 before vs 15,209 after) and no recoding or renumbering occurs at that date, so the flagged 2.2x shift is short-window noise in a low-volume single-city series, not a data artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Growth in the number of active Iowa City stores over the window is real market coverage change, not a data problem.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "item_discontinued",
+      "series": [
+       "100137",
+       "100148",
+       "100414",
+       "100488",
+       "100744",
+       "100746",
+       "101084",
+       "101299",
+       "159",
+       "25059",
+       "25683",
+       "25744",
+       "25893",
+       "25984",
+       "25988",
+       "26102",
+       "26800",
+       "26885",
+       "26892",
+       "26900",
+       "26939",
+       "27181",
+       "27182",
+       "308",
+       "333",
+       "470",
+       "472",
+       "498",
+       "502",
+       "571",
+       "693",
+       "74782",
+       "881",
+       "900407",
+       "904046",
+       "925915",
+       "925917",
+       "925984",
+       "926102",
+       "926239",
+       "926334",
+       "926352",
+       "926567",
+       "926730",
+       "926751",
+       "926884",
+       "926885",
+       "926886",
+       "926902",
+       "926908",
+       "928364",
+       "974782",
+       "990506"
+      ]
+     },
+     "reason": "Individual specialty gift packs and limited packaging variants come and go over time as normal product turnover within the Jack Daniel's brand; the aggregated brand series continues, so no exclusion is needed.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Jack Daniel's means the whole brand family (all sizes, flavors, and packaging variants sold by Brown-Forman under the Jack Daniel's name), not just the flagship 750ml Old No. 7, matching the 'include every item number of the same product' rule.",
+   "Iowa City refers to the city of Iowa City itself (region kind=city), not the wider Johnson County.",
+   "Target is bottle sales (sales_bottles) as requested, one combined total series (no breakout requested), 4-month horizon.",
+   "Two item-renumbering events (900367->926729 and 926729->26729) are already fully captured because series_by is 'none' (a single summed series), so no stitch mitigation was needed.",
+   "The item-level 'discontinued' findings (mostly one-off gift packs and limited releases) reflect normal product turnover within the brand and are left in the data as real history rather than excluded.",
+   "The one large level_shift flag around 2017-07 was checked against rolling 12-month and annual totals, which show no sustained jump, so it was treated as noise in a small city-level series rather than a data artifact and left unmodified.",
+   "Store churn in Iowa City (new stores opening, some closing) is treated as real market dynamics, not a data issue."
+  ],
+  "message": ""
+ },
+ {
+  "id": "fireball_linn_revenue",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "target"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0636,
+  "seconds": 45.7,
+  "tool_calls": 5,
+  "spec": {
+   "title": "Fireball, Linn County, next quarter",
+   "target": "sales_dollars",
+   "horizon": 3,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "64870",
+     "65013",
+     "64864",
+     "64863",
+     "64866",
+     "64865",
+     "64867",
+     "64868",
+     "100423",
+     "64858",
+     "64904",
+     "76302",
+     "100413",
+     "75971",
+     "76304",
+     "101046",
+     "76303",
+     "102556",
+     "902446",
+     "103039",
+     "101047",
+     "101988",
+     "103155",
+     "101151",
+     "101513",
+     "102057",
+     "100642",
+     "100847",
+     "100015",
+     "101710",
+     "78890",
+     "103153",
+     "76685",
+     "75972",
+     "101200",
+     "76684",
+     "78889",
+     "102096",
+     "102445",
+     "100535",
+     "910225",
+     "100938",
+     "102031",
+     "101515",
+     "103156",
+     "101512",
+     "75969",
+     "78887",
+     "103152",
+     "902214",
+     "102780",
+     "102945",
+     "102214"
+    ],
+    "label": "Fireball Cinnamon Whiskey (all variants, sizes and temporary packages)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19113"
+    ],
+    "label": "Linn County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "item_discontinued"
+     },
+     "reason": "Several Fireball seasonal/gift/keg SKUs stopped selling over the years; this is normal product-mix churn within a summed brand total, not a data artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Linn County store count changed over the window (121 opened, 81 closed); this reflects real retail licensing turnover, not a data problem, and the harness uses population features to help normalize.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "item_renumbered",
+      "series": [
+       "902214"
+      ]
+     },
+     "reason": "Item 902214 was renumbered to 102214; both are summed into this single total series so stitching has no effect.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Fireball means all Fireball Cinnamon Whiskey products and flavor extensions (Blazin Apple, Torch'd Vanilla, Vikings) across every size, including minis, gift packs, kegs and other temporary/specialty packagings, so the full brand history is captured, including discontinued and renumbered item numbers.",
+   "Revenue means sales_dollars.",
+   "Next quarter means the next 3 months (horizon=3) from the last complete loaded month (2026-08).",
+   "Linn County is the county named Linn (fips 19113), not a city.",
+   "No per-item or per-city breakout was requested, so all Fireball sales in Linn County are summed into a single monthly series.",
+   "Discontinued specialty/seasonal Fireball SKUs and store openings/closures in Linn County are treated as real demand and product-mix variation, not data errors, and are left as is (flagged for the dashboard)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "fireball_linn_revenue",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "target"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0753,
+  "seconds": 53.2,
+  "tool_calls": 5,
+  "spec": {
+   "title": "Fireball, Linn County, next quarter",
+   "target": "sales_dollars",
+   "horizon": 3,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "64870",
+     "65013",
+     "64864",
+     "64863",
+     "64866",
+     "64865",
+     "64867",
+     "64868",
+     "100423",
+     "64858",
+     "64904",
+     "76302",
+     "100413",
+     "75971",
+     "76304",
+     "101046",
+     "76303",
+     "102556",
+     "902446",
+     "103039",
+     "101047",
+     "101988",
+     "103155",
+     "101151",
+     "101513",
+     "102057",
+     "100642",
+     "100847",
+     "100015",
+     "101710",
+     "78890",
+     "103153",
+     "76685",
+     "75972",
+     "101200",
+     "76684",
+     "78889",
+     "102096",
+     "102445",
+     "100535",
+     "910225",
+     "100938",
+     "102031",
+     "101515",
+     "103156",
+     "101512",
+     "75969",
+     "78887",
+     "103152",
+     "902214",
+     "102780",
+     "102945",
+     "102214"
+    ],
+    "label": "Fireball (all sizes/variants)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19113"
+    ],
+    "label": "Linn County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "item_discontinued",
+      "series": [
+       "100015",
+       "100535",
+       "100642",
+       "100847",
+       "100938",
+       "101046",
+       "101047",
+       "101200",
+       "101512",
+       "101513",
+       "101515",
+       "102096",
+       "102214",
+       "102445",
+       "102780",
+       "103152",
+       "103156",
+       "75969",
+       "76684",
+       "76685",
+       "902446"
+      ]
+     },
+     "reason": "Temporary and seasonal Fireball packaging variants (gift boxes, holiday bags, kegs, mini novelty packs) naturally launch and retire; the aggregated brand total continues uninterrupted, so this is normal product-line turnover, not a data artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "item_renumbered",
+      "series": [
+       "902214",
+       "102214"
+      ]
+     },
+     "reason": "Series_by is none, so both the old and new item numbers for the keg 1PK are already summed into the total; the renumbering has no effect.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "19113"
+      ]
+     },
+     "reason": "Linn County store openings and closings reflect real licensing turnover in the retailer base, not a demand artifact.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Fireball means the full Fireball Cinnamon Whiskey product line under Sazerac, including all bottle sizes and every temporary/seasonal packaging variant (gift sets, kegs, minis, holiday packs), so all matching item numbers were included, not just the core UPCs.",
+   "Revenue means sales_dollars.",
+   "Next quarter means a 3-month forecast horizon from the last complete month.",
+   "Linn County means the county (statewide code 19113), not a city within it.",
+   "One combined total series was built (series_by none) since the user did not ask for a breakdown.",
+   "Discontinued temporary packaging items and store entry/exit in Linn County were treated as real demand dynamics and left unmodified, only flagged for the dashboard."
+  ],
+  "message": ""
+ },
+ {
+  "id": "statewide_liters",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "target"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.023,
+  "seconds": 37.6,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Statewide total liters, next 6 months",
+   "target": "sales_liters",
+   "horizon": 6,
+   "product": {
+    "kind": "all",
+    "codes": [],
+    "label": "All products"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa statewide"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store entry and exit over the window is real market dynamics (new licenses opening, closures/lapses), not a data artifact; kept as real demand signal per default guidance rather than adjusted away.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Interpreted 'total liquor' as all products (kind=all), statewide, single aggregated series (series_by=none).",
+   "Target metric is sales_liters since the request specifically asks for total liters (volume), not bottles or dollars.",
+   "Horizon is 6 months as requested, within the 12-month limit.",
+   "Applied register-driven corrections automatically: capped implausible bottle-volume outliers affecting liters, excluded zero-bottle/zero-dollar placeholder lines, and carried forward the latest published county population for reference features (population feature is included by default even though this is a statewide total, per the standard feature set).",
+   "Left store churn (stores opening and closing over the 2016-2026 window) as flagged real demand dynamics rather than adjusting the series, since changes in the retailer base are genuine drivers of statewide volume, not a data error.",
+   "Noted for context but took no action on: partial/possibly incomplete final month (2026-08), and the 2022 discontinuation of the COCKTAILS/RTD category, since neither requires a mitigation for a statewide all-product total."
+  ],
+  "message": ""
+ },
+ {
+  "id": "statewide_liters",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "target"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.019,
+  "seconds": 32.5,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Statewide total liters, next 6 months",
+   "target": "sales_liters",
+   "horizon": 6,
+   "product": {
+    "kind": "all",
+    "codes": [],
+    "label": "All products"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Statewide total naturally reflects the growing/shrinking store base over a 10-year window; this is real market structure, not a data artifact.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Target is total sales_liters across all products and all of Iowa, one combined series (no breakout requested).",
+   "Horizon is 6 months as requested.",
+   "Store openings/closings over the window are treated as real market structure, not a data error, so left as flag_only.",
+   "All register-recommended mitigations (price derivation not needed, duplicate-row dedup, outlier capping on implausible bottle volumes, population carry-forward, zero-value line exclusion) are applied as the harness recommends by default."
+  ],
+  "message": ""
+ },
+ {
+  "id": "diageo_scott",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "vendor"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0233,
+  "seconds": 19.8,
+  "tool_calls": 5,
+  "spec": {
+   "title": "Diageo Americas, Scott County, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "vendor",
+    "codes": [
+     "260"
+    ],
+    "label": "Diageo Americas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19163"
+    ],
+    "label": "Scott County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings and closings in Scott County are real changes in the retail base, not a data artifact; leaving as is.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Diageo means vendor 260, DIAGEO AMERICAS, all its items (896 item numbers), not a narrower brand subset.",
+   "Scott County resolved to county_fips 19163, all 152 stores ever recorded there.",
+   "Bottle sales requested, so target is sales_bottles (not dollars or liters).",
+   "One combined monthly series for the whole vendor x county slice (no by-item or by-store breakout), since the user did not ask for a breakdown.",
+   "Store churn (86 openings, 54 closings) in the county over the window is treated as real market structure, not a data error, and left unadjusted per default policy.",
+   "Reference-data lag, zero-value-line exclusion, and other warehouse-wide fixes are applied automatically per the standing register and were not further adjusted."
+  ],
+  "message": ""
+ },
+ {
+  "id": "diageo_scott",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "vendor"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.024,
+  "seconds": 19.0,
+  "tool_calls": 5,
+  "spec": {
+   "title": "Diageo Americas, Scott County, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "vendor",
+    "codes": [
+     "260"
+    ],
+    "label": "Diageo Americas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19163"
+    ],
+    "label": "Scott County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings/closings over the 10-year window are real market dynamics, not a data artifact; total demand is what the user wants forecast.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "\"Diageo\" was resolved to vendor_no 260, DIAGEO AMERICAS, the vendor code covering all 896 Diageo items in the warehouse (all sizes/products included, no size restriction was named).",
+   "\"Scott County\" was resolved to county_fips 19163 statewide within-county aggregation (all cities/stores in the county).",
+   "Target is bottle counts (sales_bottles), monthly total for the whole county (no per-store or per-item breakout was requested).",
+   "Store churn (openings/closings) in Scott County over 2016-2026 was reviewed and left as real demand variation, not a data defect, since the user asked for total county demand.",
+   "Standard register mitigations (zero-value line exclusion, reference data carry-forward, etc.) were applied automatically per the approved known-issues register."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_st_ansgar",
+  "run": 1,
+  "tags": [
+   "held_out",
+   "spelling"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0698,
+  "seconds": 54.5,
+  "tool_calls": 7,
+  "spec": {
+   "title": "Tito's Vodka (all sizes), St. Ansgar, next 4 months",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38177",
+     "38176",
+     "38178",
+     "38174",
+     "38179",
+     "38194",
+     "38185",
+     "38180",
+     "102747",
+     "38449",
+     "938180"
+    ],
+    "label": "Tito's Handmade Vodka, all sizes"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "ST ANSGAR",
+     "SAINT ANSGAR"
+    ],
+    "label": "St. Ansgar"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "normalize_values",
+     "params": {
+      "column": "city",
+      "mapping": {
+       "SAINT ANSGAR": "ST ANSGAR"
+      }
+     },
+     "reason": "Unify two stored spellings of St. Ansgar into one series",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift"
+     },
+     "reason": "Monthly totals are very small (single digits to low tens); the 2017-04 shift is low-volume noise/gradual growth, not tied to any recoding or renumbering, so treated as real demand",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "zero_months"
+     },
+     "reason": "This is a tiny city with only 2 stores; zero-sale months are normal low-volume gaps, not artifacts",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months"
+     },
+     "reason": "Checked line counts and max single-line quantities in the flagged months; no implausible single line found, consistent with real bulk/seasonal orders",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings/closures in St. Ansgar reflect real market changes, left as is per default",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Tito's = Tito's Handmade Vodka; included all item numbers/sizes (750ml, 1L, 1.75L, 375ml, 200ml, 100ml, and mini/50ml variants) plus renumbered/temporary codes since the user did not specify a size.",
+   "Target metric is bottles (sales_bottles) since the user said 'bottles', not dollars or liters.",
+   "St. Ansgar is a city-level request (not the county); included both stored spellings ST ANSGAR and SAINT ANSGAR, normalized to one series.",
+   "No 'by/per/each' language was used, so series_by is 'none' (one combined series for the product in this city).",
+   "Reviewed and left as real demand: a low-volume level shift around 2017-04, zero-sale months, a couple of outlier months (no evidence of bad data lines), and store churn (2 of 4 stores opened/closed) in this small city.",
+   "Item renumbering findings (38180->38194, 938180->38194, 38449->102747) have no effect since series_by is not 'item' and all codes are summed together."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_st_ansgar",
+  "run": 2,
+  "tags": [
+   "held_out",
+   "spelling"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0672,
+  "seconds": 45.8,
+  "tool_calls": 6,
+  "spec": {
+   "title": "Tito's Vodka, St. Ansgar, next 4 months",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38177",
+     "38176",
+     "38178",
+     "38174",
+     "38179",
+     "38194",
+     "38185",
+     "38180",
+     "102747",
+     "38449",
+     "938180"
+    ],
+    "label": "Tito's Handmade Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "SAINT ANSGAR",
+     "ST ANSGAR"
+    ],
+    "label": "St. Ansgar"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Monthly totals show a gradual ramp from very low volumes (1-10 bottles/month in 2016) to higher but still small volumes (10-30/month) through 2017-2018, not an abrupt recoding; no renumbering or reclassification event coincides with 2017-04. Real, low-base growth.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "zero_months",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Small single-city, two-store series with naturally sporadic monthly demand; zero months are genuine gaps in ordering, not a data artifact.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Checked line counts and max single line in the flagged months (e.g. 2022-08: 294 bottles over 15 lines, max line 60; 2023-07: 150 bottles over 7 lines, max line 72). These are plausible bulk store orders at normal case-multiple sizes, not implausible single-line errors, so left uncapped.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "region"
+      ]
+     },
+     "reason": "2 of 4 stores in St. Ansgar opened/closed during the window; this is a real change in the local retail base, not a data error.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "\"Tito's\" means Tito's Handmade Vodka, all bottle sizes and all its item numbers over time (750ml, 1L, 1.75L, 375ml, 200ml, minis, 100ml), including discontinued and renumbered item codes, since no specific size was named.",
+   "\"Bottles\" means the sales_bottles target (unit count), not dollars or liters.",
+   "St. Ansgar means the city of St. Ansgar, Iowa, including both stored spellings (SAINT ANSGAR and ST ANSGAR), not the whole of Mitchell County.",
+   "No 'each/by/per' breakdown was requested, so this is a single combined series (series_by none), not split by item, store or category.",
+   "The item_renumbered findings (38180->38194, 938180->38194, 38449->102747) have no effect here because the series is a single summed total, not split by item.",
+   "The apparent 2017-04 level shift, the zero-sales months, and the two outlier months are genuine small-base retail demand patterns (gradual ramp, sporadic ordering, occasional bulk orders), not data errors, so no min_date or capping was applied.",
+   "Store openings/closings in St. Ansgar over the window are a real change in local retail base and are flagged for awareness but not corrected."
+  ],
+  "message": ""
+ },
+ {
+  "id": "bottled_in_bond",
+  "run": 1,
+  "tags": [
+   "register"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0611,
+  "seconds": 42.6,
+  "tool_calls": 7,
+  "spec": {
+   "title": "Bottled in Bond Bourbon, Iowa statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011500"
+    ],
+    "label": "Bottled in Bond Bourbon"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Growth from 2019 to 2020 is a gradual ramp across many months, not an abrupt jump tied to a recoding, so it looks like real demand growth for the category.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "High months (2025-12, 2026-03, 2025-09 etc.) are broad-based across hundreds to thousands of lines with no single dominant line, consistent with real seasonal/holiday demand and category growth, not a data error.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "region"
+      ]
+     },
+     "reason": "Store entry and exit is part of the normal, expected panel churn documented in the register; not specific to this request.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Category code 1011500 is the current-day code for BOTTLED IN BOND BOURBON WHISKIES; per the known category-reassignment issue, this code meant STRAIGHT RYE before 2016-08-29, so the series correctly starts 2016-09-01 (register-applied min_date).",
+   "Statewide means all of Iowa, no region filter.",
+   "Target is bottle counts (sales_bottles) since the user said 'bottles' explicitly.",
+   "The 2019-2020 level shift and the recent high months are treated as real demand growth and seasonal/holiday spikes, not data errors, since the increases are gradual and spread across many transactions rather than a single dominant line or an abrupt cliff tied to a recoding event.",
+   "Store churn (openings/closings) is normal panel behavior across Iowa and not specific to this category; left as flagged context per the register."
+  ],
+  "message": ""
+ },
+ {
+  "id": "bottled_in_bond",
+  "run": 2,
+  "tags": [
+   "register"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0574,
+  "seconds": 38.0,
+  "tool_calls": 7,
+  "spec": {
+   "title": "Bottled in Bond Bourbon, Iowa statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011500"
+    ],
+    "label": "Bottled in Bond Bourbon"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift"
+     },
+     "reason": "Gradual ramp in 2019-2020 (bourbon category growth), not an abrupt jump tied to any recoding; real demand growth.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months"
+     },
+     "reason": "High-volume months (Dec 2025, Mar 2026, etc.) are spread across hundreds to over a thousand lines with plausible max line sizes (<=450 bottles), consistent with real bulk/holiday demand, not a data error.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Normal store entry/exit across the panel; not specific to this product, real dynamics.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Bottled in Bond Bourbon refers to category_code 1011500, which is the code currently named BOTTLED IN BOND BOURBON in sales.category; before 2016-08-29 this same code was used for a different product (STRAIGHT RYE), so the known category-reassignment issue applies and the series is started at 2016-09-01 (register rule already applied).",
+   "Target is bottles since the request said 'bottles' explicitly.",
+   "Statewide, single total series (no by/each/per breakdown requested), 3-month horizon as asked.",
+   "Reviewed the level_shift finding (~2.1x change around 2020-02): monthly data show a gradual increase from mid-2019 through mid-2020 rather than a sudden jump, consistent with real growth in bottled-in-bond bourbon demand around that period, so left as real demand.",
+   "Reviewed the outlier_months finding: the highest-volume months are spread across hundreds to 1,500+ order lines with plausible per-line bottle counts (max 120-450), not a single implausible line, so treated as real bulk/holiday demand rather than a data error.",
+   "Store churn (openings/closings) is a normal, statewide pattern not specific to this product and left as is per the register guidance."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_100_by_item",
+  "run": 1,
+  "tags": [
+   "held_out",
+   "renumbering"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"38449\", \"to\": \"102747\"}",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0624,
+  "seconds": 41.6,
+  "tool_calls": 5,
+  "spec": {
+   "title": "Tito's 100 ml items statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "102747",
+     "38449"
+    ],
+    "label": "Tito's Handmade Vodka 100ml"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "38449",
+      "to": "102747"
+     },
+     "reason": "Item 38449 (100ml, pack 1) was renumbered to 102747 (100ml, pack 12) with a one-month overlap (38449 last sold 2026-06-03, 102747 first sold 2026-05-18); same product, treat as one continuous series.",
+     "source": "agent"
+    },
+    {
+     "rule": "min_date",
+     "params": {
+      "date": "2025-11-01",
+      "series": [
+       "102747"
+      ]
+     },
+     "reason": "Combined series has no real sales before the product's first launch on 2025-11-10 (as 38449); earlier zeros are not demand.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "38449"
+      ]
+     },
+     "reason": "Elevated first month (2025-11) is a launch stocking spike, real demand, not a data error.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": []
+     },
+     "reason": "Statewide store entry/exit is background context, not specific to this product.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Tito's 100 ml items in the data are item_no 102747 and 38449 (the only two Tito's Handmade Vodka items at 100 ml); the 750/375/1000/1750/200/50 ml sizes were excluded since the user asked specifically for 100 ml.",
+   "Item 38449 (pack of 1) and item 102747 (pack of 12) are the same 100 ml product under an old and new item number, based on the one-month sales overlap and adjacent timing (38449 last sold 2026-06-03, 102747 first sold 2026-05-18); treated as a single renumbered series via stitch_successor.",
+   "The product genuinely launched in 2025-11 (first sale of 38449); no demand existed before that, so a min_date of 2025-11-01 was applied to the merged series.",
+   "The 2025-11 spike in 38449 sales is a real launch stocking rush, not a data error, so it was flagged and left uncapped.",
+   "Forecast target is sales_bottles (bottles), matching the plain request with no mention of dollars or liters.",
+   "series_by item was used since the user asked to forecast 'each' item separately; after stitching, this yields one combined series representing the continuous product history under both former codes."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_100_by_item",
+  "run": 2,
+  "tags": [
+   "held_out",
+   "renumbering"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "mitigation stitch_successor {\"from\": \"38449\", \"to\": \"102747\"}",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0641,
+  "seconds": 38.3,
+  "tool_calls": 7,
+  "spec": {
+   "title": "Tito's 100 ml items, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "102747",
+     "38449"
+    ],
+    "label": "Tito's Handmade Vodka 100 ml"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "stitch_successor",
+     "params": {
+      "column": "item_no",
+      "from": "38449",
+      "to": "102747"
+     },
+     "reason": "38449 last sold 2026-06-03 and 102747 first sold 2026-05-18 with overlapping transition; same 100 ml Tito's product renumbered mid-2026.",
+     "source": "agent"
+    },
+    {
+     "rule": "min_date",
+     "params": {
+      "date": "2025-11-01",
+      "series": [
+       "102747"
+      ]
+     },
+     "reason": "Combined 100 ml item launched 2025-11; zeros before that are pre-launch, not demand.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Statewide store entry/exit is part of normal market dynamics, not a data artifact; reviewed and left as is.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Tito's '100 ml item' refers to the 100 ml bottle size of Tito's Handmade Vodka, found under two item codes (38449 and 102747) that represent the same product before and after a mid-2026 renumbering.",
+   "The two item codes were stitched into a single series (38449 merged into successor 102747) since they overlap in time and clearly represent one continuous product, and the user asked to forecast 'each' 100 ml item (there is in fact only one true 100 ml product once the renumbering is accounted for).",
+   "Applied a min_date of 2025-11-01 to the combined series since the product did not exist before its first sale in Nov 2025; earlier zeros are not real demand.",
+   "Statewide store openings/closings over the history are normal market churn, not a data error, so left as is.",
+   "Target is bottles (no dollars/liters mentioned in the request)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "run": 1,
+  "tags": [
+   "held_out",
+   "recode"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0702,
+  "seconds": 47.9,
+  "tool_calls": 8,
+  "spec": {
+   "title": "Ready-to-drink cocktails, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1071100",
+     "1071000",
+     "1070000"
+    ],
+    "label": "Cocktails/RTD (all historical category codes)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "2020-02/03 level shift coincides with COVID-19 stockpiling surge (gradual ramp March-June 2020, largest lines are plausible bulk store orders), not a recoding; treated as real demand.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "The outlier month (2020-04) is driven by many large but plausible bulk orders during the COVID demand surge, not a single erroneous line; real demand, not capped.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Store openings/closings over the 10-year window are real market entry/exit, not a data issue.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Ready-to-drink cocktails means the COCKTAILS/RTD category. This category was recoded three times with the same name (1071100 through 2022-07-15, then 1071000 from 2022-07-18); I included both codes plus the tiny legacy code 1070000 so the total series is continuous across the recoding and does not falsely show demand dropping to zero in July 2022.",
+   "Statewide means all of Iowa, one aggregate series (no breakout requested).",
+   "Target is bottle counts since the user said 'bottles'.",
+   "The 2020-02/2020-04 level shift and outlier month reflect a real COVID-era demand surge (gradual ramp, plausible large bulk orders), not a data error, so left as real demand.",
+   "Series start moved to 2016-09-01 per the standing category taxonomy reassignment fix (pre-existing register rule), since this request groups by category_code."
+  ],
+  "message": ""
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "run": 2,
+  "tags": [
+   "held_out",
+   "recode"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0779,
+  "seconds": 58.6,
+  "tool_calls": 8,
+  "spec": {
+   "title": "Ready-to-drink cocktails, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1071100",
+     "1071000",
+     "1070000"
+    ],
+    "label": "Cocktails/RTD (all category codes)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "level_shift",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Monthly totals ramp gradually from March to June 2020 (COVID-era RTD/hard-seltzer demand surge), not an abrupt jump tied to a recoding or renumbering; real demand, left as is.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "High months (2020-04 to 2020-06, similar in 2021) are spread across 8,000-11,000+ order lines with no single implausible line (max single line 1080-3780 bottles); broad-based real demand, not a data error.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn",
+      "series": [
+       "total"
+      ]
+     },
+     "reason": "Store openings and closures over the 10-year window reflect real market entry/exit, not an artifact.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "\"Ready-to-drink cocktails\" maps to all category codes ever named COCKTAILS/RTD: 1071100 (2016-2022), 1071000 (2022-present, its direct successor), and the small legacy code 1070000 (2016-2022). Combining them into one product definition avoids treating the 2022-07-15/07-18 handover from 1071100 to 1071000 as a stoppage; the two codes hand off at matching volume levels, confirming a category recoding rather than the product line ending.",
+   "Series starts 2016-09-01 per the standing category-reassignment register rule, since pre-2016-08-29 category labels do not match later ones.",
+   "The 2020 level shift (roughly 3x higher bottles from April 2020 onward, easing but staying elevated through 2021) is treated as real pandemic-era demand growth for RTD cocktails, not a data artifact, because the increase is a multi-month ramp spread across thousands of order lines rather than a step change tied to any recoding date.",
+   "The one flagged outlier month is real broad-based demand (thousands of lines, no single implausible line), so no capping was applied.",
+   "Store churn (net growth in stores carrying this category) is left as a known driver of trend, not corrected.",
+   "Forecast target is bottles, statewide, one combined series (no series_by), 6-month horizon as requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "hawkeye_johnson",
+  "run": 1,
+  "tags": [
+   "resolution"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0523,
+  "seconds": 40.8,
+  "tool_calls": 7,
+  "spec": {
+   "title": "Hawkeye Vodka, Johnson County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "36301",
+     "36302",
+     "36304",
+     "36305",
+     "36306",
+     "36307",
+     "36308"
+    ],
+    "label": "Hawkeye Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19103"
+    ],
+    "label": "Johnson County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months"
+     },
+     "reason": "The two flagged months are driven by a single large but plausible bulk order line (2700 bottles at a normal per-bottle price), not a data error; real bulk demand is left in.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Johnson County store base grew and some stores closed over the window; this is real store entry/exit, not a data artifact.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Hawkeye Vodka means the plain Hawkeye Vodka product line, including all its bottle sizes (mini 50ml, 200ml, 375ml, 750ml, 750ml PET, 1000ml, 1750ml), item numbers 36301-36308 excluding 36305 duplicate typo (kept, it is the PET variant). Flavored variants (Hawkeye Blue Raspberry Vodka, Hawkeye Bacon Vodka) were excluded as they are distinct flavored products, not sizes of the plain vodka.",
+   "Johnson County means the county (FIPS 19103), not just Iowa City.",
+   "Target is bottle volume (sales_bottles) since the user said 'bottles'.",
+   "No series breakout requested, so one combined total series is forecast.",
+   "Two outlier months and store churn were reviewed: the outliers reflect a real large bulk order, not a data error, and store churn reflects real store openings/closings, so both were left as real demand (flag_only)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "hawkeye_johnson",
+  "run": 2,
+  "tags": [
+   "resolution"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.073,
+  "seconds": 54.8,
+  "tool_calls": 9,
+  "spec": {
+   "title": "Hawkeye Vodka, Johnson County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "36308",
+     "36304",
+     "36306",
+     "36305",
+     "36307",
+     "36302",
+     "36301"
+    ],
+    "label": "Hawkeye Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19103"
+    ],
+    "label": "Johnson County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months"
+     },
+     "reason": "August 2017 and August 2019 spikes are real bulk orders across multiple stores (2017) and one large but consistently-priced Hy-Vee order (2019, 2700 bottles at the same $10.76/bottle price as smaller lines), not data errors; leaving as real demand.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Normal store panel turnover (opens/closes) in Johnson County over the 10-year window; part of real market dynamics, not a data artifact.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Hawkeye Vodka includes all its plain sizes and packaging (item nos 36301,36302,36304,36305,36306,36307,36308: mini, 200ml, 375ml, 750ml, 750ml PET, 1000ml, 1750ml), but excludes distinct flavored line extensions (Hawkeye Blue Raspberry Vodka, Hawkeye Bacon Vodka) since the user asked for 'Hawkeye Vodka', not a flavor.",
+   "Johnson County means the full county (all cities/stores in it), matching the standard county code 19103.",
+   "No per-item or per-city breakout was requested, so this is a single total series (series_by = none).",
+   "The two outlier months (Aug 2017, Aug 2019) reflect real bulk/seasonal ordering by large retailers (Hy-Vee, Walmart, etc.) at normal per-bottle prices, not data errors, so left unmodified.",
+   "Store churn in the county over the 10-year window is normal market entry/exit, not a data artifact, so left unmodified."
+  ],
+  "message": ""
+ },
+ {
+  "id": "ames_whiskey",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "vague"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0721,
+  "seconds": 50.5,
+  "tool_calls": 9,
+  "spec": {
+   "title": "Whiskey bottles, Ames, next month",
+   "target": "sales_bottles",
+   "horizon": 1,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011000",
+     "1011100",
+     "1011200",
+     "1011300",
+     "1011400",
+     "1011600",
+     "1011700",
+     "1011800",
+     "1012000",
+     "1012100",
+     "1012200",
+     "1012400"
+    ],
+    "label": "Whiskey (all types)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "AMES"
+    ],
+    "label": "Ames"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months"
+     },
+     "reason": "Dec 2020 peak (22.8k bottles) is spread across ~1972 lines with the largest single line only 1200 bottles (5% of month); broad based holiday/pandemic demand, not a data error, so left as is.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Normal store openings/closings in Ames over the 10-year window; part of the trend reflects real store count growth, left for the model/backtest to handle.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "\"Whiskey\" is interpreted as all whiskey-type categories (blended, bourbon, single barrel bourbon, tennessee, straight rye, corn, Iowa distillery, canadian, scotch, irish, american, imported whiskies); the WHISKEY LIQUEUR category (1081600) was excluded as it is a liqueur, not a whiskey.",
+   "Ames means the city of Ames only (all 59 stores stored under that one spelling), not Story County as a whole.",
+   "One combined city-wide total series was forecast (no per-store or per-category breakout) since the user asked for a single number.",
+   "Series start is 2016-09-01 per the register's automatic fix for the August 2016 category code reassignment.",
+   "The December 2020 volume spike and ongoing store openings/closures in Ames are treated as real demand patterns, not data errors, and left unmodified for the model to learn from."
+  ],
+  "message": ""
+ },
+ {
+  "id": "ames_whiskey",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "vague"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0671,
+  "seconds": 44.2,
+  "tool_calls": 8,
+  "spec": {
+   "title": "Whiskey bottles, Ames, next month",
+   "target": "sales_bottles",
+   "horizon": 1,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011200",
+     "1011100",
+     "1011600",
+     "1012200",
+     "1012100",
+     "1012400",
+     "1011300",
+     "1011400",
+     "1011700",
+     "1011800",
+     "1011250",
+     "1011000",
+     "1012000"
+    ],
+    "label": "Whiskey (all types, excl. whiskey liqueur)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "AMES"
+    ],
+    "label": "Ames"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "outlier_months"
+     },
+     "reason": "December 2020 peak is spread across ~1972 lines with a plausible max single line of 1200 bottles; consistent with real holiday bulk ordering, not a data error.",
+     "source": "agent"
+    },
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Ames store base has genuinely opened and closed stores over the window; this is real market change, not an artifact.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "Whiskey = all whiskey/whisky spirit categories (bourbon, rye, scotch, canadian, irish, tennessee, corn, blended, single barrel, Iowa distillery, American, imported), excluding WHISKEY LIQUEUR which is a flavored liqueur product, not a straight whiskey.",
+   "Ames = the city of Ames (all stores located there, all recorded spellings), not the wider Story County.",
+   "Question asks for one combined total across all Ames stores next month, not a per-store breakdown, so series_by = none.",
+   "Bottles requested (no mention of dollars or liters), so target = sales_bottles.",
+   "Series start is automatically moved to 2016-09-01 by the approved category_code_reassignment_aug_2016 register rule, since several of the whiskey category codes changed meaning on 2016-08-29.",
+   "The single outlier month (Dec 2020) and the store churn in Ames both reflect real demand patterns (holiday bulk ordering and genuine store openings/closings), so left as-is rather than capped or excluded."
+  ],
+  "message": ""
+ },
+ {
+  "id": "vague_vodka",
+  "run": 1,
+  "tags": [
+   "vague"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0522,
+  "seconds": 39.6,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Vodka, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100",
+     "1031200",
+     "1032100",
+     "1032200",
+     "1031080",
+     "1031090",
+     "1032080",
+     "1031000",
+     "1032000"
+    ],
+    "label": "Vodka (all types)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings/closings are real market dynamics (store entry/exit), not a data artifact; leaving as is per default guidance.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "No place was named, so this is a statewide (Iowa) forecast.",
+   "No horizon was named, so I used 6 months ahead as a reasonable default; can be adjusted to any value from 1-12 months on request.",
+   "\"Vodka\" is treated as all vodka category codes (American, Imported, and their Flavored variants), including legacy/predecessor codes from before the August 2016 category taxonomy reassignment, so the history is complete under every code the category has ever used.",
+   "Target is bottle volume (sales_bottles), the default unit, since the user did not ask for dollars or liters.",
+   "No breakdown was requested (no \"by\" or \"each\"), so this is a single combined statewide vodka series.",
+   "The known category code reassignment of 2016-08-29 is handled automatically by the harness register (series start moved to 2016-09-01).",
+   "Store churn (entries/exits) affects the trend but reflects real market changes, not a data error, so it is flagged for the dashboard but not altered."
+  ],
+  "message": ""
+ },
+ {
+  "id": "vague_vodka",
+  "run": 2,
+  "tags": [
+   "vague"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0464,
+  "seconds": 36.0,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Vodka, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100",
+     "1031200",
+     "1032200",
+     "1032100",
+     "1032080",
+     "1032000",
+     "1031080",
+     "1031000",
+     "1031090"
+    ],
+    "label": "Vodka (all subcategories)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ],
+   "mitigations": [
+    {
+     "rule": "flag_only",
+     "params": {
+      "check": "store_churn"
+     },
+     "reason": "Store openings/closings over the window are ongoing structural market changes (real demand context), not a data artifact; left as is per default guidance.",
+     "source": "agent"
+    }
+   ]
+  },
+  "assumptions": [
+   "\"Vodka\" was interpreted as all vodka category codes found in the data (American, imported, flavored, and the pre-2016 proof-based codes that were later folded into these), so the full history of the category is captured despite the 2016 taxonomy reassignment.",
+   "No place was specified, so the forecast is statewide (all of Iowa).",
+   "No horizon was specified, so a default 6-month forecast horizon was used.",
+   "Target metric defaulted to sales_bottles (bottle volume) since neither dollars nor liters were requested.",
+   "No breakout was requested, so a single combined statewide vodka series is forecast (series_by = none).",
+   "The 2016-08-29 category code reassignment known issue is handled automatically by the harness, which moved the effective series start to 2016-09-01.",
+   "Store churn (net growth in licensed stores over the window) is treated as real demand-driving context, not a data error, and is flagged for the dashboard rather than corrected."
+  ],
+  "message": ""
+ }
+]
