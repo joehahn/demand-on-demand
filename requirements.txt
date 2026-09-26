@@ -10,3 +10,4 @@ skforecast
 plotly
 python-dotenv
 pytest
+holidays

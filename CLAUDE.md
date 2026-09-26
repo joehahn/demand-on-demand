@@ -60,6 +60,23 @@ Iowa Liquor Sales, 2016 onward, one Iowa Data Hub dataset per year:
 
 Forecast targets: `sales_bottles`, `sales_dollars`, `sales_liters`.
 
+Load: `.venv/bin/python load_data.py` (all stages; about 20 minutes, database about 13 GB).
+
+Warehouse (built 2026-09-26, orders 2016-01-04 to 2026-08-31):
+- `raw.liquor_sales`: 27.9M rows, text, exactly as published (agent cannot read it)
+- `sales.invoice_line` (26.4M lines, PK `line_id`), `sales.store` (3,199), `sales.item` (13,443),
+  `sales.vendor` (492), `sales.category` (108)
+- `ref.calendar`, `ref.county_population` (2016-2025), `ref.county_income` (SAIPE, 2016-2024)
+- `meta.column_notes` plus Postgres COMMENTs
+
+Known source issues (found while loading):
+- The 2022, 2025 and 2026 exports repeat ~1.5M rows verbatim across CSV parts (2022 would be
+  inflated ~23%). The loader drops exact duplicates; the portal's own 2026 row count matches.
+- `invoice_id` changed meaning on 2025-09-01: before, one id per line; after, one id per order.
+- `state_bottle_cost` / `state_bottle_retail` are blank for all of 2016 and ~40% of 2025.
+- County is blank on ~4% of 2016 lines; 17 stores have no county in `sales.store`.
+- Category taxonomy was reorganized: ~97 names in 2016 vs 48 in 2025.
+
 ## Ground rules
 
 - The LLM decides *what* to forecast; deterministic code owns the split, metrics,
@@ -72,7 +89,7 @@ Forecast targets: `sales_bottles`, `sales_dollars`, `sales_liters`.
 ## Build phases
 
 0. Setup: repo, env, Postgres, dataset ids (done)
-1. `load_data.py`: one-time pull into a Postgres star schema + ref tables + data dictionary
+1. `load_data.py`: one-time pull into a Postgres star schema + ref tables + data dictionary (done)
 2. `explore_data.py`: dashboard documenting the dirt
 3. Governance harness driven by a hand-written spec (no LLM)
 4. Agent: tools, SQL validator, spec parser, cleaning/feature schemas

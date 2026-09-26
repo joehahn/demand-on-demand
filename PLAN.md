@@ -82,6 +82,11 @@ Phase 0: look up the ids for 2016 through 2024 on catalog.data.gov. Fallback: Bi
 The new portal has normalized casing in 2025, so most of the dirt should be in older years
 (mixed-case cities, null counties, renamed categories). Check this in Phase 2.
 
+**Phase 1 findings (2026-09-26):** the new portal normalized letter case in every year, but the
+data is still messy in other ways: blank counties, 97 vs 48 category names, 100% missing prices
+in 2016, and bottle-size outliers. The state's own export also duplicates ~1.5M rows (2022, 2025,
+2026), which the loader removes. That is a good blog item: "the first bug was in the state's export." 
+
 ## 3. Database: simulating the enterprise
 
 **Decision: Postgres** (local, Homebrew), database `iowa_liquor`.
