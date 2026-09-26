@@ -1,0 +1,12 @@
+anthropic
+psycopg[binary]
+pandas
+pyarrow
+requests
+sqlglot
+scikit-learn
+lightgbm
+skforecast
+plotly
+python-dotenv
+pytest

@@ -1,0 +1,63 @@
+# CLAUDE.md
+**Author:** Joe Hahn  
+**Email:** jmh.datasciences@gmail.com  
+**Date:** 2026-September-26 <br>
+**branch** main
+
+## Project
+
+demand-on-demand: a business user asks in plain English for a forecast
+("monthly forecast of Tito's bottles sold in Polk County for the next 5 months")
+and a single Claude agent (Anthropic SDK, one agent with several tools) finds the
+relevant tables, resolves fuzzy business terms, writes the aggregation SQL, and
+proposes cleaning rules and features. A fixed, deterministic Python harness then
+trains, grid-searches, backtests against a seasonal-naive baseline, and renders an
+HTML dashboard of predictions vs actuals.
+
+Claude Code is the build tool. The Anthropic SDK is the runtime; the app never
+needs Claude Code to run. See `PLAN.md` for the full design.
+
+GitHub: https://github.com/joehahn/demand-on-demand (not yet created)
+
+## Environment
+
+- Python 3.12 venv at `.venv/` (Dropbox-ignored): `.venv/bin/python`
+- Postgres 17 via Homebrew, database `iowa_liquor`: `/opt/homebrew/opt/postgresql@17/bin/psql -d iowa_liquor`
+- Settings in `.env` (copy `.env.example`); never commit `.env`
+- Raw downloads go to `$DOD_DATA_DIR` (default `~/data/demand-on-demand`), never into this Dropbox folder
+
+## Data
+
+Iowa Liquor Sales, 2016 onward, one Iowa Data Hub dataset per year:
+`https://idh-be.iowa.gov/api/v1/datasets/<id>/rows.csv` (returns a zip of CSV parts, latin-1).
+
+| year | id | year | id |
+|---|---|---|---|
+| 2016 | 1253 | 2022 | 1259 |
+| 2017 | 1254 | 2023 | 1260 |
+| 2018 | 1255 | 2024 | 1261 |
+| 2019 | 1256 | 2025 | 1262 |
+| 2020 | 1257 | 2026 YTD | 1263 |
+| 2021 | 1258 | | |
+
+Forecast targets: `sales_bottles`, `sales_dollars`, `sales_liters`.
+
+## Ground rules
+
+- The LLM decides *what* to forecast; deterministic code owns the split, metrics,
+  baseline, cleaning execution, and dashboard. Never let generated code touch those.
+- The agent's DB access is read-only and every SQL statement is validated (sqlglot, SELECT-only).
+- Always write simple code that is well commented and understood at a glance.
+- Writing style for README, blog, and posts: no em dashes in narrative text; describe the
+  agent as a single agent with multiple tools (never "multi-agent"); NL2SQL is not RAG.
+
+## Build phases
+
+0. Setup: repo, env, Postgres, dataset ids (done)
+1. `load_data.py`: one-time pull into a Postgres star schema + ref tables + data dictionary
+2. `explore_data.py`: dashboard documenting the dirt
+3. Governance harness driven by a hand-written spec (no LLM)
+4. Agent: tools, SQL validator, spec parser, cleaning/feature schemas
+5. Golden-set evals, cost and latency logging
+6. Showcase runs to GitHub Pages, README
+7. Blog and LinkedIn series

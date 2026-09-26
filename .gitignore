@@ -1,0 +1,22 @@
+# Claude
+.claude/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+
+# Secrets
+.env
+
+# Data: raw downloads live outside Dropbox (see DOD_DATA_DIR); anything local is regenerated
+data/
+cache/
+out/
+
+# Dashboards published via GitHub Pages live under docs/ and ARE tracked
