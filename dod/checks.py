@@ -130,9 +130,17 @@ def store_checks(spec, start):
 
 def run(spec, panel):
     findings = series_checks(panel.series, panel.labels) + item_checks(spec, panel.start) + store_checks(spec, panel.start)
-    # mark which findings the spec's mitigations already address
+    # mark which findings the spec's mitigations address: fixed by the suggested rule, or reviewed and
+    # deliberately left alone (a flag_only naming the check, e.g. {"check": "level_shift", "series": ["total"]})
     for f in findings:
-        f["addressed"] = any(m.rule == f["suggested_rule"] and
-                             all(m.params.get(k) == v for k, v in f["suggested_params"].items() if k != "date")
-                             for m in spec.mitigations)
+        fixed = f["suggested_rule"] not in (None, "flag_only") and any(m.rule == f["suggested_rule"] and
+                    all(m.params.get(k) == v for k, v in f["suggested_params"].items() if k != "date")
+                    for m in spec.mitigations)
+        reviewed = [m for m in spec.mitigations if m.rule == "flag_only" and m.params.get("check") == f["check"]
+                    and (not m.params.get("series") or f["series"] in m.params["series"])]
+        f["addressed"] = fixed or bool(reviewed)
+        no_effect = f["suggested_rule"] is None  # e.g. a renumbering inside one summed series
+        f["addressed"] = f["addressed"] or no_effect
+        f["resolution"] = "fixed" if fixed else ("reviewed" if reviewed else ("no_effect" if no_effect else "open"))
+        f["review_note"] = reviewed[0].reason if reviewed and not fixed else ""
     return findings

@@ -79,7 +79,7 @@ def fig_change(change, labels):
                              margin=dict(b=70))
 
 
-def build(spec, panel, decisions, findings, res, usage=None):
+def build(spec, panel, decisions, findings, res, usage=None, agent=None):
     plot = Plots()
     wide, fc, bt, ps = panel.series, res["forecast"], res["backtest"], res["per_step"]
     labels = panel.labels
@@ -130,7 +130,9 @@ def build(spec, panel, decisions, findings, res, usage=None):
     if findings:
         fnd = pd.DataFrame(findings)
         fnd["fix"] = fnd.suggested_rule.fillna("none") + fnd.suggested_params.map(lambda p: f" {json.dumps(p)}" if p else "")
-        fnd["status"] = fnd.addressed.map({True: "fixed in this run", False: "reported, not fixed"})
+        fnd["status"] = fnd.resolution.map({"fixed": "fixed in this run", "reviewed": "reviewed, left as is",
+                                            "no_effect": "no effect here", "open": "reported, not fixed"})
+        fnd["message"] = fnd.message + fnd.review_note.map(lambda n: f" Agent: {n}" if n else "")
         fnd_html = table(fnd[["check", "severity", "message", "fix", "status"]])
     else:
         fnd_html = '<p class="note">No slice-level problems found.</p>'
@@ -153,11 +155,27 @@ def build(spec, panel, decisions, findings, res, usage=None):
     tw, uw = res["test_window"], res["tune_window"]
     cost = ""
     if usage:
-        cost = f"<p>Agent: {esc(usage.get('model'))}, {usage.get('input_tokens', 0):,} input and " \
-               f"{usage.get('output_tokens', 0):,} output tokens, about ${usage.get('est_cost_usd', 0):.2f}.</p>"
+        cost = (f"<p>Agent: {esc(usage.get('model'))}, {usage.get('calls', 0)} API calls, "
+                f"{usage.get('input_tokens', 0) + usage.get('cache_read_tokens', 0) + usage.get('cache_write_tokens', 0):,} "
+                f"input tokens ({usage.get('cache_read_tokens', 0):,} read from cache) and {usage.get('output_tokens', 0):,} "
+                f"output tokens, about ${usage.get('est_cost_usd', 0):.2f}, {usage.get('agent_seconds', 0):.0f}s of agent "
+                f"time.</p>")
+    ask_html, trace_html = "", ""
+    if agent:
+        assumptions = "".join(f"<li>{esc(a)}</li>" for a in agent.get("assumptions", []))
+        ask_html = (f'<p class="asked">Asked: &ldquo;{esc(agent["request"])}&rdquo;</p>'
+                    + (f'<p>{esc(agent["summary"])}</p>' if agent.get("summary") else "")
+                    + (f'<p class="note">Assumptions the agent made:</p><ul class="note">{assumptions}</ul>'
+                       if assumptions else ""))
+        tr = pd.DataFrame(agent.get("trace", []))
+        if not tr.empty:
+            trace_html = ("<h2>What the agent did</h2><p>Every tool call, in order. All tools are read-only; the only "
+                          "way the agent affects the result is the spec it submits, which the harness validates.</p>"
+                          + table(tr[["turn", "tool", "input", "result"]]))
 
     body = f"""
 <h1>{esc(spec.title)}</h1>
+{ask_html}
 <p>{esc(spec.product.label)} in {esc(spec.region.label)}: monthly {unit}, {months}. Model: {esc(model_name)},
 {verdict} over a {len(bt.origin.unique())}-origin backtest on {tw[0]:%b %Y} to {tw[1]:%b %Y}, months the model never
 trained on.</p>
@@ -192,6 +210,7 @@ the same tuning window. The test window below was not used for any choice.</p>
 <p>Feature choice, scored on the test window for the record (below 1 beats the baseline):</p>
 {table(abl)}
 
+{trace_html}
 <h2>Exactly what ran</h2>
 {cost}
 <p>Request spec:</p><pre>{esc(spec.model_dump_json(indent=2))}</pre>

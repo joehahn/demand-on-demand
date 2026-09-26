@@ -29,6 +29,7 @@ class Panel:
     data_end: pd.Timestamp
     start: str
     changes: list = field(default_factory=list)   # mitigation log: rule, series, note, before/after
+    actuals: pd.DataFrame = None          # the series before outlier caps: what forecasts are scored against
     labels: dict = field(default_factory=dict)    # series code -> readable label
 
 
@@ -175,6 +176,7 @@ def build(spec, decisions):
                     wide.loc[wide.index < pd.Timestamp(m.params["date"]), c] = np.nan
                     changes.append({"rule": m.rule, "source": m.source, "params": m.params, "note": m.reason,
                                     "series": c, "before": before, "after": wide[c].copy()})
+    actuals = wide.copy()  # caps below change model inputs only, never the numbers the model is judged on
     caps = [d for d in decisions if d["rule"] == "cap_outliers" and d["action"] == "applied"]
     caps += [{"params": m.params, "issue_id": None, "source": m.source} for m in spec.mitigations if m.rule == "cap_outliers"]
     for cap in caps[:1]:  # one cap pass, whichever source asked for it
@@ -199,4 +201,4 @@ def build(spec, decisions):
     for k, v in params.items():  # a readable copy for the dashboard; execution used bind parameters
         display_sql = display_sql.replace(f"%({k})s", repr(v) if not isinstance(v, list) else "ARRAY" + repr(v))
     return Panel(series=wide, exog=exog, future_index=horizon_idx, sql=display_sql.strip(), data_end=end,
-                 start=start, changes=changes, labels=labels_for(spec, wide.columns))
+                 start=start, changes=changes, labels=labels_for(spec, wide.columns), actuals=actuals)

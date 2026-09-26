@@ -127,14 +127,16 @@ def score(bt):
     return (ok.actual - ok.pred).abs().sum() / naive if naive else np.nan
 
 
-def backtest(cfg, wide, exog, origins, steps, features):
+def backtest(cfg, wide, exog, origins, steps, features, actuals=None):
+    """Forecast from each origin; score against `actuals` (uncapped) so input fixes cannot flatter the model."""
+    actuals = wide if actuals is None else actuals
     rows = []
     for origin in origins:
         pred = fit_predict(cfg, wide, exog, origin, steps, features)
         for r in pred.itertuples():
             if r.month in wide.index:
                 rows.append({"origin": origin, "month": r.month, "step": r.step, "series": r.series,
-                             "pred": max(r.pred, 0.0), "actual": wide.at[r.month, r.series],
+                             "pred": max(r.pred, 0.0), "actual": actuals.at[r.month, r.series],
                              "naive": seasonal_naive(wide, r.month, r.series)})
     return pd.DataFrame(rows)
 
@@ -166,7 +168,7 @@ def per_step(bt):
     return pd.DataFrame(rows)
 
 
-def run(wide, exog, future_index, steps, feature_groups, log=print):
+def run(wide, exog, future_index, steps, feature_groups, log=print, actuals=None):
     t0 = time.time()
     tune_origins, test_origins = windows(wide, steps)
     cols = {"calendar": ["month_of_year", "business_days", "holidays"], "population": ["population"]}
@@ -196,7 +198,7 @@ def run(wide, exog, future_index, steps, feature_groups, log=print):
                 log(f"  dropped feature group '{g}': tuning rel MAE {trial_score:.3f} without it")
 
     # 3. honest test: rolling origin over the last months, refit at every origin
-    bt = backtest(best, wide, exog, test_origins, steps, features)
+    bt = backtest(best, wide, exog, test_origins, steps, features, actuals)
     steps_table = per_step(bt)
     log(f"  backtest: {len(test_origins)} origins, test rel MAE {score(bt):.3f}")
 
@@ -207,7 +209,8 @@ def run(wide, exog, future_index, steps, feature_groups, log=print):
             trial, label = [c for c in features if c not in cols[g]], f"without {g}"
         else:
             trial, label = features + cols[g], f"with {g} added back"
-        ablation.append({"features": label, "rel_mae": score(backtest(best, wide, exog, test_origins, steps, trial))})
+        ablation.append({"features": label,
+                         "rel_mae": score(backtest(best, wide, exog, test_origins, steps, trial, actuals))})
     ablation.append({"features": "seasonal naive baseline", "rel_mae": 1.0})
 
     # 5. final model on all history; intervals from the backtest's relative errors at each step

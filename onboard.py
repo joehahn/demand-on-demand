@@ -21,9 +21,9 @@ from pathlib import Path
 import anthropic
 import pandas as pd
 import psycopg
-import sqlglot
 from dotenv import load_dotenv
-from sqlglot import exp
+
+from dod.sqlcheck import check_sql
 
 ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
@@ -33,7 +33,6 @@ OUT = ROOT / "out" / "onboarding"
 MODEL = os.environ.get("DOD_ONBOARD_MODEL", "claude-opus-5")
 PRICES = {"claude-opus-5": (5.00, 25.00), "claude-sonnet-5": (2.00, 10.00),
           "claude-opus-4-8": (5.00, 25.00)}  # $ per 1M input / output tokens
-AGENT_SCHEMAS = {"sales", "ref", "meta"}   # what the read-only agent role can see
 
 # The harness's closed vocabulary of fixes. Claude must pick one; it cannot invent code.
 MITIGATIONS = {
@@ -193,25 +192,6 @@ def draft(evidence):
 
 
 # ---------------------------------------------------------------- verification
-
-def check_sql(sql):
-    """Allow exactly one SELECT whose tables all live in schemas the agent can read."""
-    try:
-        stmts = sqlglot.parse(sql, read="postgres")
-    except sqlglot.errors.ParseError as e:
-        return f"does not parse: {str(e).splitlines()[0]}"
-    if len(stmts) != 1 or not isinstance(stmts[0], (exp.Select, exp.Union, exp.With)) and stmts[0].find(exp.Select) is None:
-        return "not a single SELECT"
-    if any(stmts[0].find(t) for t in (exp.Insert, exp.Update, exp.Delete, exp.Create, exp.Drop, exp.Alter)):
-        return "contains a write"
-    ctes = {c.alias for c in stmts[0].find_all(exp.CTE)}
-    for table in stmts[0].find_all(exp.Table):
-        if table.name in ctes:
-            continue
-        if table.db not in AGENT_SCHEMAS:
-            return f"reads {table.db or '(no schema)'}.{table.name}, outside sales/ref/meta"
-    return None
-
 
 def verify(issues):
     """Run each evidence query as the read-only agent role and record what came back."""
