@@ -95,7 +95,8 @@ Known source issues (found while loading):
 0. Setup: repo, env, Postgres, dataset ids (done)
 1. `load_data.py`: one-time pull into a Postgres star schema + ref tables + data dictionary (done)
 2. `explore_data.py`: dashboard documenting the dirt -> `docs/data_exploration.html` (done; `--fresh` re-queries)
-3. Governance harness driven by a hand-written spec (no LLM)
+2b. `onboard.py`: Claude drafts meta.known_issues from profiling; human approves (demo Act 1)
+3. Governance harness driven by a hand-written spec (no LLM), incl. slice profiling + mitigation rules
 4. Agent: tools, SQL validator, spec parser, cleaning/feature schemas
 5. Golden-set evals, cost and latency logging
 6. Showcase runs to GitHub Pages, README

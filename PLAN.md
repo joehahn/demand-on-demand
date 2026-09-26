@@ -149,6 +149,56 @@ Key decisions:
 - **Refusals:** horizon too long for the available history, objects not in the data, or too little history to backtest.
 - **Caching:** the panel and the fitted model are keyed by spec minus horizon (reused from FDE03), so "extend to 8 months" is instant.
 
+## 4b. Data quality: warned in advance AND spotted live
+
+The demo runs in three acts, and data quality is the thread through all of them.
+
+**Act 1: Onboarding (one time, before anyone asks for a forecast).**
+`explore_data.py` profiles the warehouse (docs/data_exploration.html). Then `onboard.py` hands the
+profiling results to Claude, which drafts entries for a **known-issues register**, `meta.known_issues`.
+A human reviews and approves each one. This is the AI-assisted version of what a good data team
+does when it adopts a new source. Each entry has:
+`issue_id, title, scope (table/column/codes/date range), evidence (the SQL that shows it), impact,
+mitigation (a named rule from the harness's closed vocabulary), status (approved | proposed)`.
+
+The register deliberately holds **warehouse-level** knowledge only, the things a data team would know:
+- state export duplicated rows (already fixed in ETL, recorded for lineage)
+- category codes reassigned on 2016-08-29 → `min_date` 2016-09-01 for category-level series
+- bottle prices blank before 2025-09 → `derive_price` = dollars / bottles
+- invoice_id meaning changed 2025-09-01 → never count orders by invoice_id
+- zero-bottle / zero-dollar lines since 2022 → `exclude_zero_lines`
+
+**Act 2: A forecast request.** The agent reads the register first (it's in the cached system prompt),
+resolves entities, pulls the slice, and then runs a **slice-level profiling pass**: deterministic checks
+computed by the harness (level shifts, gaps, zero months, outlier months, entities starting or stopping
+mid-history, successor items). Claude interprets them and proposes mitigations from the same closed
+vocabulary. The harness applies them and logs every one. It surfaces what no register covers, because
+it is specific to *this* request. Real examples already found in the data:
+- Tito's 50 ml mini was renumbered on 2020-07-27/31 (item 38180 → 38194). Without stitching, a
+  "Tito's minis" series shows a false collapse. → `stitch_successor`
+- stores opening or closing inside the requested county → `per_store_active` or a note
+- a category's sales jump the day a code was reassigned (visible even without the register)
+
+The dashboard has a **Data issues** panel with two lists: "from the register" and "found in this run".
+Each entry shows the before/after effect on the series, so a reader can see the AI's catch and what it
+changed.
+
+**Act 3: The learning loop.** Anything found in Act 2 that looks warehouse-wide is written as a
+*proposed* register entry to `out/proposed_issues.jsonl`, never straight into the database. The agent's
+role is read-only. A human approves it into `meta.known_issues` with `onboard.py --review`. That is
+the governance story: the AI learns, and a person signs off.
+
+**Keeping the "AI spotted it" claim honest:** the evals include golden requests whose slices contain
+known problems that are *not* in the register (the Tito's renumbering, the 2025-07 category-name
+shortening, MT/MOUNT PLEASANT). We score detection recall and report it. The test suite also injects
+synthetic faults into copies of slices (a duplicated month, a spike, a gap). The public demo itself
+runs on real data only.
+
+**Start year: keep 2016 in the warehouse.** Companies don't delete history, and the taxonomy break is
+one of the best demo moments: the agent says "codes changed meaning on 2016-08-29, so this category
+series starts 2016-09." That costs 8 months out of 128. Item- and store-level series are unaffected
+(item numbers didn't change) and keep all of 2016.
+
 ## 5. Interfaces
 
 - CLI: `python -m fod "monthly forecast of Tito's bottles sold in Polk County, next 5 months"`
