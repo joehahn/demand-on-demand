@@ -73,9 +73,13 @@ Known source issues (found while loading):
 - The 2022, 2025 and 2026 exports repeat ~1.5M rows verbatim across CSV parts (2022 would be
   inflated ~23%). The loader drops exact duplicates; the portal's own 2026 row count matches.
 - `invoice_id` changed meaning on 2025-09-01: before, one id per line; after, one id per order.
-- `state_bottle_cost` / `state_bottle_retail` are blank for all of 2016 and ~40% of 2025.
-- County is blank on ~4% of 2016 lines; 17 stores have no county in `sales.store`.
-- Category taxonomy was reorganized: ~97 names in 2016 vs 48 in 2025.
+  Prices are filled from the same date, so the state likely switched source systems.
+- `state_bottle_cost` / `state_bottle_retail` are blank on every line 2016-2024 (filled from 2025-09).
+- County is blank on ~4% of 2016 lines; 18 stores have no county in `sales.store`; 17 stores changed
+  county over time (462 changed name, 272 changed address).
+- Category taxonomy reorganized ~2016-08-29: ~96 names became ~47 and many codes were reassigned to
+  different categories (e.g. 1011400 Bottled in Bond Bourbon -> Tennessee Whiskies). Names shortened 2025-07.
+- Since 2022, 1-4k lines/year have zero bottles and zero dollars (likely cancelled lines).
 
 ## Ground rules
 
@@ -90,7 +94,7 @@ Known source issues (found while loading):
 
 0. Setup: repo, env, Postgres, dataset ids (done)
 1. `load_data.py`: one-time pull into a Postgres star schema + ref tables + data dictionary (done)
-2. `explore_data.py`: dashboard documenting the dirt
+2. `explore_data.py`: dashboard documenting the dirt -> `docs/data_exploration.html` (done; `--fresh` re-queries)
 3. Governance harness driven by a hand-written spec (no LLM)
 4. Agent: tools, SQL validator, spec parser, cleaning/feature schemas
 5. Golden-set evals, cost and latency logging
