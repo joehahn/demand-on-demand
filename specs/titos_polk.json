@@ -1,0 +1,9 @@
+{
+  "title": "Tito's vodka bottles, Polk County, next 5 months",
+  "target": "sales_bottles",
+  "horizon": 5,
+  "product": {"kind": "item", "codes": ["38174","38176","38177","38178","38179","38180","38185","38194","38449","102747","938180"],
+              "label": "Tito's Handmade Vodka (all sizes)"},
+  "region": {"kind": "county", "codes": ["19153"], "label": "Polk County"},
+  "series_by": "none"
+}

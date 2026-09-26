@@ -1,0 +1,16 @@
+{
+  "title": "Tito's minis by item, statewide, next 6 months",
+  "target": "sales_bottles",
+  "horizon": 6,
+  "product": {"kind": "item", "codes": ["38180","38194","38185","938180"], "label": "Tito's Handmade Vodka 50 ml"},
+  "region": {"kind": "statewide", "label": "Iowa"},
+  "series_by": "item",
+  "mitigations": [
+    {"rule": "stitch_successor", "params": {"column": "item_no", "from": "38180", "to": "38194"},
+     "reason": "Same 50 ml product renumbered in July 2020"},
+    {"rule": "stitch_successor", "params": {"column": "item_no", "from": "938180", "to": "38194"},
+     "reason": "Temporary item number used for six weeks in July and August 2020"},
+    {"rule": "min_date", "params": {"date": "2024-04-01", "series": ["38185"]},
+     "reason": "4-pack launched April 2024; earlier zeros are not demand"}
+  ]
+}

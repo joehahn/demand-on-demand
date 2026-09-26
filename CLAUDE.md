@@ -96,7 +96,16 @@ Known source issues (found while loading):
 1. `load_data.py`: one-time pull into a Postgres star schema + ref tables + data dictionary (done)
 2. `explore_data.py`: dashboard documenting the dirt -> `docs/data_exploration.html` (done; `--fresh` re-queries)
 2b. `onboard.py`: Claude drafts meta.known_issues from profiling; evidence SQL re-run as dod_agent; human approves with `--approve` (demo Act 1). Model: DOD_ONBOARD_MODEL, default claude-opus-5 with server-side fallbacks.
-3. Governance harness driven by a hand-written spec (no LLM), incl. slice profiling + mitigation rules
+3. Governance harness driven by a hand-written spec (no LLM), incl. slice profiling + mitigation rules (done)
+   `python -m dod.run specs/<name>.json` -> out/<slug>/dashboard.html, forecast.csv, backtest.csv, summary.json.
+   Package `dod/`: spec (request schema), register (which approved issues apply), panel (SQL built from the
+   spec, never by the LLM; before/after of every fix), checks (slice-level findings with suggested fixes),
+   model (48-config grid of lightgbm/ridge x level/diff/yoy targets on a 24-month tuning window, seasonal
+   naive as a candidate, feature-group selection on the tuning window, 24-month rolling-origin test,
+   80% ranges from backtest errors), dashboard, viz (shared styling, also used by explore_data.py).
+   First results (test error relative to seasonal naive): Tito's Polk 0.97, Tito's minis by item 1.01,
+   American vodka top-5 counties 1.07. These series are very regular since 2023, so last year is a
+   strong baseline; report that honestly.
 4. Agent: tools, SQL validator, spec parser, cleaning/feature schemas
 5. Golden-set evals, cost and latency logging
 6. Showcase runs to GitHub Pages, README
