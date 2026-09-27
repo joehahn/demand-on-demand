@@ -135,7 +135,7 @@ QUERIES = {
         SELECT date_trunc('month', first_order_on)::date AS month, count(*) AS opened
         FROM sales.store GROUP BY 1 ORDER BY 1""",
 
-    # order lines per day as published, and how many of them are distinct (the rest are export duplicates)
+    # records per day as published, and how many of them are distinct (the rest are export duplicates)
     "daily": """
         WITH published AS (SELECT ordered_on, count(*) AS n FROM raw.liquor_sales GROUP BY 1),
              distinct_rows AS (SELECT ordered_on, count(*) AS n
@@ -205,7 +205,7 @@ def load_all(fresh):
 # ---------------------------------------------------------------- figures
 
 def volume(d):
-    """Daily published vs distinct lines, with the duplicates split out."""
+    """Daily published vs distinct records, with the duplicates split out."""
     v = d["daily"].copy()
     v["day"] = pd.to_datetime(v.day)
     # every calendar day, zero when no orders were placed, so a step line drops to zero on weekends and holidays
@@ -224,7 +224,7 @@ def stacked(x, v, title, shape="hv", height=340, outline=True):
                               fillcolor="rgba(42,120,214,0.55)" if outline else "rgba(42,120,214,0.85)", **common),
                    go.Scatter(x=x, y=v.duplicates, name="Duplicate records (removed)", line_color=ORANGE,
                               fillcolor="rgba(235,104,52,0.55)" if outline else "rgba(235,104,52,0.9)", **common)])
-    f = style(f, title, "order lines", height=height, legend=True)
+    f = style(f, title, "records", height=height, legend=True)
     return f.update_layout(legend_traceorder="normal")
 
 
@@ -238,20 +238,18 @@ def with_end(v, freq):
 def fig_daily(d):
     v = with_end(volume(d).set_index("day")[["distinct_rows", "duplicates"]], "D")
     # ~3,900 days that drop to zero every weekend: filled areas without outlines, or the strokes hide the fill
-    f = stacked(v.index, v, "Order lines per day", height=380, outline=False)
-    f.update_xaxes(rangeslider=dict(visible=True, thickness=0.06))
-    return f
+    return stacked(v.index, v, "Records per day", height=380, outline=False)
 
 
 def fig_monthly_lines(d):
     v = volume(d).set_index("day").resample("MS")[["distinct_rows", "duplicates"]].sum()
-    return stacked(with_end(v, "MS").index, with_end(v, "MS"), "Order lines per month")
+    return stacked(with_end(v, "MS").index, with_end(v, "MS"), "Records per month")
 
 
 def fig_yearly_lines(d):
     v = volume(d)
     v = v.groupby(v.day.dt.year)[["distinct_rows", "duplicates"]].sum()
-    f = stacked(v.index.astype(str), v, "Order lines per year (2026 through August)", shape="hvh")
+    f = stacked(v.index.astype(str), v, "Records per year (2026 through August)", shape="hvh")
     f.update_xaxes(type="category")
     return f
 
@@ -260,7 +258,17 @@ def fig_weekday(d):
     v = volume(d)
     names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     w = v.groupby(v.day.dt.dayofweek)[["distinct_rows", "duplicates"]].sum().reindex(range(7), fill_value=0)
-    f = stacked([names[i] for i in w.index], w, "Order lines by day of week", shape="hvh")
+    f = stacked([names[i] for i in w.index], w, "Records by day of week", shape="hvh")
+    f.update_xaxes(type="category")
+    return f
+
+
+def fig_month_of_year(d):
+    v = volume(d)
+    v = v[v.day.dt.year <= 2025]  # complete years only, or Jan-Aug would count one more year than Sep-Dec
+    names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    m = v.groupby(v.day.dt.month)[["distinct_rows", "duplicates"]].sum().reindex(range(1, 13), fill_value=0)
+    f = stacked([names[i - 1] for i in m.index], m, "Records by month of year, 2016 to 2025", shape="hvh")
     f.update_xaxes(type="category")
     return f
 
@@ -271,15 +279,15 @@ def fig_line_sizes(d):
     labels = ["1", "2", "3-6", "7-12", "13-24", "25-48", "49-120", "121-600", "over 600"]
     bins = [(1, 1), (2, 2), (3, 6), (7, 12), (13, 24), (25, 48), (49, 120), (121, 600), (601, 10 ** 9)]
     counts = [b[(b.bottles >= lo) & (b.bottles <= hi)].lines.sum() for lo, hi in bins]
-    f = go.Figure(go.Bar(x=labels, y=counts, marker_color=BLUE, hovertemplate="%{x} bottles: %{y:,} lines<extra></extra>"))
-    f.update_xaxes(type="category", title="bottles on the order line")
-    return style(f, "Order size: bottles per order line", "order lines").update_layout(hovermode="closest")
+    f = go.Figure(go.Bar(x=labels, y=counts, marker_color=BLUE, hovertemplate="%{x} bottles: %{y:,} records<extra></extra>"))
+    f.update_xaxes(type="category", title="bottles on the record")
+    return style(f, "Order size: bottles per record", "records").update_layout(hovermode="closest")
 
 
 def fig_top(df, title):
     t = df.sort_values("dollars")
     f = go.Figure(go.Bar(x=t.dollars, y=t.name.str.title(), orientation="h", marker_color=BLUE,
-                         customdata=t.lines, hovertemplate="%{y}: $%{x:,.0f}, %{customdata:,} lines<extra></extra>"))
+                         customdata=t.lines, hovertemplate="%{y}: $%{x:,.0f}, %{customdata:,} records<extra></extra>"))
     return style(f, title, height=460).update_layout(hovermode="closest", margin=dict(l=260))
 
 
@@ -305,7 +313,7 @@ def fig_dupes(d):
     f = go.Figure([line(x.month, x.published, "Rows as published", ORANGE),
                    line(x.month, x.distinct_rows, "Distinct rows (loaded)", BLUE)])
     f.update_traces(hovertemplate="%{y:,.0f}")
-    return style(f, "The state's export repeats rows: published vs distinct lines per month", "lines", legend=True)
+    return style(f, "The state's export repeats rows: published vs distinct records per month", "records", legend=True)
 
 
 def fig_blanks(d):
@@ -349,9 +357,9 @@ def fig_bottle_sizes(d):
     b = d["bottle_sizes"].dropna()
     top = b.nlargest(15, "lines").sort_values("bottle_volume_ml")
     f = go.Figure(go.Bar(x=top.bottle_volume_ml.astype(int).astype(str) + " ml", y=top.lines, marker_color=BLUE,
-                         hovertemplate="%{x}: %{y:,} lines<extra></extra>"))
+                         hovertemplate="%{x}: %{y:,} records<extra></extra>"))
     f.update_xaxes(type="category")
-    return style(f, "The 15 most common bottle sizes", "lines", height=320).update_layout(hovermode="closest")
+    return style(f, "The 15 most common bottle sizes", "records", height=320).update_layout(hovermode="closest")
 
 
 def fig_counties(d):
@@ -387,7 +395,7 @@ def build_page(d):
     plot = Plots()  # plotly.js loaded once, from the CDN
 
     tiles = [
-        (f"{rc['sales.invoice_line'] / 1e6:.1f}M", "order lines, 2016 to Aug 2026"),
+        (f"{rc['sales.invoice_line'] / 1e6:.1f}M", "records, 2016 to Aug 2026"),
         (f"${m.dollars.sum() / 1e9:.2f}B", "wholesale sales"),
         (f"{rc['sales.store']:,}", "stores"),
         (f"{rc['sales.item']:,}", "products"),
@@ -418,24 +426,24 @@ how each one was fixed in the warehouse, once, so no forecast has to deal with i
 <div class="tiles">{tiles_html}</div>
 
 <h2>1. How many orders, and when</h2>
-<p>Every chart here counts order lines as the state published them, drawn as steps. Orange is the share that turned out to be exact
-duplicates in the export (section 3), which the loader removes. Orders are placed on business days only, so weekends
-are nearly empty, and volume grows through 2021 before leveling off.</p>
+<p>Every chart here counts records as the state published them, drawn as steps. Each record is one line of a
+wholesale order that an Iowa store placed with the state, which sells it the liquor; these are not retail sales. Orange is
+the share that turned out to be exact duplicates in the export (section 3), which the loader removes. Stores place
+their orders on business days, so weekends are nearly empty even though stores sell to customers then.</p>
 {plot(fig_daily(d))}
 {plot(fig_monthly_lines(d))}
 {plot(fig_weekday(d))}
+{plot(fig_month_of_year(d))}
 {plot(fig_yearly_lines(d))}
 {fixed('duplicates', 'how the duplicate rows were found and removed')}
 
 <h2>2. Demand: trend and seasonality</h2>
-<p>Strong December peaks every year, a step up during 2020, and a plateau since 2023. This is the
-signal the forecaster has to learn.</p>
 {"".join(plot(f) for f in fig_demand(d))}
 
 <h2>3. The state's own export duplicates rows</h2>
 <p>The 2022, 2025 and 2026 downloads repeat {dup_rows:,} rows verbatim across CSV parts. Left in, 2022
 sales would be inflated by roughly 23%. The portal's own 2026 row count matches the distinct count, so the
-loader drops exact duplicates. This was the first bug, and it was upstream of us.</p>
+loader drops exact duplicates.</p>
 {plot(fig_dupes(d))}
 {fixed('duplicates', 'duplicate rows: the issue and the fix')}
 
@@ -453,7 +461,7 @@ until 2016-08-25 and "Tennessee Whiskies" after. In July 2025 several names were
 join of sales to the category table labels old sales with today's name, so an agent asked for "Tennessee
 whiskey since 2016" has to notice this. The first 24 reassigned codes:</p>
 {plot(fig_categories(d))}
-{table(cat.head(24), {"lines": comma})}
+{table(cat.head(24).rename(columns={"lines": "records"}), {"records": comma})}
 {fixed('categories', 'category codes: history restated in today\'s taxonomy')}
 
 <h2>5b. A category that looks discontinued was recoded</h2>
@@ -467,7 +475,7 @@ same name, same products. A forecast of "ready-to-drink cocktails" built on eith
 renumbered in July 2020 (38180 to 38194, with a temporary 938180 in between). Across the whole catalog,
 {len(d["renumbered"])} items were renumbered like this, carrying {d["renumbered"].old_bottles.sum() / 1e6:.1f}M bottles of
 history. The largest:</p>
-{table(titos, {"lines": comma, "bottles": comma})}
+{table(titos.rename(columns={"lines": "records"}), {"records": comma, "bottles": comma})}
 {table(d["renumbered"].head(12).astype({"old_last_order": str, "new_first_order": str}), {"old_bottles": comma})}
 {fixed('renumbering', 'renumbered items joined into product families')}
 
@@ -481,7 +489,7 @@ time. {rc['stores with no county']} stores have no county at all. City spellings
 {plot(fig_store_openings(d))}
 
 <h2>8. Outliers and odd lines</h2>
-<p>{len(bs):,} distinct bottle sizes appear, but the 15 most common cover {top15 / bs.lines.sum():.1%} of lines.
+<p>{len(bs):,} distinct bottle sizes appear, but the 15 most common cover {top15 / bs.lines.sum():.1%} of records.
 The tail runs from {int(bs.bottle_volume_ml.min())} ml to {int(bs.bottle_volume_ml.max()):,} ml.</p>
 {plot(fig_bottle_sizes(d))}
 {table(sus, {"zero_dollar": comma, "zero_bottles": comma, "huge_bottles": comma})}
@@ -503,7 +511,7 @@ new line_id.</p>
 {fixed('census', 'Census data lag: latest year carried forward')}
 
 <h2>11. Who orders what</h2>
-<p>Most order lines are small: a case or less. The largest categories, vendors and stores by wholesale dollars,
+<p>Most records are small: a case or less. The largest categories, vendors and stores by wholesale dollars,
 2016 to August 2026, from the clean warehouse (categories in today's taxonomy):</p>
 {plot(fig_line_sizes(d))}
 {plot(fig_top(d["top_categories"], "Top 15 categories by sales dollars"))}
