@@ -45,8 +45,9 @@ def run(spec, out_root=OUT, usage=None, agent=None, narrate=None, log=print):
     t0 = time.time()
     log(f"== {spec.title}")
     p = panel.build(spec)
-    log(f"  panel: {p.series.shape[1]} series x {p.series.shape[0]} months from {p.start}")
-    res = model.run(p.series, p.exog, p.future_index, spec.horizon, spec.features, log=log)
+    log(f"  panel: {p.series.shape[1]} series x {p.series.shape[0]} months from {p.start}, "
+        f"{0 if p.pool is None else p.pool[0].shape[1]} companion series ({time.time() - t0:.0f}s)")
+    res = model.run(p.series, p.exog, p.future_index, spec.horizon, spec.features, log=log, pool=p.pool)
     facts = facts_for(spec, p, res)
     if narrate:
         agent["summary"] = narrate(facts)

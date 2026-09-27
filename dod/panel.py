@@ -10,7 +10,9 @@ from . import db
 
 # How each spec kind maps to SQL. Kinds and targets come from Literal types in spec.py, so these fragments never
 # contain user text; codes travel as bind parameters.
-PRODUCT_FILTER = {"item": "i.family_item_no = ANY(%(product)s)", "category": "i.category_current = ANY(%(product)s)",
+# Products resolve to their member item numbers first (member_items), so every query filters on the indexed
+# l.item_no; filtering through the item join would scan all 26M order lines.
+PRODUCT_FILTER = {"item": "l.item_no = ANY(%(items)s)", "category": "l.item_no = ANY(%(items)s)",
                   "vendor": "l.vendor_no = ANY(%(product)s)", "all": "TRUE"}
 REGION_FILTER = {"county": "s.county_fips = ANY(%(region)s)", "city": "s.city = ANY(%(region)s)",
                  "store": "l.store_no = ANY(%(region)s)", "statewide": "TRUE"}
@@ -27,10 +29,20 @@ class Panel:
     data_end: pd.Timestamp
     start: str
     labels: dict = field(default_factory=dict)    # series code -> readable label
+    pool: tuple = None                            # (companion series, their exog): same product in other counties
 
 
-def build_sql(spec):
-    params = {"product": spec.product.codes, "region": spec.region.codes, "start": spec.start}
+def member_items(spec):
+    """Item numbers behind a product scope: every member of the named families, or every item in the categories."""
+    col = {"item": "family_item_no", "category": "category_current"}.get(spec.product.kind)
+    if col is None:
+        return []
+    return list(db.query(f"SELECT item_no FROM sales.item WHERE {col} = ANY(%s)", (spec.product.codes,)).item_no)
+
+
+def build_sql(spec, items=None):
+    params = {"product": spec.product.codes, "region": spec.region.codes, "start": spec.start,
+              "items": items if items is not None else member_items(spec)}
     sql = f"""
 SELECT date_trunc('month', l.ordered_on)::date AS month,
        {SERIES_EXPR[spec.series_by]} AS series,
@@ -113,9 +125,29 @@ def population_features(spec, index, series_codes):
     return {code: total for code in series_codes}
 
 
+N_COMPANIONS = 15
+
+
+def companions(spec, start, last_month, exclude, items):
+    """The same product in the busiest other counties, for the model to learn shared patterns from."""
+    sql = f"""
+SELECT date_trunc('month', l.ordered_on)::date AS month, 'pool: ' || s.county_name AS series, sum(l.{spec.target}) AS value
+FROM sales.invoice_line l JOIN sales.item i USING (item_no) JOIN sales.store s USING (store_no)
+WHERE {PRODUCT_FILTER[spec.product.kind]} AND l.ordered_on >= %(start)s AND s.county_name IS NOT NULL
+GROUP BY 1, 2"""
+    df = db.query(sql, {"product": spec.product.codes, "items": items, "start": start})
+    if df.empty:
+        return None
+    recent = df[pd.to_datetime(df.month) >= last_month - pd.DateOffset(years=2)].groupby("series").value.sum()
+    keep = [c for c in recent.sort_values(ascending=False).index if c.removeprefix("pool: ") not in exclude][:N_COMPANIONS]
+    wide = to_wide(df[df.series.isin(keep)], start, last_month)
+    return wide if len(wide.columns) else None
+
+
 def build(spec):
     end, last_month = data_end()
-    sql, params = build_sql(spec)
+    items = member_items(spec)
+    sql, params = build_sql(spec, items)
     raw = db.query(sql, params)
     if raw.empty:
         raise ValueError("No sales match this product and region.")
@@ -127,8 +159,30 @@ def build(spec):
     pops = population_features(spec, full_idx, wide.columns) if "population" in spec.features else {}
     exog = {c: pd.concat([cal, pops[c]], axis=1) if c in pops else cal.copy() for c in wide}
 
+    # companions: skip the counties that ARE the requested series (a single county, or a county breakout)
+    exclude = set(wide.columns) if spec.series_by == "county" else set()
+    if spec.region.kind == "county" and spec.series_by == "none" and len(spec.region.codes) == 1:
+        exclude |= set(db.query("SELECT DISTINCT county_name FROM sales.store WHERE county_fips = %s",
+                                (spec.region.codes[0],)).county_name)
+    comp = companions(spec, spec.start, last_month, exclude, items)
+    pool = None
+    if comp is not None:
+        comp_exog = {}
+        if "population" in spec.features:
+            pop = db.query("SELECT s.county_name, p.year, sum(p.population) AS population FROM ref.county_population p "
+                           "JOIN (SELECT DISTINCT county_fips, county_name FROM sales.store) s USING (county_fips) "
+                           "GROUP BY 1, 2")
+        for c in comp:
+            ex = cal.copy()
+            if "population" in spec.features:
+                by_year = pop[pop.county_name == c.removeprefix("pool: ")].set_index("year").population
+                ex["population"] = pd.Series(full_idx.year, index=full_idx).map(by_year).astype(float)
+            comp_exog[c] = ex
+        pool = (comp, comp_exog)
+
     display_sql = sql
+    params["items"] = params["items"] if len(params["items"]) <= 30 else params["items"][:30] + ["..."]
     for k, v in params.items():  # a readable copy for the dashboard; execution used bind parameters
         display_sql = display_sql.replace(f"%({k})s", repr(v) if not isinstance(v, list) else "ARRAY" + repr(v))
     return Panel(series=wide, exog=exog, future_index=horizon_idx, sql=display_sql.strip(), data_end=end,
-                 start=spec.start, labels=labels_for(spec, wide.columns))
+                 start=spec.start, labels=labels_for(spec, wide.columns), pool=pool)

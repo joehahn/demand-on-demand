@@ -20,3 +20,4 @@ cache/
 out/
 
 # Dashboards published via GitHub Pages live under docs/ and ARE tracked
+benchmark/out/
