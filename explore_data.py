@@ -421,8 +421,9 @@ def build_page(d):
 <p>Every wholesale liquor order placed by an Iowa retailer since 2016, loaded into a local Postgres
 warehouse. This page is the first step of <a href="https://github.com/joehahn/demand-on-demand">demand-on-demand</a>:
 before an AI agent can answer "forecast Tito's in Polk County for the next 5 months," someone has to
-know what traps are in the data. These are the ones we found; <a href="data_fixes.html">the data fixes page</a> shows
-how each one was fixed in the warehouse, once, so no forecast has to deal with it.</p>
+know what traps are in the data. Claude found these while loading and profiling the data, and proposed a fix for each;
+a person reviewed and approved every fix before it went into the warehouse. <a href="data_fixes.html">The data fixes page</a>
+shows how each one was fixed there, once, so no forecast has to deal with it.</p>
 <div class="tiles">{tiles_html}</div>
 
 <h2>1. How many orders, and when</h2>
