@@ -135,6 +135,30 @@ QUERIES = {
         SELECT date_trunc('month', first_order_on)::date AS month, count(*) AS opened
         FROM sales.store GROUP BY 1 ORDER BY 1""",
 
+    # order lines per day as published, and how many of them are distinct (the rest are export duplicates)
+    "daily": """
+        WITH published AS (SELECT ordered_on, count(*) AS n FROM raw.liquor_sales GROUP BY 1),
+             distinct_rows AS (SELECT ordered_on, count(*) AS n
+                               FROM (SELECT DISTINCT invoice_id, ordered_on, store_no, store_name, store_address, store_city, store_zip_code, county_fips_code, county_name, category_code, category_name, vendor_number, vendor_name, item_no, im_desc, pack, bottle_volume_ml, state_bottle_cost, state_bottle_retail, sales_bottles, sales_dollars, sales_liters, sales_gallons FROM raw.liquor_sales) d GROUP BY 1)
+        SELECT p.ordered_on::date AS day, p.n AS published, d.n AS distinct_rows
+        FROM published p JOIN distinct_rows d USING (ordered_on) ORDER BY 1""",
+
+    "line_sizes": """
+        SELECT sales_bottles AS bottles, count(*) AS lines FROM sales.invoice_line GROUP BY 1 ORDER BY 1""",
+
+    "top_categories": """
+        SELECT c.category_name AS name, sum(l.sales_dollars) AS dollars, count(*) AS lines
+        FROM sales.invoice_line l JOIN sales.item i USING (item_no) JOIN sales.category c ON c.category_code = i.category_current
+        GROUP BY 1 ORDER BY 2 DESC LIMIT 15""",
+
+    "top_vendors": """
+        SELECT v.vendor_name AS name, sum(l.sales_dollars) AS dollars, count(*) AS lines
+        FROM sales.invoice_line l JOIN sales.vendor v USING (vendor_no) GROUP BY 1 ORDER BY 2 DESC LIMIT 15""",
+
+    "top_stores": """
+        SELECT s.store_name || ' (' || s.city || ')' AS name, sum(l.sales_dollars) AS dollars, count(*) AS lines
+        FROM sales.invoice_line l JOIN sales.store s USING (store_no) GROUP BY 1 ORDER BY 2 DESC LIMIT 15""",
+
     "row_counts": """
         SELECT 'raw.liquor_sales' AS tbl, count(*) AS n FROM raw.liquor_sales
         UNION ALL SELECT 'sales.invoice_line', count(*) FROM sales.invoice_line
@@ -179,6 +203,90 @@ def load_all(fresh):
 
 
 # ---------------------------------------------------------------- figures
+
+def volume(d):
+    """Daily published vs distinct lines, with the duplicates split out."""
+    v = d["daily"].copy()
+    v["day"] = pd.to_datetime(v.day)
+    # every calendar day, zero when no orders were placed, so a step line drops to zero on weekends and holidays
+    v = v.set_index("day").reindex(pd.date_range(v.day.min(), v.day.max(), freq="D"), fill_value=0)
+    v = v.rename_axis("day").reset_index()
+    v["duplicates"] = v.published - v.distinct_rows
+    return v
+
+
+def stacked(x, v, title, shape="hv", height=340, outline=True):
+    """Step-style stacked areas: distinct records in blue, export duplicates stacked on top in orange.
+    shape "hv" steps at each date (a period starts at its date); "hvh" centers each step on a category label."""
+    common = dict(mode="lines", line=dict(shape=shape, width=1.5 if outline else 0), stackgroup="lines",
+                  hovertemplate="%{y:,.0f}")
+    f = go.Figure([go.Scatter(x=x, y=v.distinct_rows, name="Distinct records", line_color=BLUE,
+                              fillcolor="rgba(42,120,214,0.55)" if outline else "rgba(42,120,214,0.85)", **common),
+                   go.Scatter(x=x, y=v.duplicates, name="Duplicate records (removed)", line_color=ORANGE,
+                              fillcolor="rgba(235,104,52,0.55)" if outline else "rgba(235,104,52,0.9)", **common)])
+    f = style(f, title, "order lines", height=height, legend=True)
+    return f.update_layout(legend_traceorder="normal")
+
+
+def with_end(v, freq):
+    """Repeat the last period one step later, so a step line gives the final period its full width."""
+    last = v.iloc[[-1]].copy()
+    last.index = last.index + pd.tseries.frequencies.to_offset(freq)
+    return pd.concat([v, last])
+
+
+def fig_daily(d):
+    v = with_end(volume(d).set_index("day")[["distinct_rows", "duplicates"]], "D")
+    # ~3,900 days that drop to zero every weekend: filled areas without outlines, or the strokes hide the fill
+    f = stacked(v.index, v, "Order lines per day", height=380, outline=False)
+    f.update_xaxes(rangeslider=dict(visible=True, thickness=0.06))
+    return f
+
+
+def fig_monthly_lines(d):
+    v = volume(d).set_index("day").resample("MS")[["distinct_rows", "duplicates"]].sum()
+    return stacked(with_end(v, "MS").index, with_end(v, "MS"), "Order lines per month")
+
+
+def fig_yearly_lines(d):
+    v = volume(d)
+    v = v.groupby(v.day.dt.year)[["distinct_rows", "duplicates"]].sum()
+    f = stacked(v.index.astype(str), v, "Order lines per year (2026 through August)", shape="hvh")
+    f.update_xaxes(type="category")
+    return f
+
+
+def fig_weekday(d):
+    v = volume(d)
+    names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    w = v.groupby(v.day.dt.dayofweek)[["distinct_rows", "duplicates"]].sum().reindex(range(7), fill_value=0)
+    f = stacked([names[i] for i in w.index], w, "Order lines by day of week", shape="hvh")
+    f.update_xaxes(type="category")
+    return f
+
+
+def fig_line_sizes(d):
+    b = d["line_sizes"]
+    edges = [1, 2, 3, 6, 7, 12, 13, 24, 25, 48, 49, 120, 121, 600, 601, 10 ** 9]
+    labels = ["1", "2", "3-6", "7-12", "13-24", "25-48", "49-120", "121-600", "over 600"]
+    bins = [(1, 1), (2, 2), (3, 6), (7, 12), (13, 24), (25, 48), (49, 120), (121, 600), (601, 10 ** 9)]
+    counts = [b[(b.bottles >= lo) & (b.bottles <= hi)].lines.sum() for lo, hi in bins]
+    f = go.Figure(go.Bar(x=labels, y=counts, marker_color=BLUE, hovertemplate="%{x} bottles: %{y:,} lines<extra></extra>"))
+    f.update_xaxes(type="category", title="bottles on the order line")
+    return style(f, "Order size: bottles per order line", "order lines").update_layout(hovermode="closest")
+
+
+def fig_top(df, title):
+    t = df.sort_values("dollars")
+    f = go.Figure(go.Bar(x=t.dollars, y=t.name.str.title(), orientation="h", marker_color=BLUE,
+                         customdata=t.lines, hovertemplate="%{y}: $%{x:,.0f}, %{customdata:,} lines<extra></extra>"))
+    return style(f, title, height=460).update_layout(hovermode="closest", margin=dict(l=260))
+
+
+def fixed(anchor, what):
+    """Link to the section of the data fixes page that explains this issue and its correction."""
+    return f'<p class="fixlink">Corrected in the warehouse: <a href="data_fixes.html#{anchor}">{what}</a></p>'
+
 
 def fig_demand(d):
     m = d["monthly"]  # the 2026 file ends on a month boundary (Aug 31), so every month is complete
@@ -309,24 +417,36 @@ know what traps are in the data. These are the ones we found; <a href="data_fixe
 how each one was fixed in the warehouse, once, so no forecast has to deal with it.</p>
 <div class="tiles">{tiles_html}</div>
 
-<h2>1. Demand: trend and seasonality</h2>
+<h2>1. How many orders, and when</h2>
+<p>Every chart here counts order lines as the state published them, drawn as steps. Orange is the share that turned out to be exact
+duplicates in the export (section 3), which the loader removes. Orders are placed on business days only, so weekends
+are nearly empty, and volume grows through 2021 before leveling off.</p>
+{plot(fig_daily(d))}
+{plot(fig_monthly_lines(d))}
+{plot(fig_weekday(d))}
+{plot(fig_yearly_lines(d))}
+{fixed('duplicates', 'how the duplicate rows were found and removed')}
+
+<h2>2. Demand: trend and seasonality</h2>
 <p>Strong December peaks every year, a step up during 2020, and a plateau since 2023. This is the
 signal the forecaster has to learn.</p>
 {"".join(plot(f) for f in fig_demand(d))}
 
-<h2>2. The state's own export duplicates rows</h2>
+<h2>3. The state's own export duplicates rows</h2>
 <p>The 2022, 2025 and 2026 downloads repeat {dup_rows:,} rows verbatim across CSV parts. Left in, 2022
 sales would be inflated by roughly 23%. The portal's own 2026 row count matches the distinct count, so the
 loader drops exact duplicates. This was the first bug, and it was upstream of us.</p>
 {plot(fig_dupes(d))}
+{fixed('duplicates', 'duplicate rows: the issue and the fix')}
 
-<h2>3. Missing values move around over time</h2>
+<h2>4. Missing values move around over time</h2>
 <p>Bottle cost and retail price are blank on every line from 2016 through 2024 and are only partly filled
 after that, so any price feature has to be derived as dollars per bottle. County and address are blank on
 a few percent of early lines.</p>
 {plot(fig_blanks(d))}
+{fixed('checked', 'missing prices: why no fix is needed (price = dollars / bottles)')}
 
-<h2>4. Category codes were reused for different categories</h2>
+<h2>5. Category codes were reused for different categories</h2>
 <p>At the end of August 2016 the state reorganized its product taxonomy: about 100 category names became
 about 48, and many codes were shifted to mean something else. Code 1011400 meant "Bottled in Bond Bourbon"
 until 2016-08-25 and "Tennessee Whiskies" after. In July 2025 several names were shortened again. A naive
@@ -334,45 +454,61 @@ join of sales to the category table labels old sales with today's name, so an ag
 whiskey since 2016" has to notice this. The first 24 reassigned codes:</p>
 {plot(fig_categories(d))}
 {table(cat.head(24), {"lines": comma})}
+{fixed('categories', 'category codes: history restated in today\'s taxonomy')}
 
-<h2>4b. A category that looks discontinued was recoded</h2>
+<h2>5b. A category that looks discontinued was recoded</h2>
 <p>COCKTAILS/RTD stops dead under code 1071100 on 2022-07-15 and restarts three days later under code 1071000,
 same name, same products. A forecast of "ready-to-drink cocktails" built on either code alone is wrong.</p>
 {plot(fig_rtd(d))}
+{fixed('categories', 'the Cocktails/RTD recode: one continuous category')}
 
-<h2>5. One product, many item numbers</h2>
+<h2>6. One product, many item numbers</h2>
 <p>"Tito's" is not one row. It is several item numbers across bottle sizes and packs, and the 50 ml mini was
 renumbered in July 2020 (38180 to 38194, with a temporary 938180 in between). Across the whole catalog,
 {len(d["renumbered"])} items were renumbered like this, carrying {d["renumbered"].old_bottles.sum() / 1e6:.1f}M bottles of
 history. The largest:</p>
 {table(titos, {"lines": comma, "bottles": comma})}
 {table(d["renumbered"].head(12).astype({"old_last_order": str, "new_first_order": str}), {"old_bottles": comma})}
+{fixed('renumbering', 'renumbered items joined into product families')}
 
-<h2>6. Stores drift, open and close</h2>
+<h2>7. Stores drift, open and close</h2>
 <p>Of {int(sd.stores):,} stores, {int(sd.changed_name):,} changed recorded name, {int(sd.changed_address):,}
 changed address, {int(sd.changed_city):,} changed city and {int(sd.changed_county):,} changed county over
 time. {rc['stores with no county']} stores have no county at all. City spellings are not standardized either; these
 {len(d["city_variants"])} spellings each name a city also spelled another way:</p>
 {table(d["city_variants"])}
+{fixed('cities', 'city spellings unified')}
 {plot(fig_store_openings(d))}
 
-<h2>7. Outliers and odd lines</h2>
+<h2>8. Outliers and odd lines</h2>
 <p>{len(bs):,} distinct bottle sizes appear, but the 15 most common cover {top15 / bs.lines.sum():.1%} of lines.
 The tail runs from {int(bs.bottle_volume_ml.min())} ml to {int(bs.bottle_volume_ml.max()):,} ml.</p>
 {plot(fig_bottle_sizes(d))}
 {table(sus, {"zero_dollar": comma, "zero_bottles": comma, "huge_bottles": comma})}
+{fixed('zero-lines', 'zero lines removed')}
+{fixed('checked', 'large bottle sizes checked: genuine pallet and cask buys, kept')}
 <p class="note">Since 2022, a few thousand lines a year have zero bottles and zero dollars (likely cancelled
 lines). huge_bottles = lines with a bottle volume of 10 liters or more.</p>
 
-<h2>8. invoice_id changed meaning</h2>
+<h2>9. invoice_id changed meaning</h2>
 <p>Until August 2025 each order line had its own invoice_id. From September 2025 one id covers the whole
 order, and at the same time bottle prices start being filled in: signs that the state switched source
 systems. Anything that counts "orders" by invoice_id breaks across that date, so the loader keys lines on a
 new line_id.</p>
 {plot(fig_lines_per_invoice(d))}
+{fixed('checked', 'invoice_id: lines keyed by a new line_id')}
 
-<h2>9. Geography: joins to Census reference data</h2>
+<h2>10. Geography: joins to Census reference data</h2>
 {plot(fig_counties(d))}
+{fixed('census', 'Census data lag: latest year carried forward')}
+
+<h2>11. Who orders what</h2>
+<p>Most order lines are small: a case or less. The largest categories, vendors and stores by wholesale dollars,
+2016 to August 2026, from the clean warehouse (categories in today's taxonomy):</p>
+{plot(fig_line_sizes(d))}
+{plot(fig_top(d["top_categories"], "Top 15 categories by sales dollars"))}
+{plot(fig_top(d["top_vendors"], "Top 15 vendors by sales dollars"))}
+{plot(fig_top(d["top_stores"], "Top 15 stores by sales dollars"))}
 
 <footer>
 Data: <a href="https://catalog.data.gov/dataset?q=iowa+liquor+sales">Iowa Liquor Sales</a>, State of Iowa,

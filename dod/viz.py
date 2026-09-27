@@ -77,6 +77,7 @@ th.num, td.num { text-align:right; font-variant-numeric:tabular-nums; }
 .note { font-size:13px; color:var(--muted); }
 .asked { font-size:17px; color:var(--ink); font-style:italic; margin:4px 0 10px; }
 td { vertical-align:top; word-break:break-word; }
+.fixlink { font-size:13px; color:var(--muted); margin:2px 0 14px; }
 .warn { font-size:14px; color:var(--ink); border-left:3px solid #fab219; padding:4px 10px; }
 /* plotly draws its own text/grid colors; point them at the theme tokens */
 .card .main-svg :is(.xtick, .ytick, .g-xtitle, .g-ytitle, .gtitle, .legendtext, .cbaxis, .cbtitle) text,

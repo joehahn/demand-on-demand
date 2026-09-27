@@ -141,16 +141,16 @@ warehouse, by the loader's clean stage. The raw landing table stays exactly as p
 before and after. Forecasts read only the clean tables, so none of them has to know these problems existed.</p>
 {table(d["fixes"], {"rows_affected": lambda v: f"{int(v):,}" if v else "checked"})}
 
-<h2>1. Duplicate rows in the state's export</h2>
+<h2 id="duplicates">1. Duplicate rows in the state's export</h2>
 <p>{n("export_duplicates"):,} rows repeated verbatim across CSV parts of the 2022, 2025 and 2026 downloads were removed.
 The portal's own 2026 row count matches the de-duplicated count.</p>
 {plot(fig_dupes)}
 
-<h2>2. Zero lines</h2>
+<h2 id="zero-lines">2. Zero lines</h2>
 <p>{n("zero_value_lines"):,} order lines with zero bottles or zero dollars, likely cancelled lines, were removed.</p>
 {table(d["zero_lines"], {"zero_lines_removed": comma})}
 
-<h2>3. Category codes that changed meaning</h2>
+<h2 id="categories">3. Category codes that changed meaning</h2>
 <p>Every line now takes its item's <em>current</em> category, so all ten years are in today's taxonomy, and retired
 codes map to the live code with the same name. {n("category_taxonomy"):,} lines changed category. Before, code
 1011400 meant "Bottled in Bond Bourbon" until 2016-08-25, so Tennessee whiskey looked like it jumped 20-fold that
@@ -160,7 +160,7 @@ week:</p>
 {plot(fig_rtd)}
 {table(d["crosswalk"])}
 
-<h2>4. Renumbered items</h2>
+<h2 id="renumbering">4. Renumbered items</h2>
 <p>{n("item_renumbering")} items were renumbered: same description and size, the new number starting within weeks of
 the old one stopping. Each old number now belongs to a product family named after its current item, so the product's
 history is continuous. Tito's 50 ml mini, before and after:</p>
@@ -168,17 +168,17 @@ history is continuous. Tito's 50 ml mini, before and after:</p>
 <p>The 20 largest renumberings:</p>
 {table(fams.head(20), {"old_bottles": comma})}
 
-<h2>5. City spellings</h2>
+<h2 id="cities">5. City spellings</h2>
 <p>Each city now has one spelling in <code>store.city</code>; the source spelling is kept in
 <code>store.city_recorded</code>.</p>
 {table(d["cities"])}
 
-<h2>6. Census data lags sales</h2>
+<h2 id="census">6. Census data lags sales</h2>
 <p>Census publishes county population about a year late and income about two years late. The latest published year
 is carried forward, flagged, so every sales month has a reference value:</p>
 {table(d["census"])}
 
-<h2>7. Checked and left as is</h2>
+<h2 id="checked">7. Checked and left as is</h2>
 <p><strong>Large-volume lines</strong> (6 liters or more) looked like errors but are genuine: pallet shippers and
 whole-cask purchases. <strong>Missing prices</strong> before September 2025 need no fix, because unit price is
 dollars divided by bottles. <strong>invoice_id</strong> changed meaning in September 2025, so lines are keyed by the
