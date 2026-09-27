@@ -92,33 +92,15 @@ Known source issues (found while loading):
 
 ## Build phases
 
-0. Setup: repo, env, Postgres, dataset ids (done)
-1. `load_data.py`: one-time pull into a Postgres star schema + ref tables + data dictionary (done)
-2. `explore_data.py`: dashboard documenting the dirt -> `docs/data_exploration.html` (done; `--fresh` re-queries)
-2b. `onboard.py`: Claude drafts meta.known_issues from profiling; evidence SQL re-run as dod_agent; human approves with `--approve` (demo Act 1). Model: DOD_ONBOARD_MODEL, default claude-opus-5 with server-side fallbacks.
-3. Governance harness driven by a hand-written spec (no LLM), incl. slice profiling + mitigation rules (done)
-   `python -m dod.run specs/<name>.json` -> out/<slug>/dashboard.html, forecast.csv, backtest.csv, summary.json.
-   Package `dod/`: spec (request schema), register (which approved issues apply), panel (SQL built from the
-   spec, never by the LLM; before/after of every fix), checks (slice-level findings with suggested fixes),
-   model (48-config grid of lightgbm/ridge x level/diff/yoy targets on a 24-month tuning window, seasonal
-   naive as a candidate, feature-group selection on the tuning window, 24-month rolling-origin test,
-   80% ranges from backtest errors), dashboard, viz (shared styling, also used by explore_data.py).
-   First results (test error relative to seasonal naive): Tito's Polk 0.97, Tito's minis by item 1.01,
-   American vodka top-5 counties 1.07. These series are very regular since 2023, so last year is a
-   strong baseline; report that honestly.
-4. Agent (done): `python -m dod.agent "<request>" [--interactive] [--spec-only]`. Model DOD_AGENT_MODEL,
-   default claude-sonnet-5; about $0.03-0.20 and 30-90 s of agent time per request, plus ~1.5 min harness.
-   The agent resolves words with find_values, previews the spec (register + slice findings), decides each
-   finding (fix an artifact, or flag_only naming the check when it is real demand), submits; a second call
-   writes the dashboard summary from precomputed facts only. Probe results 2026-09-26: found the held-out
-   Tito's mini renumbering and the MT/MOUNT PLEASANT spelling (after abbreviation-aware search), handled the
-   2016 category trap via the register, refused Chicago and a 24-month horizon. Known variance: the 4-pack
-   late_start was fixed in one run and left in another; per-finding defaults added to the prompt.
-5. Evals (done): `python evals/run_evals.py [--runs N] [--only ids]` (spec-only agent runs scored against
-   evals/cases.json -> evals/report.md) and `python evals/grounding.py` (every number in dashboard summaries
-   must trace to saved facts -> evals/grounding.md). 2026-09-26: 38/38 runs correct (14 fresh cases 28/28,
-   5 dev cases 10/10), $0.06 per run, median 40 s; 9/9 summaries grounded; Cocktails/RTD register error
-   found and proposed (Act 3). Caveats: 5 cases were used while tuning the prompt; a perfect score means the
-   set needs harder cases. Item search reads lifetime stats added to sales.item (load_data "item stats").
-6. Showcase runs to GitHub Pages, README
-7. Blog and LinkedIn series
+Demo scope (decided 2026-09-27): known data issues are documented (explore page) and fixed once in the warehouse
+(`load_data.py clean`, `docs/data_fixes.html`); forecasts read only clean data. The demo's focus is fast, easy,
+accurate forecasts on request. No runtime issue discovery (register, slice checks and onboarding were removed).
+
+0. Setup (done)
+1. `load_data.py`: download, raw, curate, ref, clean, meta (done)
+2. `explore_data.py` -> docs/data_exploration.html; `data_fixes.py` -> docs/data_fixes.html (done)
+3. Harness `dod/` (done, being tuned): spec -> panel (SQL on clean tables) -> model (grid on tuning window,
+   seasonal naive as a candidate, rolling-origin test) -> dashboard. `python -m dod.run specs/<name>.json`
+4. Agent `python -m dod.agent "<request>" [--spec-only]`: find_values, run_select, preview_spec, ask_user, submit_spec
+5. Evals `evals/` (to be updated to the simplified agent)
+6. Pooled model and speed; showcase; blog and LinkedIn

@@ -1,17 +1,13 @@
-"""The agent's tools. Every one is read-only; the only way the agent changes anything is by submitting a
-spec, which the harness validates and runs. Results are compact text, because they go back into the
-model's context."""
+"""The agent's tools. Every one is read-only; the only way the agent affects a forecast is the spec it submits,
+which the harness validates and runs. Results are compact text, because they go back into the model's context."""
 import json
 import re
-from pathlib import Path
-
 from pydantic import ValidationError
 
-from . import checks, db, panel, register
+from . import db, panel
 from .spec import Spec
 from .sqlcheck import check_sql
 
-ROOT = Path(__file__).parent.parent
 MAX_ROWS = 100
 
 
@@ -45,16 +41,16 @@ def _canonical(col):
 # Search the small dimension tables; per-code dates come from index lookups (min/max on (code, date)).
 FIND_SQL = {
     "item": """
-        SELECT i.item_no, i.item_desc, i.bottle_volume_ml AS ml, i.pack, c.category_name, v.vendor_name,
-               i.first_order_on AS first_order, i.last_order_on AS last_order, i.total_bottles AS bottles
-        FROM sales.item i LEFT JOIN sales.category c USING (category_code) LEFT JOIN sales.vendor v USING (vendor_no)
-        WHERE {match} ORDER BY i.total_bottles DESC NULLS LAST LIMIT 60""",
+        SELECT h.item_no, h.item_desc, h.bottle_volume_ml AS ml, h.pack, c.category_name, v.vendor_name,
+               min(i.first_order_on) AS first_order, max(i.last_order_on) AS last_order, sum(i.total_bottles) AS bottles
+        FROM sales.item i JOIN sales.item h ON h.item_no = i.family_item_no
+        LEFT JOIN sales.category c ON c.category_code = h.category_current LEFT JOIN sales.vendor v ON v.vendor_no = h.vendor_no
+        WHERE {match} GROUP BY 1, 2, 3, 4, 5, 6 ORDER BY bottles DESC NULLS LAST LIMIT 60""",
     "category": """
-        WITH m AS (SELECT c.category_code, c.category_name FROM sales.category c WHERE {match})
-        SELECT m.*, (SELECT count(*) FROM sales.item i WHERE i.category_code = m.category_code) AS items,
-               (SELECT min(ordered_on) FROM sales.invoice_line l WHERE l.category_code = m.category_code) AS first_order,
-               (SELECT max(ordered_on) FROM sales.invoice_line l WHERE l.category_code = m.category_code) AS last_order
-        FROM m ORDER BY items DESC LIMIT 40""",
+        SELECT c.category_code, c.category_name, count(*) AS items, min(i.first_order_on) AS first_order,
+               max(i.last_order_on) AS last_order, sum(i.total_bottles) AS bottles
+        FROM sales.category c JOIN sales.item i ON i.category_current = c.category_code
+        WHERE {match} GROUP BY 1, 2 ORDER BY bottles DESC NULLS LAST LIMIT 40""",
     "vendor": """
         WITH m AS (SELECT vendor_no, vendor_name FROM sales.vendor WHERE {match})
         SELECT m.*, (SELECT count(*) FROM sales.item i WHERE i.vendor_no = m.vendor_no) AS items,
@@ -71,7 +67,7 @@ FIND_SQL = {
         SELECT store_no, store_name, city, county_name, first_order_on, last_order_on FROM sales.store
         WHERE {match} ORDER BY last_order_on DESC LIMIT 40""",
 }
-FIND_COLUMN = {"item": "i.item_desc", "category": "c.category_name", "vendor": "vendor_name",
+FIND_COLUMN = {"item": "h.item_desc", "category": "c.category_name", "vendor": "vendor_name",
                "city": "city", "county": "county_name", "store": "store_name"}
 
 
@@ -96,75 +92,57 @@ def run_select(sql):
         return f"Error: {str(e).splitlines()[0]}"
 
 
-def parse_spec(spec_json, source="agent"):
+def parse_spec(spec_json):
     try:
-        spec = Spec(**json.loads(spec_json))
-        for m in spec.mitigations:  # record who chose each fix, whatever the model wrote
-            m.source = source
-        return spec, None
+        return Spec(**json.loads(spec_json)), None
     except (json.JSONDecodeError, ValidationError, TypeError) as e:
         return None, f"Error: invalid spec: {e}"
 
 
 def preview(spec_json):
-    """Build the monthly series and run the slice checks, without training anything."""
+    """Build the monthly series for a draft spec, without training anything."""
     spec, err = parse_spec(spec_json)
     if err:
         return err, None
-    decisions = register.assess(spec, register.load())
     try:
-        p = panel.build(spec, decisions)
+        p = panel.build(spec)
     except ValueError as e:
         return f"Error: {e}", None
-    findings = checks.run(spec, p)
-    lines = [f"Series start {p.start}, last complete month {p.series.index[-1]:%Y-%m}, {len(p.series)} months."]
+    lines = [f"Last complete month {p.series.index[-1]:%Y-%m}; {p.series.shape[1]} series."]
     for c in p.series:
         s = p.series[c].dropna()
         nz = s[s > 0]
-        lines.append(f"- {c} ({p.labels.get(c, c)}): first sale {nz.index.min():%Y-%m}, last sale "
-                     f"{nz.index.max():%Y-%m}, last 12 months {s.iloc[-12:].sum():,.0f}" if len(nz) else f"- {c}: no sales")
-    lines.append("Register decisions:")
-    lines += [f"- {d['issue_id']}: {d['action']} ({d['note']})" for d in decisions if d["action"] != "not_relevant"]
-    lines.append("Slice findings:" if findings else "Slice findings: none")
-    for f in findings:
-        fix = f"{f['suggested_rule']} {json.dumps(f['suggested_params'])}" if f["suggested_rule"] else "none"
-        lines.append(f"- [{f['severity']}] {f['check']} ({f['series']}): {f['message']} Suggested fix: {fix}. "
-                     + {"fixed": "Fixed by this spec.", "reviewed": "Reviewed in this spec and left as is.",
-                        "no_effect": "", "open": ""}[f["resolution"]])
-    for ch in p.changes:
-        lines.append(f"Applied: {ch['rule']} {json.dumps(ch['params'])} {ch.get('note', '')}")
+        if nz.empty:
+            lines.append(f"- {c}: no sales")
+            continue
+        months = len(s)
+        lines.append(f"- {c} ({p.labels.get(c, c)}): {months} months of history from {s.index[0]:%Y-%m}, "
+                     f"last sale {nz.index.max():%Y-%m}, last 12 months {s.iloc[-12:].sum():,.0f}"
+                     + (" -- under 24 months, too short to forecast" if months < 24 else ""))
     return "\n".join(lines), spec
-
-
-def propose_issue(issue):
-    """Act 3: a warehouse-wide problem found during a request becomes a PROPOSED register entry for a human."""
-    path = ROOT / "out" / "proposed_issues.jsonl"
-    path.parent.mkdir(exist_ok=True)
-    with path.open("a") as f:
-        f.write(json.dumps(issue) + "\n")
-    return f"Recorded as a proposal in {path.relative_to(ROOT)}; a human reviews it before it enters the register."
 
 
 TOOLS = [
     {"name": "find_values",
-     "description": "Fuzzy-search warehouse names to resolve business words to codes. Returns matching rows with "
-                    "codes, names, sizes and sales volume, largest first. Search one kind at a time with short words "
-                    "(e.g. kind=item, text='titos mini'); search again with other words if nothing fits.",
+     "description": "Fuzzy-search warehouse names to resolve business words to codes: products (one row per product, "
+                    "with size, category, vendor, dates and bottles sold), categories, vendors, cities, counties or "
+                    "stores, largest first. Use short words (kind=item, text='titos mini'); search again with other "
+                    "words if nothing fits.",
      "input_schema": {"type": "object", "properties": {
          "kind": {"type": "string", "enum": ["item", "category", "vendor", "city", "county", "store"]},
          "text": {"type": "string"}}, "required": ["kind", "text"], "additionalProperties": False},
      "strict": True},
     {"name": "run_select",
      "description": "Run one read-only SELECT against the sales, ref or meta schemas (tables must be "
-                    f"schema-qualified). Returns at most {MAX_ROWS} rows. Use it to check facts, not to aggregate the "
-                    "forecast series; the harness builds those itself.",
+                    f"schema-qualified). Returns at most {MAX_ROWS} rows. Use it only to check a fact the other "
+                    "tools do not give you (e.g. which counties are largest).",
      "input_schema": {"type": "object", "properties": {"sql": {"type": "string"}},
                       "required": ["sql"], "additionalProperties": False},
      "strict": True},
     {"name": "preview_spec",
-     "description": "Validate a draft spec (JSON string), build its monthly series, apply the register, and run the "
-                    "slice checks. Returns series summaries, register decisions and findings with suggested fixes. "
-                    "Nothing is trained. Call it before submit_spec, and again after adding mitigations.",
+     "description": "Validate a draft spec (JSON string) and summarize the monthly series it produces: months of "
+                    "history, last sale, last 12 months. Nothing is trained. Use it to confirm the spec matches the "
+                    "request before submitting.",
      "input_schema": {"type": "object", "properties": {"spec_json": {"type": "string"}},
                       "required": ["spec_json"], "additionalProperties": False},
      "strict": True},
@@ -174,17 +152,9 @@ TOOLS = [
      "input_schema": {"type": "object", "properties": {"question": {"type": "string"}},
                       "required": ["question"], "additionalProperties": False},
      "strict": True},
-    {"name": "propose_register_issue",
-     "description": "Propose a WAREHOUSE-WIDE data problem you discovered (one that would affect many requests) for "
-                    "the known-issues register. A human decides. Do not use this for problems specific to one item or place.",
-     "input_schema": {"type": "object", "properties": {
-         "title": {"type": "string"}, "description": {"type": "string"}, "evidence_sql": {"type": "string"},
-         "suggested_rule": {"type": "string"}}, "required": ["title", "description", "evidence_sql", "suggested_rule"],
-         "additionalProperties": False},
-     "strict": True},
     {"name": "submit_spec",
-     "description": "Submit the final spec (JSON string) for training, backtesting and the dashboard. Include every "
-                    "mitigation you chose, each with a one-line reason. List the assumptions you made in plain English.",
+     "description": "Submit the final spec (JSON string) for training, backtesting and the dashboard, with the "
+                    "assumptions you made in plain English.",
      "input_schema": {"type": "object", "properties": {
          "spec_json": {"type": "string"},
          "assumptions": {"type": "array", "items": {"type": "string"}}},

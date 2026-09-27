@@ -10,13 +10,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from . import checks, dashboard, model, panel, register
+from . import dashboard, model, panel
 from .spec import load
 
 OUT = Path(__file__).parent.parent / "out"
 
 
-def facts_for(spec, p, res, findings):
+def facts_for(spec, p, res):
     """The numbers the narrator may use, and nothing else."""
     fc, wide = res["forecast"], p.series
     last_year = {f"{m:%Y-%m}": float(sum(wide.at[m - pd.DateOffset(years=1), c] for c in fc.series.unique()
@@ -38,33 +38,26 @@ def facts_for(spec, p, res, findings):
                                  "baseline_error_pct": round(100 * r["wape_naive"], 1), "verdict": r["reliability"]}
                                 for r in res["per_step"].to_dict("records")],
             "not_forecast": {p.labels.get(c, c): why for c, why in res["skipped"].items()},
-            "unvalidated": [p.labels.get(c, c) for c in res["unvalidated"]],
-            "open_findings": [f["message"] for f in findings if f["resolution"] == "open" and f["severity"] == "high"],
-            "reviewed_findings": [f"{f['message']} Analyst decision: {f['review_note']}" for f in findings
-                                  if f["resolution"] == "reviewed"],
-            "fixes_applied": [f"{m.rule}: {m.reason}" for m in spec.mitigations if m.rule != "flag_only"]}
+            "unvalidated": [p.labels.get(c, c) for c in res["unvalidated"]]}
 
 
 def run(spec, out_root=OUT, usage=None, agent=None, narrate=None, log=print):
     t0 = time.time()
     log(f"== {spec.title}")
-    decisions = register.assess(spec, register.load())
-    p = panel.build(spec, decisions)
+    p = panel.build(spec)
     log(f"  panel: {p.series.shape[1]} series x {p.series.shape[0]} months from {p.start}")
-    findings = checks.run(spec, p)
-    log(f"  slice checks: {len(findings)} finding(s), {sum(f['addressed'] for f in findings)} addressed by the spec")
-    res = model.run(p.series, p.exog, p.future_index, spec.horizon, spec.features, log=log, actuals=p.actuals)
-    facts = facts_for(spec, p, res, findings)
+    res = model.run(p.series, p.exog, p.future_index, spec.horizon, spec.features, log=log)
+    facts = facts_for(spec, p, res)
     if narrate:
         agent["summary"] = narrate(facts)
     out = out_root / spec.slug
     out.mkdir(parents=True, exist_ok=True)
-    (out / "dashboard.html").write_text(dashboard.build(spec, p, decisions, findings, res, usage, agent))
+    (out / "dashboard.html").write_text(dashboard.build(spec, p, res, usage, agent))
     res["forecast"].assign(label=res["forecast"].series.map(p.labels)).to_csv(out / "forecast.csv", index=False)
     res["backtest"].to_csv(out / "backtest.csv", index=False)
     summary = {"title": spec.title, "spec": spec.model_dump(), "best": res["best"],
                "feature_groups": res["feature_groups"], "test_rel_mae": res["test_rel_mae"],
-               "per_step": res["per_step"].to_dict("records"), "findings": findings, "register": decisions,
+               "per_step": res["per_step"].to_dict("records"),
                "forecast_total": float(res["forecast"].pred.sum()), "seconds": round(time.time() - t0, 1),
                "agent": {k: v for k, v in (agent or {}).items()}, "dashboard": str(out / "dashboard.html"),
                "facts": facts}

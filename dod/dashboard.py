@@ -48,38 +48,7 @@ def fig_accuracy(per_step):
                  legend=True).update_layout(hovermode="x unified")
 
 
-def fig_change(change, labels):
-    """Before/after for one data fix: dotted orange is the data before the fix, blue after."""
-    p, code = change["params"], change.get("series")
-    fig = go.Figure()
-    if change["rule"] == "stitch_successor":
-        old, new = str(p["from"]), str(p["to"])
-        before, after = change["before"], change["after"]
-        if old in before:
-            fig.add_trace(line(before.index, before[old], f"before: item {old}", ORANGE, dash="dot"))
-        if new in before:
-            fig.add_trace(line(before.index, before[new], f"before: item {new}", AQUA, dash="dot"))
-        if new in after:
-            fig.add_trace(line(after.index, after[new], f"after: item {new} (joined)", BLUE))
-        title = f"Joining item {old} into {new}"
-    elif change["rule"] == "normalize_values":
-        before, after = change["before"], change["after"]
-        for src, dst in list(p.get("mapping", {}).items())[:3]:
-            if src in before:
-                fig.add_trace(line(before.index, before[src], f"before: {src}", ORANGE, dash="dot"))
-            if dst in after:
-                fig.add_trace(line(after.index, after[dst], f"after: {dst}", BLUE))
-        title = "Normalizing spellings"
-    else:
-        fig.add_trace(line(change["before"].index, change["before"].values, "before", ORANGE, dash="dot"))
-        fig.add_trace(line(change["after"].index, change["after"].values, "after", BLUE))
-        title = f"{change['rule']}: {labels.get(code, code)}"
-    fig = style(fig, title, height=280, legend=True)
-    return fig.update_layout(legend=dict(orientation="h", y=-0.18, x=0, xanchor="left", yanchor="top"),
-                             margin=dict(b=70))
-
-
-def build(spec, panel, decisions, findings, res, usage=None, agent=None):
+def build(spec, panel, res, usage=None, agent=None):
     plot = Plots()
     wide, fc, bt, ps = panel.series, res["forecast"], res["backtest"], res["per_step"]
     labels = panel.labels
@@ -123,27 +92,8 @@ def build(spec, panel, decisions, findings, res, usage=None, agent=None):
         columns={"step": "months ahead", "wape": "model error", "wape_naive": "baseline error",
                  "skill_vs_naive": "improvement"})
 
-    # data issues
-    reg = pd.DataFrame(decisions)
-    reg_used = reg[reg.action != "not_relevant"][["issue_id", "action", "note"]]
-    reg_skip = reg[reg.action == "not_relevant"][["issue_id", "note"]]
-    if findings:
-        fnd = pd.DataFrame(findings)
-        fnd["fix"] = fnd.suggested_rule.fillna("none") + fnd.suggested_params.map(lambda p: f" {json.dumps(p)}" if p else "")
-        fnd["status"] = fnd.resolution.map({"fixed": "fixed in this run", "reviewed": "reviewed, left as is",
-                                            "no_effect": "no effect here", "open": "reported, not fixed"})
-        fnd["message"] = fnd.message + fnd.review_note.map(lambda n: f" Agent: {n}" if n else "")
-        fnd_html = table(fnd[["check", "severity", "message", "fix", "status"]])
-    else:
-        fnd_html = '<p class="note">No slice-level problems found.</p>'
-    mit = [m for m in spec.mitigations]
-    mit_html = table(pd.DataFrame([{"rule": m.rule, "params": json.dumps(m.params), "source": m.source, "reason": m.reason}
-                                   for m in mit])) if mit else '<p class="note">No request-level fixes applied.</p>'
-    change_charts = "".join(f'<p class="note">{esc(ch.get("note") or "")}</p>' + plot(fig_change(ch, labels))
-                            for ch in panel.changes if "before" in ch)
-    skipped = res.get("skipped", {})
     skipped_html = "".join(f'<p class="warn">Not forecast: {esc(labels.get(c, c))}, {esc(why)}.</p>'
-                           for c, why in skipped.items())
+                           for c, why in res.get("skipped", {}).items())
     skipped_html += "".join(f'<p class="warn">Unvalidated: {esc(labels.get(c, c))} was too new to backtest during the '
                             f'test window, so its forecast comes from the pooled model with no track record of its own. '
                             f'Treat it as indicative.</p>' for c in res.get("unvalidated", []))
@@ -192,15 +142,11 @@ actually happened and with the simplest serious baseline: the same month last ye
 {plot(fig_accuracy(ps))}
 {table(ps_show)}
 
-<h2>What was done to the data</h2>
-<h3>Known in advance (the approved register)</h3>
-{table(reg_used)}
-<details><summary class="note">{len(reg_skip)} register issues not relevant to this request</summary>{table(reg_skip)}</details>
-<h3>Found in this run (slice checks)</h3>
-{fnd_html}
-<h3>Request-level fixes applied</h3>
-{mit_html}
-{change_charts}
+<h2>The data</h2>
+<p>Monthly {unit} from {panel.start[:7]} through {wide.index[-1]:%b %Y}, read from the clean warehouse: duplicate
+export rows and zero lines removed, renumbered products joined, categories in today's taxonomy, one spelling per city.
+See <a href="https://joehahn.github.io/demand-on-demand/data_fixes.html">what was fixed</a>. A series starts at its
+first sale.</p>
 
 <h2>How the model was chosen</h2>
 <p>{len(res["grid"]) - 1} model configurations were compared on {uw[0]:%b %Y} to {uw[1]:%b %Y}, before the test window,
