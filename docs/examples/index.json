@@ -1,0 +1,52 @@
+[
+ {
+  "request": "Monthly forecast of Tito's minis in Des Moines for the next 5 months",
+  "slug": "tito_s_minis_des_moines_next_5_months",
+  "title": "Tito's minis, Des Moines, next 5 months",
+  "rel_mae": 0.8876790487126873,
+  "summary": "Tito's Minis (50ml) in Des Moines are forecast at 3,410 bottles over the next five months, up 10% versus the same months last year (3,090 bottles). Growth is led by November and January, each up roughly 24-25% year over year, while September and October look close to flat. The model is 11% more accurate than a simple seasonal-naive baseline in backtesting, though errors still run around 35% by month, so treat this as a directional guide rather than a precise number. No series were skipped or left unvalidated in this forecast.",
+  "cost": 0.0238,
+  "agent_seconds": 22.0,
+  "harness_seconds": 24.7
+ },
+ {
+  "request": "What revenue should we expect from Fireball in Linn County next quarter?",
+  "slug": "fireball_linn_county_next_quarter",
+  "title": "Fireball, Linn County, next quarter",
+  "rel_mae": 0.9113818130801968,
+  "summary": "Fireball sales in Linn County are forecast at about $553,000 over the next quarter, down 4% from the same months last year ($578,000). The dip is led by September, projected down 11%, while November is expected to run 4% above last year. Backtesting shows the model is 9% more accurate than a simple seasonal-naive baseline across all three forecast months, so it can be reasonably trusted for near-term planning. No series were skipped or left unvalidated.",
+  "cost": 0.03,
+  "agent_seconds": 17.9,
+  "harness_seconds": 16.2
+ },
+ {
+  "request": "American vodka sales dollars for each of the five largest counties, next 6 months",
+  "slug": "american_vodka_dollars_top_5_counties_next_6_months",
+  "title": "American vodka dollars, top 5 counties, next 6 months",
+  "rel_mae": 1.040802073497476,
+  "summary": "American vodka sales across the top 5 counties are forecast at about $15.3 million over the next six months, roughly flat (+1%) versus the same months last year's $15.2 million. Monthly results are mixed, with November standing out at +10% versus last year while September and January dip slightly (-2%). Backtesting shows this model is about 4% less accurate than a simple seasonal-naive baseline, and it tends to underperform that baseline at the 4- and 6-month horizons, so treat the later months with some caution. Polk county dominates the forecast at roughly $6.86 million of the total.",
+  "cost": 0.0205,
+  "agent_seconds": 16.3,
+  "harness_seconds": 18.0
+ },
+ {
+  "request": "Forecast ready-to-drink cocktail bottles statewide for the next 6 months",
+  "slug": "ready_to_drink_cocktails_statewide_next_6_months",
+  "title": "Ready-to-drink cocktails, statewide, next 6 months",
+  "rel_mae": 1.0160456458384017,
+  "summary": "Statewide ready-to-drink cocktail sales over the next six months are forecast at about 247,000 bottles, down 19% from the 307,000 bottles sold in the same months last year, with declines ranging from about 12% to 26% month to month. Backtesting shows the model is roughly 2% less accurate than a simple seasonal-naive baseline overall, performing better than the baseline in the near term (months 1 and 2) but falling behind in later months (4 through 6), so treat the later months of this forecast with more caution. No series were skipped or left unvalidated.",
+  "cost": 0.0137,
+  "agent_seconds": 11.7,
+  "harness_seconds": 13.8
+ },
+ {
+  "request": "Total liters of liquor sold statewide over the next 12 months",
+  "slug": "statewide_total_liters_next_12_months",
+  "title": "Statewide total liters, next 12 months",
+  "rel_mae": 1.0415261467369448,
+  "summary": "Statewide volume over the next 12 months is forecast at about 21.1 million liters, down 2% from the same months last year's 21.5 million liters. Monthly changes range from small gains like +2% in March and August to declines of -6% in October and July. In backtesting, the model was 4% less accurate than a simple seasonal-naive baseline overall, performing on par or better through the first six months ahead but noticeably worse than the baseline from 9 to 12 months out, so nearer-term months should be trusted more than the tail end of the forecast. No series were flagged as unvalidated or skipped.",
+  "cost": 0.0127,
+  "agent_seconds": 19.7,
+  "harness_seconds": 24.4
+ }
+]

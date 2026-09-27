@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>demand-on-demand</title>
+<style>
+:root { color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --line:#e1e0d9; --border:rgba(11,11,11,0.10); --accent:#2a78d6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+  --line:#2c2c2a; --border:rgba(255,255,255,0.10); --accent:#3987e5; } }
+:root[data-theme="dark"] { color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+  --line:#2c2c2a; --border:rgba(255,255,255,0.10); --accent:#3987e5; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--page); color:var(--ink);
+  font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+main { max-width:1040px; margin:0 auto; padding:32px 16px 64px; }
+h1 { font-size:26px; margin:0 0 6px; } h2 { font-size:19px; margin:36px 0 8px; } h3 { font-size:15px; margin:20px 0 6px; }
+pre { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; overflow-x:auto; font-size:12px; color:var(--ink2); }
+details { margin:6px 0; } summary { cursor:pointer; }
+p, li { color:var(--ink2); max-width:760px; } a { color:var(--accent); }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:8px 10px; margin:10px 0; }
+.tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin:16px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+.tile .v { font-size:24px; font-weight:600; color:var(--ink); } .tile .k { font-size:13px; color:var(--muted); }
+.tbl { overflow-x:auto; } table { border-collapse:collapse; width:100%; font-size:13px; }
+th, td { text-align:left; padding:6px 10px; border-bottom:1px solid var(--line); }
+th { color:var(--muted); font-weight:600; } td { color:var(--ink2); }
+th.num, td.num { text-align:right; font-variant-numeric:tabular-nums; }
+.note { font-size:13px; color:var(--muted); }
+.asked { font-size:17px; color:var(--ink); font-style:italic; margin:4px 0 10px; }
+td { vertical-align:top; word-break:break-word; }
+.warn { font-size:14px; color:var(--ink); border-left:3px solid #fab219; padding:4px 10px; }
+/* plotly draws its own text/grid colors; point them at the theme tokens */
+.card .main-svg :is(.xtick, .ytick, .g-xtitle, .g-ytitle, .gtitle, .legendtext, .cbaxis, .cbtitle) text,
+.card .main-svg :is(.gtitle, .legendtext) { fill:var(--ink2) !important; }
+.card .main-svg .gridlayer path, .card .main-svg .xgrid, .card .main-svg .ygrid { stroke:var(--line) !important; }
+.card .hoverlayer text { fill:#0b0b0b !important; }
+footer { margin-top:48px; font-size:13px; color:var(--muted); }
+
+.diagram { width:100%; height:auto; margin:8px 0 4px; }
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:12px; margin:12px 0; }
+.ex { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.ex a.q { font-weight:600; font-style:italic; color:var(--ink); text-decoration:none; }
+.ex a.q:hover { text-decoration:underline; }
+.ex p { font-size:14px; margin:8px 0 0; }
+.ex .meta { font-size:12px; color:var(--muted); margin-top:8px; }
+.cta { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-top:28px; }
+</style></head>
+<body><main>
+<h1>demand-on-demand</h1>
+<p class="asked">Ask for a demand forecast in plain English. Get a tested forecast and dashboard in about half a minute.</p>
+<p>A business user types a question like <em>"monthly forecast of Tito's minis in Des Moines for the next 5 months"</em>.
+One Claude agent turns the words into a precise request against a company-style Postgres warehouse of 26 million
+Iowa liquor orders (2016 to 2026). A fixed Python harness then builds the data, tunes and tests the models against the
+simplest honest benchmark, the same month last year, and publishes a dashboard that says how far to trust the answer.</p>
+<div class="tiles"><div class="tile"><div class="v">34 s</div><div class="k">plain English to dashboard (median)</div></div><div class="tile"><div class="v">$0.02</div><div class="k">Claude API cost per request</div></div><div class="tile"><div class="v">21 of 30</div><div class="k">benchmark forecasts beat last year</div></div><div class="tile"><div class="v">38/38</div><div class="k">agent eval runs correct</div></div></div>
+
+<h2>How it works</h2>
+
+<svg viewBox="0 0 960 300" role="img" aria-label="How a forecast request flows" class="diagram">
+  <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+  <g font-size="13" fill="var(--ink)">
+    <rect x="10" y="100" width="170" height="90" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+    <text x="95" y="130" text-anchor="middle" font-weight="600">Business question</text>
+    <text x="95" y="152" text-anchor="middle" fill="var(--ink2)">"Tito's minis in</text>
+    <text x="95" y="170" text-anchor="middle" fill="var(--ink2)">Des Moines, 5 months"</text>
+
+    <rect x="230" y="80" width="210" height="130" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+    <text x="335" y="108" text-anchor="middle" font-weight="600">Claude agent</text>
+    <text x="335" y="130" text-anchor="middle" fill="var(--ink2)">resolves words to codes</text>
+    <text x="335" y="150" text-anchor="middle" fill="var(--ink2)">read-only tools, about</text>
+    <text x="335" y="170" text-anchor="middle" fill="var(--ink2)">4 calls and 15 seconds</text>
+    <text x="335" y="192" text-anchor="middle" fill="var(--muted)" font-size="12">writes a spec, not code</text>
+
+    <rect x="490" y="80" width="220" height="130" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+    <text x="600" y="108" text-anchor="middle" font-weight="600">Fixed Python harness</text>
+    <text x="600" y="130" text-anchor="middle" fill="var(--ink2)">builds the SQL, tunes 96 models</text>
+    <text x="600" y="150" text-anchor="middle" fill="var(--ink2)">backtests vs last year</text>
+    <text x="600" y="170" text-anchor="middle" fill="var(--ink2)">on months it never saw</text>
+    <text x="600" y="192" text-anchor="middle" fill="var(--muted)" font-size="12">about 15 seconds</text>
+
+    <rect x="760" y="100" width="190" height="90" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+    <text x="855" y="130" text-anchor="middle" font-weight="600">Dashboard</text>
+    <text x="855" y="152" text-anchor="middle" fill="var(--ink2)">forecast, 80% range,</text>
+    <text x="855" y="170" text-anchor="middle" fill="var(--ink2)">how far to trust it</text>
+
+    <rect x="330" y="240" width="280" height="50" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-dasharray="4 3"/>
+    <text x="470" y="262" text-anchor="middle" font-weight="600">Clean Postgres warehouse</text>
+    <text x="470" y="280" text-anchor="middle" fill="var(--ink2)" font-size="12">26M orders, fixed once at load time</text>
+
+    <rect x="330" y="10" width="280" height="44" rx="10" fill="none" stroke="var(--line)" stroke-dasharray="4 3"/>
+    <text x="470" y="37" text-anchor="middle" fill="var(--ink2)" font-size="12">credentials never reach the model</text>
+  </g>
+  <g stroke="var(--muted)" stroke-width="1.5" fill="none" marker-end="url(#arr)">
+    <line x1="180" y1="145" x2="226" y2="145"/>
+    <line x1="440" y1="145" x2="486" y2="145"/>
+    <line x1="710" y1="145" x2="756" y2="145"/>
+    <line x1="335" y1="210" x2="400" y2="238"/>
+    <line x1="600" y1="210" x2="540" y2="238"/>
+  </g>
+</svg>
+<ul>
+<li><strong>The AI decides what to forecast; code decides how.</strong> The agent resolves products, places, measures
+and horizons with read-only tools, and hands over a spec. It never writes the SQL, the train/test split, the metrics
+or the charts. Those are fixed code, the same for every request.</li>
+<li><strong>Honest accuracy.</strong> Every forecast is backtested on the last 24 months, which no choice ever saw.
+Model settings are tuned on the two years before that, and "same month last year" is always a candidate: a model is
+used only as far as it beats it.</li>
+<li><strong>Clean data, fixed once.</strong> The public data has real problems: duplicated export rows, recoded
+categories, renumbered products, inconsistent spellings. They are documented on
+<a href="data_exploration.html">the data exploration page</a> and fixed once, in the warehouse, as shown on
+<a href="data_fixes.html">the data fixes page</a>. No forecast has to know they existed.</li>
+<li><strong>Least privilege.</strong> The agent's database login can only read the clean tables. Credentials stay
+in the Python process and never appear in a prompt.</li>
+</ul>
+
+<h2>Example forecasts</h2>
+<p>Five requests typed in plain English, each run once, shown as they came out, the misses included.</p>
+<div class="cards"><div class="ex"><a class="q" href="examples/tito_s_minis_des_moines_next_5_months.html">&ldquo;Monthly forecast of Tito&#x27;s minis in Des Moines for the next 5 months&rdquo;</a><p>Tito&#x27;s Minis (50ml) in Des Moines are forecast at 3,410 bottles over the next five months, up 10% versus the same months last year (3,090 bottles). Growth is led by November and January, each up roughly 24-25% year over year, while September and October look close to flat. The model is 11% more accurate than a simple seasonal-naive baseline in backtesting, though errors still run around 35% by month, so treat this as a directional guide rather than a precise number. No series were skipped or left unvalidated in this forecast.</p><div class="meta">Backtest: 11% more accurate than repeating last year (0.89). 47 s, $0.02.</div></div><div class="ex"><a class="q" href="examples/fireball_linn_county_next_quarter.html">&ldquo;What revenue should we expect from Fireball in Linn County next quarter?&rdquo;</a><p>Fireball sales in Linn County are forecast at about $553,000 over the next quarter, down 4% from the same months last year ($578,000). The dip is led by September, projected down 11%, while November is expected to run 4% above last year. Backtesting shows the model is 9% more accurate than a simple seasonal-naive baseline across all three forecast months, so it can be reasonably trusted for near-term planning. No series were skipped or left unvalidated.</p><div class="meta">Backtest: 9% more accurate than repeating last year (0.91). 34 s, $0.03.</div></div><div class="ex"><a class="q" href="examples/american_vodka_dollars_top_5_counties_next_6_months.html">&ldquo;American vodka sales dollars for each of the five largest counties, next 6 months&rdquo;</a><p>American vodka sales across the top 5 counties are forecast at about $15.3 million over the next six months, roughly flat (+1%) versus the same months last year&#x27;s $15.2 million. Monthly results are mixed, with November standing out at +10% versus last year while September and January dip slightly (-2%). Backtesting shows this model is about 4% less accurate than a simple seasonal-naive baseline, and it tends to underperform that baseline at the 4- and 6-month horizons, so treat the later months with some caution. Polk county dominates the forecast at roughly $6.86 million of the total.</p><div class="meta">Backtest: about as accurate as repeating last year (1.04). 34 s, $0.02.</div></div><div class="ex"><a class="q" href="examples/ready_to_drink_cocktails_statewide_next_6_months.html">&ldquo;Forecast ready-to-drink cocktail bottles statewide for the next 6 months&rdquo;</a><p>Statewide ready-to-drink cocktail sales over the next six months are forecast at about 247,000 bottles, down 19% from the 307,000 bottles sold in the same months last year, with declines ranging from about 12% to 26% month to month. Backtesting shows the model is roughly 2% less accurate than a simple seasonal-naive baseline overall, performing better than the baseline in the near term (months 1 and 2) but falling behind in later months (4 through 6), so treat the later months of this forecast with more caution. No series were skipped or left unvalidated.</p><div class="meta">Backtest: about as accurate as repeating last year (1.02). 26 s, $0.01.</div></div><div class="ex"><a class="q" href="examples/statewide_total_liters_next_12_months.html">&ldquo;Total liters of liquor sold statewide over the next 12 months&rdquo;</a><p>Statewide volume over the next 12 months is forecast at about 21.1 million liters, down 2% from the same months last year&#x27;s 21.5 million liters. Monthly changes range from small gains like +2% in March and August to declines of -6% in October and July. In backtesting, the model was 4% less accurate than a simple seasonal-naive baseline overall, performing on par or better through the first six months ahead but noticeably worse than the baseline from 9 to 12 months out, so nearer-term months should be trusted more than the tail end of the forecast. No series were flagged as unvalidated or skipped.</p><div class="meta">Backtest: about as accurate as repeating last year (1.04). 44 s, $0.01.</div></div></div>
+
+<h2>How good is it?</h2>
+<p><strong>Forecast accuracy.</strong> On 30 forecasts sampled from the warehouse (products, categories,
+vendors; counties and statewide; bottles, dollars and liters; 3 to 12 months ahead), the chosen model beat "same month
+last year" on <strong>21</strong>, with a median error 8% lower than that baseline
+(median monthly error 14.1% vs 17.3%). Retail demand here is
+very regular year to year, so last year is a hard baseline to beat, and on the rest it was not beaten.
+<a href="https://github.com/joehahn/demand-on-demand/blob/main/benchmark/report.md">Full benchmark</a>.</p>
+<p><strong>Agent accuracy.</strong> 38 of 38 runs across 19 test requests produced exactly the right
+product, place, measure and horizon, or correctly declined (a city outside Iowa, a 24-month horizon, a product too new
+to forecast). Every number in the dashboard summaries is checked against the harness's results.
+<a href="https://github.com/joehahn/demand-on-demand/blob/main/evals/report.md">Eval report</a>.</p>
+
+<h2>Built with</h2>
+<p>Claude Code (building), the Claude API with Claude Sonnet 5 (the agent at runtime), Postgres, skforecast,
+LightGBM and scikit-learn, plotly. Code, specs, evals and write-up: <a href="https://github.com/joehahn/demand-on-demand">github.com/joehahn/demand-on-demand</a>.</p>
+
+<div class="cta"><strong>Joseph M. Hahn, Ph.D., JMH DataSciences.</strong> Independent AI and machine learning
+consultant; eight years delivering AI systems in Oracle's AI Center of Excellence. If your business runs on forecasts
+someone still builds by hand, <a href="https://jmh-datasciences.com">let's talk</a>.
+<a href="https://www.linkedin.com/in/hahnjoe/">LinkedIn</a>.</div>
+
+<footer>
+Data: <a href="https://catalog.data.gov/dataset/iowa-liquor-sales">Iowa Liquor Sales</a>, State of Iowa, via the Iowa
+Data Hub, licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; modified (cleaned and
+aggregated). County population and income: U.S. Census Bureau. Not endorsed by the State of Iowa. Brand names appear
+only as they do in the public data.
+</footer></main></body></html>
