@@ -186,7 +186,7 @@ new line_id.</p>
 {table(d["large_lines"], {"lines": comma, "liters": comma})}
 
 <footer>
-Data: <a href="https://catalog.data.gov/dataset/iowa-liquor-sales">Iowa Liquor Sales</a>, State of Iowa, via the Iowa
+Data: <a href="https://catalog.data.gov/dataset?q=iowa+liquor+sales">Iowa Liquor Sales</a>, State of Iowa, via the Iowa
 Data Hub, licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Modified as described on this
 page. County population and income: U.S. Census Bureau. Not endorsed by the State of Iowa.<br>
 Built by Joseph M. Hahn, Ph.D., <a href="https://jmh-datasciences.com">JMH DataSciences</a>, with

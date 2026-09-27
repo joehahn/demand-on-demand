@@ -375,7 +375,7 @@ new line_id.</p>
 {plot(fig_counties(d))}
 
 <footer>
-Data: <a href="https://catalog.data.gov/dataset/iowa-liquor-sales">Iowa Liquor Sales</a>, State of Iowa,
+Data: <a href="https://catalog.data.gov/dataset?q=iowa+liquor+sales">Iowa Liquor Sales</a>, State of Iowa,
 Alcohol Operations Bureau, via the Iowa Data Hub, licensed
 <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Modified: exact duplicate rows removed,
 values typed, aggregated. County population and income: U.S. Census Bureau (Population Estimates, SAIPE).

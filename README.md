@@ -112,7 +112,7 @@ time series) · [diplomacy-A2A](https://github.com/joehahn/diplomacy-A2A) (seven
 
 Code and writing: [MIT](LICENSE).
 
-**Data:** [Iowa Liquor Sales](https://catalog.data.gov/dataset/iowa-liquor-sales), State of Iowa, via the Iowa Data
+**Data:** [Iowa Liquor Sales](https://catalog.data.gov/dataset?q=iowa+liquor+sales), State of Iowa, via the Iowa Data
 Hub, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); modified (duplicates removed, cleaned,
 aggregated). County population and income: U.S. Census Bureau. Not endorsed by the State of Iowa. Brand names appear
 only as they do in the public data. Raw data is not stored in this repo; `load_data.py` downloads it.
