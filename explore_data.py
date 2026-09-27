@@ -103,7 +103,7 @@ QUERIES = {
                count(*) FILTER (WHERE NULLIF(trim(sales_dollars), '')::numeric <= 0) AS zero_dollar,
                count(*) FILTER (WHERE NULLIF(trim(sales_bottles), '')::numeric <= 0) AS zero_bottles,
                count(*) FILTER (WHERE NULLIF(trim(bottle_volume_ml), '')::numeric >= 10000) AS huge_bottles
-        FROM (SELECT DISTINCT * FROM raw.liquor_sales) r GROUP BY 1 ORDER BY 1""",
+        FROM (SELECT DISTINCT invoice_id, ordered_on, store_no, store_name, store_address, store_city, store_zip_code, county_fips_code, county_name, category_code, category_name, vendor_number, vendor_name, item_no, im_desc, pack, bottle_volume_ml, state_bottle_cost, state_bottle_retail, sales_bottles, sales_dollars, sales_liters, sales_gallons FROM raw.liquor_sales) r GROUP BY 1 ORDER BY 1""",
 
     # the Cocktails/RTD category moved to a new code in July 2022
     "rtd_codes": """

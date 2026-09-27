@@ -34,7 +34,7 @@ QUERIES = {
               FROM sales.invoice_line GROUP BY 1) c USING (month) ORDER BY 1""",
     "zero_lines": """
         SELECT left(ordered_on, 4)::int AS year, count(*) AS zero_lines_removed
-        FROM (SELECT DISTINCT * FROM raw.liquor_sales) r
+        FROM (SELECT DISTINCT invoice_id, ordered_on, store_no, store_name, store_address, store_city, store_zip_code, county_fips_code, county_name, category_code, category_name, vendor_number, vendor_name, item_no, im_desc, pack, bottle_volume_ml, state_bottle_cost, state_bottle_retail, sales_bottles, sales_dollars, sales_liters, sales_gallons FROM raw.liquor_sales) r
         WHERE NULLIF(trim(sales_bottles), '')::numeric <= 0 OR NULLIF(trim(sales_dollars), '')::numeric <= 0
         GROUP BY 1 ORDER BY 1""",
     "tennessee": """
@@ -139,7 +139,7 @@ def build(d):
 <p>Every problem documented on <a href="data_exploration.html">the data exploration page</a> is fixed once, in the
 warehouse, by the loader's clean stage. The raw landing table stays exactly as published, so each fix below is shown
 before and after. Forecasts read only the clean tables, so none of them has to know these problems existed.</p>
-{table(d["fixes"], {"rows_affected": comma})}
+{table(d["fixes"], {"rows_affected": lambda v: f"{int(v):,}" if v else "checked"})}
 
 <h2>1. Duplicate rows in the state's export</h2>
 <p>{n("export_duplicates"):,} rows repeated verbatim across CSV parts of the 2022, 2025 and 2026 downloads were removed.

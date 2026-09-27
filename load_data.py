@@ -367,13 +367,16 @@ def copy_rows(conn, table, ddl, rows):
 def clean():
     with connect() as conn:
         fixes = []
-        dupes = conn.execute("SELECT (SELECT count(*) FROM raw.liquor_sales) - "
-                             "(SELECT count(*) FROM sales.invoice_line)").fetchone()[0]
+        # counts are measured from the data (raw vs clean), so they are right however often this stage runs
+        published, distinct, zeros = conn.execute(f"""
+            SELECT (SELECT count(*) FROM raw.liquor_sales), count(*),
+                   count(*) FILTER (WHERE NULLIF(trim(sales_bottles), '')::numeric <= 0
+                                       OR NULLIF(trim(sales_dollars), '')::numeric <= 0)
+            FROM (SELECT DISTINCT {', '.join(RAW_COLS)} FROM raw.liquor_sales) d""").fetchone()
         fixes.append(("export_duplicates", "Rows repeated verbatim across CSV parts of the 2022, 2025 and 2026 "
-                      "exports; exact duplicates removed when sales.invoice_line was built.", dupes))
-
-        n = conn.execute("DELETE FROM sales.invoice_line WHERE sales_bottles <= 0 OR sales_dollars <= 0").rowcount
-        fixes.append(("zero_value_lines", "Order lines with zero bottles or zero dollars (likely cancelled) removed.", n))
+                      "exports; exact duplicates removed when sales.invoice_line was built.", published - distinct))
+        conn.execute("DELETE FROM sales.invoice_line WHERE sales_bottles <= 0 OR sales_dollars <= 0")
+        fixes.append(("zero_value_lines", "Order lines with zero bottles or zero dollars (likely cancelled) removed.", zeros))
 
         fam = item_families(conn)
         copy_rows(conn, "sales.item_family", "item_no text PRIMARY KEY, family_item_no text NOT NULL", fam)
@@ -415,21 +418,23 @@ def clean():
         xwalk = city_crosswalk(conn)
         copy_rows(conn, "sales.city_crosswalk", "city_recorded text PRIMARY KEY, city text NOT NULL", xwalk)
         conn.execute("UPDATE sales.store SET city = city_recorded")
-        n = conn.execute("UPDATE sales.store s SET city = x.city FROM sales.city_crosswalk x "
-                         "WHERE s.city_recorded = x.city_recorded").rowcount
+        conn.execute("UPDATE sales.store s SET city = x.city FROM sales.city_crosswalk x "
+                     "WHERE s.city_recorded = x.city_recorded")
+        n = conn.execute("SELECT count(*) FROM sales.store WHERE city IS DISTINCT FROM city_recorded").fetchone()[0]
         fixes.append(("city_spelling", f"{len(xwalk)} city spellings mapped to one name each (sales.city_crosswalk; "
                       "the original stays in store.city_recorded).", n))
 
         for table, col in (("ref.county_population", "population"), ("ref.county_income", "median_household_income")):
             conn.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS carried_forward boolean DEFAULT false")
-            n = conn.execute(f"""
+            conn.execute(f"""
                 INSERT INTO {table} (county_fips, year, {col}, carried_forward)
                 SELECT l.county_fips, y.year, l.{col}, true
                 FROM (SELECT DISTINCT ON (county_fips) county_fips, year, {col} FROM {table}
                       ORDER BY county_fips, year DESC) l
                 CROSS JOIN generate_series({FIRST_YEAR}, {LAST_YEAR + 1}) AS y(year)
                 WHERE y.year > l.year
-                ON CONFLICT (county_fips, year) DO NOTHING""").rowcount
+                ON CONFLICT (county_fips, year) DO NOTHING""")
+            n = conn.execute(f"SELECT count(*) FROM {table} WHERE carried_forward").fetchone()[0]
             fixes.append((f"census_lag_{col}", f"{table}: the latest published year is carried forward to "
                           f"{LAST_YEAR + 1} and flagged carried_forward.", n))
 
