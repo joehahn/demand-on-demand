@@ -298,14 +298,166 @@ def ref():
                    "county_fips text, year int, median_household_income int, PRIMARY KEY (county_fips, year)")
 
 
+# ---------------------------------------------------------------- clean: fix the known issues once, in the warehouse
+# Each issue documented by explore_data.py is fixed here, so every forecast reads clean data and no forecast has
+# to know about the problems. raw.liquor_sales stays untouched; docs/data_fixes.html shows before and after.
+
+def item_families(conn):
+    """Renumbered items -> product families. A successor has the same description and size, and its first order
+    falls within -45..+90 days of its predecessor's last order. Chains collapse to the most recent item."""
+    pairs = conn.execute("""
+        SELECT o.item_no, n.item_no FROM sales.item o JOIN sales.item n
+          ON n.item_desc = o.item_desc AND n.bottle_volume_ml = o.bottle_volume_ml AND n.item_no <> o.item_no
+         AND n.first_order_on BETWEEN o.last_order_on - 45 AND o.last_order_on + 90
+         AND n.last_order_on > o.last_order_on AND n.first_order_on > o.first_order_on
+        WHERE o.last_order_on < (SELECT max(last_order_on) - 60 FROM sales.item)""").fetchall()
+    parent = {}
+
+    def root(x):
+        while parent.get(x, x) != x:
+            x = parent[x]
+        return x
+    for old, new in pairs:
+        parent[root(old)] = root(new)
+    members = {}
+    for item in {i for pair in pairs for i in pair}:
+        members.setdefault(root(item), set()).add(item)
+    last = dict(conn.execute("SELECT item_no, last_order_on FROM sales.item").fetchall())
+    rows = []
+    for group in members.values():
+        head = max(group, key=lambda i: (last[i], i))   # a family is named after its most recent item
+        rows += [(i, head) for i in sorted(group) if i != head]
+    return rows
+
+
+CITY_ABBREVIATIONS = {"MT": "MOUNT", "ST": "SAINT", "FT": "FORT"}
+
+
+def city_crosswalk(conn):
+    """Spelling variants of one city (MT/MOUNT, CLEARLAKE/CLEAR LAKE, ARNOLD'S/ARNOLDS) -> one name: abbreviations
+    spelled out, then the spaced form (as in official names: Lone Tree, Le Claire), then no apostrophe, then the
+    spelling used by the most stores."""
+    stores = conn.execute("SELECT city_recorded, county_fips, count(*) FROM sales.store "
+                          "WHERE city_recorded IS NOT NULL GROUP BY 1, 2").fetchall()
+
+    def key(city):
+        words = [CITY_ABBREVIATIONS.get(w, w) for w in city.upper().split()]
+        return "".join(ch for ch in "".join(words) if ch.isalpha())
+    groups = {}
+    for city, fips, n in stores:
+        groups.setdefault((key(city), fips), []).append((city, n))
+    rows = []
+    for variants in groups.values():
+        if len(variants) < 2:
+            continue
+        spelled = [v for v in variants if not any(w in CITY_ABBREVIATIONS for w in v[0].split())]
+        best = max(spelled or variants, key=lambda v: (" " in v[0], "'" not in v[0], v[1]))[0]
+        rows += [(c, best) for c, _ in variants if c != best]
+    return rows
+
+
+def copy_rows(conn, table, ddl, rows):
+    conn.execute(f"DROP TABLE IF EXISTS {table}")
+    conn.execute(f"CREATE TABLE {table} ({ddl})")
+    with conn.cursor() as cur, cur.copy(f"COPY {table} FROM STDIN") as copy:
+        for row in rows:
+            copy.write_row(row)
+
+
+def clean():
+    with connect() as conn:
+        fixes = []
+        dupes = conn.execute("SELECT (SELECT count(*) FROM raw.liquor_sales) - "
+                             "(SELECT count(*) FROM sales.invoice_line)").fetchone()[0]
+        fixes.append(("export_duplicates", "Rows repeated verbatim across CSV parts of the 2022, 2025 and 2026 "
+                      "exports; exact duplicates removed when sales.invoice_line was built.", dupes))
+
+        n = conn.execute("DELETE FROM sales.invoice_line WHERE sales_bottles <= 0 OR sales_dollars <= 0").rowcount
+        fixes.append(("zero_value_lines", "Order lines with zero bottles or zero dollars (likely cancelled) removed.", n))
+
+        fam = item_families(conn)
+        copy_rows(conn, "sales.item_family", "item_no text PRIMARY KEY, family_item_no text NOT NULL", fam)
+        conn.execute("ALTER TABLE sales.item DROP COLUMN IF EXISTS family_item_no")
+        conn.execute("ALTER TABLE sales.item ADD COLUMN family_item_no text")
+        conn.execute("UPDATE sales.item SET family_item_no = item_no")
+        conn.execute("UPDATE sales.item i SET family_item_no = f.family_item_no FROM sales.item_family f "
+                     "WHERE f.item_no = i.item_no")
+        fixes.append(("item_renumbering", "Renumbered items joined into product families (sales.item_family, "
+                      "item.family_item_no), so a product's history continues across a new item number.", len(fam)))
+
+        conn.execute("DROP TABLE IF EXISTS sales.category_crosswalk")
+        conn.execute("""
+            CREATE TABLE sales.category_crosswalk AS
+            WITH use AS (SELECT category_code, max(last_order_on) AS last_on, sum(total_bottles) AS bottles
+                         FROM sales.item WHERE category_code IS NOT NULL GROUP BY 1),
+                 named AS (SELECT c.category_code, c.category_name, u.last_on, u.bottles
+                           FROM sales.category c LEFT JOIN use u USING (category_code)),
+                 live AS (SELECT DISTINCT ON (category_name) category_name, category_code AS current_code
+                          FROM named ORDER BY category_name, last_on DESC NULLS LAST, bottles DESC NULLS LAST)
+            SELECT n.category_code, l.current_code FROM named n JOIN live l USING (category_name)
+            WHERE n.category_code <> l.current_code""")
+        n_codes = conn.execute("SELECT count(*) FROM sales.category_crosswalk").fetchone()[0]
+        conn.execute("ALTER TABLE sales.item DROP COLUMN IF EXISTS category_current")
+        conn.execute("ALTER TABLE sales.item ADD COLUMN category_current text")
+        conn.execute("UPDATE sales.item SET category_current = category_code")
+        conn.execute("UPDATE sales.item i SET category_current = x.current_code FROM sales.category_crosswalk x "
+                     "WHERE x.category_code = i.category_code")
+        restated = conn.execute("SELECT count(*) FROM sales.invoice_line l JOIN sales.item i USING (item_no) "
+                                "WHERE l.category_code IS DISTINCT FROM i.category_current").fetchone()[0]
+        fixes.append(("category_taxonomy", "History restated in today's categories: every line takes its item's "
+                      f"current category (item.category_current), and {n_codes} retired codes map to the live code with "
+                      "the same name (sales.category_crosswalk). Fixes the 2016-08-29 reassignment and the 2022 "
+                      "Cocktails/RTD recode.", restated))
+
+        # keep the source spelling first, so re-running this stage always starts from what was recorded
+        conn.execute("ALTER TABLE sales.store ADD COLUMN IF NOT EXISTS city_recorded text")
+        conn.execute("UPDATE sales.store SET city_recorded = city WHERE city_recorded IS NULL")
+        xwalk = city_crosswalk(conn)
+        copy_rows(conn, "sales.city_crosswalk", "city_recorded text PRIMARY KEY, city text NOT NULL", xwalk)
+        conn.execute("UPDATE sales.store SET city = city_recorded")
+        n = conn.execute("UPDATE sales.store s SET city = x.city FROM sales.city_crosswalk x "
+                         "WHERE s.city_recorded = x.city_recorded").rowcount
+        fixes.append(("city_spelling", f"{len(xwalk)} city spellings mapped to one name each (sales.city_crosswalk; "
+                      "the original stays in store.city_recorded).", n))
+
+        for table, col in (("ref.county_population", "population"), ("ref.county_income", "median_household_income")):
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS carried_forward boolean DEFAULT false")
+            n = conn.execute(f"""
+                INSERT INTO {table} (county_fips, year, {col}, carried_forward)
+                SELECT l.county_fips, y.year, l.{col}, true
+                FROM (SELECT DISTINCT ON (county_fips) county_fips, year, {col} FROM {table}
+                      ORDER BY county_fips, year DESC) l
+                CROSS JOIN generate_series({FIRST_YEAR}, {LAST_YEAR + 1}) AS y(year)
+                WHERE y.year > l.year
+                ON CONFLICT (county_fips, year) DO NOTHING""").rowcount
+            fixes.append((f"census_lag_{col}", f"{table}: the latest published year is carried forward to "
+                          f"{LAST_YEAR + 1} and flagged carried_forward.", n))
+
+        fixes += [
+            ("invoice_id_meaning", "invoice_id changed from one id per line to one id per order on 2025-09-01; "
+             "lines are keyed by the new line_id instead.", 0),
+            ("missing_prices", "state_bottle_cost and state_bottle_retail are blank before 2025-09; unit price is "
+             "sales_dollars / sales_bottles.", 0),
+            ("large_volume_lines", "Lines of 6 liters or more were checked: pallet shippers and whole-cask purchases, "
+             "genuine volume, kept as recorded.", 0),
+        ]
+        copy_rows(conn, "meta.data_fixes", "fix_id text PRIMARY KEY, description text, rows_affected bigint", fixes)
+        conn.execute("DROP TABLE IF EXISTS meta.known_issues")   # superseded: the fixes now live in the warehouse
+        conn.execute("ANALYZE sales.invoice_line, sales.item, sales.store")
+        for fix_id, _, n in fixes:
+            print(f"  {fix_id}: {n:,}")
+
+
 # ---------------------------------------------------------------- data dictionary
-# What a decent company data dictionary says: what each column means. It does NOT list the data
-# quality problems; finding those is part of the agent's job.
 
 TABLE_NOTES = {
-    "sales.invoice_line": "One row per product line on a retailer's wholesale liquor order from the state (Iowa Class E licensees), 2016 onward. Price, pack and category are as recorded on the order date.",
+    "sales.invoice_line": "One row per product line on a retailer's wholesale liquor order from the state (Iowa Class E licensees), 2016 onward, cleaned (see meta.data_fixes). Price, pack and category_code are as recorded on the order date.",
     "sales.store": "Licensed retail stores that ordered liquor. Attributes are the most recently recorded values.",
-    "sales.item": "Liquor products. Attributes are the most recently recorded values.",
+    "sales.item": "Liquor products. Attributes are the most recently recorded values. Use family_item_no for a product across renumberings and category_current for its category.",
+    "sales.item_family": "Renumbered items: each old item_no and the current item_no of its product family.",
+    "sales.category_crosswalk": "Retired category codes and the live code with the same name.",
+    "sales.city_crosswalk": "City spelling variants and the one name used in store.city.",
+    "meta.data_fixes": "Every data-quality fix applied to the warehouse, with the number of rows affected.",
     "sales.vendor": "Liquor vendors / distillers / importers.",
     "sales.category": "Product categories. Name is the most recently recorded name for the code.",
     "ref.calendar": "One row per calendar day, with US federal holidays and business days.",
@@ -333,7 +485,7 @@ COLUMN_NOTES = {
     },
     "sales.store": {
         "store_no": "Store number.", "store_name": "Store name.", "address": "Street address.",
-        "city": "City.", "zip_code": "ZIP code.", "county_fips": "5-digit county FIPS code; joins ref.county_population and ref.county_income.",
+        "city": "City, one spelling per city.", "city_recorded": "City as recorded by the source.", "zip_code": "ZIP code.", "county_fips": "5-digit county FIPS code; joins ref.county_population and ref.county_income.",
         "county_name": "County name.", "first_order_on": "Date of the store's first order.", "last_order_on": "Date of the store's latest order.",
     },
     "sales.item": {
@@ -341,6 +493,8 @@ COLUMN_NOTES = {
         "category_code": "Category; joins sales.category.", "pack": "Bottles per case.", "bottle_volume_ml": "Bottle volume in milliliters.",
         "first_order_on": "Date of the item's first order.", "last_order_on": "Date of the item's latest order.",
         "total_bottles": "Bottles ordered over the item's lifetime.",
+        "family_item_no": "Current item number of this product's family; equals item_no unless the item was renumbered.",
+        "category_current": "The item's category in today's taxonomy; use it for category-level analysis over any period.",
     },
     "sales.vendor": {"vendor_no": "Vendor number.", "vendor_name": "Vendor name."},
     "sales.category": {"category_code": "Category code.", "category_name": "Category name."},
@@ -349,8 +503,10 @@ COLUMN_NOTES = {
         "iso_week": "ISO week number.", "day_of_week": "1 = Monday ... 7 = Sunday.", "is_weekend": "Saturday or Sunday.",
         "holiday_name": "US federal holiday name, else NULL.", "is_business_day": "Weekday that is not a federal holiday.",
     },
-    "ref.county_population": {"county_fips": "5-digit county FIPS code.", "year": "Year.", "population": "Resident population estimate."},
-    "ref.county_income": {"county_fips": "5-digit county FIPS code.", "year": "Year.", "median_household_income": "Median household income in dollars."},
+    "ref.county_population": {"county_fips": "5-digit county FIPS code.", "year": "Year.", "population": "Resident population estimate.",
+                              "carried_forward": "True when the latest published year was carried forward."},
+    "ref.county_income": {"county_fips": "5-digit county FIPS code.", "year": "Year.", "median_household_income": "Median household income in dollars.",
+                          "carried_forward": "True when the latest published year was carried forward."},
 }
 
 
@@ -374,7 +530,7 @@ def meta():
         print("  comments written")
 
 
-STAGES = {"download": download, "raw": raw, "curate": curate, "ref": ref, "meta": meta}
+STAGES = {"download": download, "raw": raw, "curate": curate, "ref": ref, "clean": clean, "meta": meta}
 
 if __name__ == "__main__":
     names = sys.argv[1:] or list(STAGES)

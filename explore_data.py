@@ -81,9 +81,8 @@ QUERIES = {
 
     # city spellings that differ only by abbreviation
     "city_variants": """
-        SELECT store_city AS city, count(DISTINCT store_no) AS stores, count(*) AS lines
-        FROM raw.liquor_sales
-        WHERE store_city ~ '^(MT|MOUNT|ST|SAINT|FT|FORT) ' GROUP BY 1 ORDER BY 1""",
+        SELECT x.city_recorded AS spelling, x.city AS same_city_as, count(DISTINCT s.store_no) AS stores
+        FROM sales.city_crosswalk x JOIN sales.store s ON s.city_recorded = x.city_recorded GROUP BY 1, 2 ORDER BY 2""",
 
     # stores whose recorded attributes change over time
     "store_drift": """
@@ -100,11 +99,23 @@ QUERIES = {
         SELECT bottle_volume_ml, count(*) AS lines FROM sales.invoice_line GROUP BY 1 ORDER BY 1""",
 
     "suspect_lines": """
-        SELECT extract(year FROM ordered_on)::int AS year,
-               count(*) FILTER (WHERE sales_dollars <= 0)  AS zero_dollar,
-               count(*) FILTER (WHERE sales_bottles <= 0)  AS zero_bottles,
-               count(*) FILTER (WHERE bottle_volume_ml >= 10000) AS huge_bottles
-        FROM sales.invoice_line GROUP BY 1 ORDER BY 1""",
+        SELECT left(ordered_on, 4)::int AS year,
+               count(*) FILTER (WHERE NULLIF(trim(sales_dollars), '')::numeric <= 0) AS zero_dollar,
+               count(*) FILTER (WHERE NULLIF(trim(sales_bottles), '')::numeric <= 0) AS zero_bottles,
+               count(*) FILTER (WHERE NULLIF(trim(bottle_volume_ml), '')::numeric >= 10000) AS huge_bottles
+        FROM (SELECT DISTINCT * FROM raw.liquor_sales) r GROUP BY 1 ORDER BY 1""",
+
+    # the Cocktails/RTD category moved to a new code in July 2022
+    "rtd_codes": """
+        SELECT date_trunc('month', ordered_on)::date AS month, category_code, sum(sales_bottles) AS bottles
+        FROM sales.invoice_line WHERE category_code IN ('1071100', '1071000', '1070000') GROUP BY 1, 2 ORDER BY 1, 2""",
+
+    # renumbered items: same product, new item number (detected by the loader's clean stage)
+    "renumbered": """
+        SELECT f.item_no AS old_item, f.family_item_no AS new_item, o.item_desc, o.bottle_volume_ml AS ml,
+               o.last_order_on AS old_last_order, n.first_order_on AS new_first_order, o.total_bottles AS old_bottles
+        FROM sales.item_family f JOIN sales.item o ON o.item_no = f.item_no JOIN sales.item n ON n.item_no = f.family_item_no
+        ORDER BY o.total_bottles DESC""",
 
     # order ids changed meaning on 2025-09-01
     "lines_per_invoice": """
@@ -210,6 +221,15 @@ def fig_categories(d):
     return style(f, "The product taxonomy was reorganized", "count", legend=True)
 
 
+def fig_rtd(d):
+    r = d["rtd_codes"].pivot_table(index="month", columns="category_code", values="bottles", aggfunc="sum")
+    names = {"1071100": "code 1071100", "1071000": "code 1071000", "1070000": "code 1070000"}
+    f = go.Figure([line(r.index, r[c], names[c], col) for c, col in zip(["1071100", "1071000", "1070000"], [BLUE, ORANGE, AQUA])
+                   if c in r])
+    f.update_traces(hovertemplate="%{y:,.0f}")
+    return style(f, "Cocktails/RTD bottles per month by recorded category code", "bottles", legend=True)
+
+
 def fig_lines_per_invoice(d):
     x = d["lines_per_invoice"]
     f = go.Figure(line(x.month, x.lines_per_invoice, "Lines per invoice_id", BLUE))
@@ -285,7 +305,8 @@ def build_page(d):
 <p>Every wholesale liquor order placed by an Iowa retailer since 2016, loaded into a local Postgres
 warehouse. This page is the first step of <a href="https://github.com/joehahn/demand-on-demand">demand-on-demand</a>:
 before an AI agent can answer "forecast Tito's in Polk County for the next 5 months," someone has to
-know what traps are in the data. These are the ones we found.</p>
+know what traps are in the data. These are the ones we found; <a href="data_fixes.html">the data fixes page</a> shows
+how each one was fixed in the warehouse, once, so no forecast has to deal with it.</p>
 <div class="tiles">{tiles_html}</div>
 
 <h2>1. Demand: trend and seasonality</h2>
@@ -314,16 +335,25 @@ whiskey since 2016" has to notice this. The first 24 reassigned codes:</p>
 {plot(fig_categories(d))}
 {table(cat.head(24), {"lines": comma})}
 
+<h2>4b. A category that looks discontinued was recoded</h2>
+<p>COCKTAILS/RTD stops dead under code 1071100 on 2022-07-15 and restarts three days later under code 1071000,
+same name, same products. A forecast of "ready-to-drink cocktails" built on either code alone is wrong.</p>
+{plot(fig_rtd(d))}
+
 <h2>5. One product, many item numbers</h2>
-<p>"Tito's" is not one row. It is several item numbers across bottle sizes and packs, some discontinued.
-Resolving a business term to the right set of items is the NL2SQL agent's first job.</p>
+<p>"Tito's" is not one row. It is several item numbers across bottle sizes and packs, and the 50 ml mini was
+renumbered in July 2020 (38180 to 38194, with a temporary 938180 in between). Across the whole catalog,
+{len(d["renumbered"])} items were renumbered like this, carrying {d["renumbered"].old_bottles.sum() / 1e6:.1f}M bottles of
+history. The largest:</p>
 {table(titos, {"lines": comma, "bottles": comma})}
+{table(d["renumbered"].head(12).astype({"old_last_order": str, "new_first_order": str}), {"old_bottles": comma})}
 
 <h2>6. Stores drift, open and close</h2>
 <p>Of {int(sd.stores):,} stores, {int(sd.changed_name):,} changed recorded name, {int(sd.changed_address):,}
 changed address, {int(sd.changed_city):,} changed city and {int(sd.changed_county):,} changed county over
-time. {rc['stores with no county']} stores have no county at all. City spellings are not standardized either:</p>
-{table(d["city_variants"], {"stores": comma, "lines": comma})}
+time. {rc['stores with no county']} stores have no county at all. City spellings are not standardized either; these
+{len(d["city_variants"])} spellings each name a city also spelled another way:</p>
+{table(d["city_variants"])}
 {plot(fig_store_openings(d))}
 
 <h2>7. Outliers and odd lines</h2>
