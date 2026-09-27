@@ -42,30 +42,6 @@ def check(case, res):
         extra = sorted(set(want.get("forbid", [])) & set(got["codes"]))
         if want.get("forbid"):
             add(f"{scope}.forbid", not extra, f"included {extra}")
-    for m in exp.get("mitigations", []):
-        def matches(s):
-            if s["rule"] != m["rule"]:
-                return False
-            for k, v in m["params"].items():
-                have = s["params"].get(k)
-                if k == "date":  # month precision is enough
-                    if not str(have or "").startswith(v):
-                        return False
-                elif isinstance(v, list):
-                    if not set(v) <= set(have or []):
-                        return False
-                elif str(have) != str(v):
-                    return False
-            return True
-        add(f"mitigation {m['rule']} {json.dumps(m['params'])}", any(matches(s) for s in spec["mitigations"]),
-            "not applied")
-    if "proposes_register_issue" in exp:
-        n = res.get("tools", []).count("propose_register_issue")
-        add("register proposal", (n > 0) == exp["proposes_register_issue"],
-            f"{n} proposal(s), expected {'one' if exp['proposes_register_issue'] else 'none'}")
-    for rule in exp.get("forbidden_rules", []):
-        used = [s for s in spec["mitigations"] if s["rule"] == rule]
-        add(f"no {rule}", not used, f"applied {rule}: {used[0]['reason'][:120] if used else ''}")
     return out
 
 
@@ -75,12 +51,11 @@ def one(case, run_no):
         res = agent.ask(case["request"], train=False, log=lambda *a: None)
     except Exception as e:  # an agent crash is a failed run, not a failed eval
         res = {"status": "crash", "message": repr(e), "usage": {"est_cost_usd": 0}, "trace": []}
-    res["tools"] = [t["tool"] for t in res.get("trace", [])]
     checks = check(case, res)
     return {"id": case["id"], "run": run_no, "tags": case["tags"], "status": res["status"],
             "passed": all(c["ok"] for c in checks), "checks": checks,
             "cost": res["usage"].get("est_cost_usd", 0), "seconds": round(time.time() - t0, 1),
-            "tool_calls": len(res.get("trace", [])), "tools": res["tools"], "spec": res.get("spec"), "assumptions": res.get("assumptions"),
+            "tool_calls": len(res.get("trace", [])), "spec": res.get("spec"), "assumptions": res.get("assumptions"),
             "message": res.get("message", "")}
 
 

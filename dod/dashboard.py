@@ -63,8 +63,13 @@ def build(spec, panel, res, usage=None, agent=None):
                "about as accurate as repeating last year" if rel <= 1.05 else
                f"{(rel - 1):.0%} less accurate than repeating last year")
     best = res["best"]
-    model_name = "seasonal naive (same month last year)" if best["model"] == "seasonal_naive" else \
-        f"{best['model']}, {best['target']} target"
+    ens = res.get("ensemble") or []
+    if best["model"] == "seasonal_naive":
+        model_name = "seasonal naive (same month last year), since no model beat it on the tuning window"
+    else:
+        kinds = ", ".join(f"{c['model']} ({c['target']}{', pooled' if c.get('pool') else ''})" for c in ens) or best["model"]
+        model_name = (f"{'average of ' if len(ens) > 1 else ''}{kinds}, blended {res.get('model_share', 1):.0%} model "
+                      f"with {1 - res.get('model_share', 1):.0%} same-month-last-year")
     money = "$" if unit == "dollars" else ""
     tiles = [
         (f"{money}{total:,.0f}", f"forecast {unit}, {months}"),
@@ -153,6 +158,9 @@ first sale.</p>
 together with the baseline; a model had to beat the baseline there to be used. Feature groups were then kept or dropped on
 the same tuning window. The test window below was not used for any choice.</p>
 {table(grid)}
+<p>Final choice, also on the tuning window: how many of the top configurations to average, and how much weight
+to give them against "same month last year" (tuning error vs baseline, lower is better):</p>
+{table(res["blend"], {"tuning_rel_mae": lambda v: f"{v:.3f}", "model_share": lambda v: f"{v:.0%}"}) if len(res.get("blend", [])) else ""}
 <p>Feature choice, scored on the test window for the record (below 1 beats the baseline):</p>
 {table(abl)}
 

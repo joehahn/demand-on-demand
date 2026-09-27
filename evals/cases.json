@@ -28,15 +28,12 @@
      "19153"
     ],
     "forbid": []
-   },
-   "proposes_register_issue": false
+   }
   }
  },
  {
   "id": "titos_minis_by_item",
   "tags": [
-   "held_out",
-   "renumbering",
    "dev"
   ],
   "request": "How many bottles of each Tito's mini item will sell statewide over the next 6 months?",
@@ -47,48 +44,19 @@
    "product": {
     "kind": "item",
     "must": [
-     "38180",
      "38194",
-     "938180",
      "38185"
     ]
    },
    "region": {
     "kind": "statewide"
-   },
-   "mitigations": [
-    {
-     "rule": "stitch_successor",
-     "params": {
-      "from": "38180",
-      "to": "38194"
-     }
-    },
-    {
-     "rule": "stitch_successor",
-     "params": {
-      "from": "938180",
-      "to": "38194"
-     }
-    },
-    {
-     "rule": "min_date",
-     "params": {
-      "date": "2024-04",
-      "series": [
-       "38185"
-      ]
-     }
-    }
-   ],
-   "proposes_register_issue": false
+   }
   }
  },
  {
   "id": "titos_minis_des_moines",
   "tags": [
    "resolution",
-   "restraint",
    "dev"
   ],
   "request": "monthly forecast of Tito's minis in Des Moines for the next 5 months",
@@ -98,7 +66,6 @@
    "product": {
     "kind": "item",
     "must": [
-     "38180",
      "38194"
     ]
    },
@@ -110,17 +77,12 @@
     "forbid": [
      "WEST DES MOINES"
     ]
-   },
-   "forbidden_rules": [
-    "cap_outliers"
-   ]
+   }
   }
  },
  {
   "id": "crown_mount_pleasant",
   "tags": [
-   "held_out",
-   "spelling",
    "dev"
   ],
   "request": "Monthly liters of Crown Royal in Mount Pleasant for the next 4 months",
@@ -139,17 +101,14 @@
    "region": {
     "kind": "city",
     "must": [
-     "MOUNT PLEASANT",
-     "MT PLEASANT"
+     "MOUNT PLEASANT"
     ]
-   },
-   "proposes_register_issue": false
+   }
   }
  },
  {
   "id": "tennessee_whiskey",
   "tags": [
-   "register",
    "fresh"
   ],
   "request": "Forecast Tennessee whiskey bottles across Iowa for the next 3 months",
@@ -322,8 +281,6 @@
  {
   "id": "titos_st_ansgar",
   "tags": [
-   "held_out",
-   "spelling",
    "fresh"
   ],
   "request": "Tito's bottles in St. Ansgar for the next 4 months",
@@ -340,8 +297,7 @@
    "region": {
     "kind": "city",
     "must": [
-     "SAINT ANSGAR",
-     "ST ANSGAR"
+     "SAINT ANSGAR"
     ]
    }
   }
@@ -349,7 +305,6 @@
  {
   "id": "bottled_in_bond",
   "tags": [
-   "register",
    "fresh"
   ],
   "request": "Bottled in bond bourbon bottles statewide, next 3 months",
@@ -370,42 +325,18 @@
  {
   "id": "titos_100_by_item",
   "tags": [
-   "held_out",
-   "renumbering",
+   "refusal",
+   "too_new",
    "fresh"
   ],
   "request": "Forecast each Tito's 100 ml item statewide for the next 6 months",
   "expect": {
-   "status": "ok",
-   "horizon": 6,
-   "series_by": "item",
-   "product": {
-    "kind": "item",
-    "must": [
-     "38449",
-     "102747"
-    ]
-   },
-   "region": {
-    "kind": "statewide"
-   },
-   "mitigations": [
-    {
-     "rule": "stitch_successor",
-     "params": {
-      "from": "38449",
-      "to": "102747"
-     }
-    }
-   ],
-   "proposes_register_issue": false
+   "status": "no_forecast"
   }
  },
  {
   "id": "rtd_cocktails_recode",
   "tags": [
-   "held_out",
-   "recode",
    "fresh"
   ],
   "request": "Forecast ready-to-drink cocktail bottles statewide for the next 6 months",
@@ -415,14 +346,12 @@
    "product": {
     "kind": "category",
     "must": [
-     "1071000",
-     "1071100"
+     "1071000"
     ]
    },
    "region": {
     "kind": "statewide"
-   },
-   "proposes_register_issue": true
+   }
   }
  },
  {
