@@ -159,6 +159,12 @@ QUERIES = {
         SELECT s.store_name || ' (' || s.city || ')' AS name, sum(l.sales_dollars) AS dollars, count(*) AS lines
         FROM sales.invoice_line l JOIN sales.store s USING (store_no) GROUP BY 1 ORDER BY 2 DESC LIMIT 15""",
 
+    # bottles per month by category, in today's taxonomy: the slices that forecasts are actually asked about
+    "category_monthly": """
+        SELECT date_trunc('month', l.ordered_on)::date AS month, c.category_name AS category, sum(l.sales_bottles) AS bottles
+        FROM sales.invoice_line l JOIN sales.item i USING (item_no) JOIN sales.category c ON c.category_code = i.category_current
+        GROUP BY 1, 2 ORDER BY 1, 2""",
+
     "row_counts": """
         SELECT 'raw.liquor_sales' AS tbl, count(*) AS n FROM raw.liquor_sales
         UNION ALL SELECT 'sales.invoice_line', count(*) FROM sales.invoice_line
@@ -289,6 +295,53 @@ def fig_top(df, title):
     f = go.Figure(go.Bar(x=t.dollars, y=t.name.str.title(), orientation="h", marker_color=BLUE,
                          customdata=t.lines, hovertemplate="%{y}: $%{x:,.0f}, %{customdata:,} records<extra></extra>"))
     return style(f, title, height=460).update_layout(hovermode="closest", margin=dict(l=260))
+
+
+def by_category(d):
+    """Monthly bottles, one column per category (today's taxonomy), plus the statewide total."""
+    c = d["category_monthly"].pivot_table(index="month", columns="category", values="bottles", aggfunc="sum")
+    c.index = pd.to_datetime(c.index)
+    c["ALL LIQUOR"] = d["monthly"].set_index(pd.to_datetime(d["monthly"].month)).bottles
+    return c
+
+
+def fig_slice_seasonality(d):
+    """Two holiday categories against the total, each as a share of its own average month."""
+    c = by_category(d)
+    series = [("ALL LIQUOR", "All liquor", BLUE), ("CREAM LIQUEURS", "Cream liqueurs", ORANGE),
+              ("TEMPORARY & SPECIALTY PACKAGES", "Gift and specialty packs", AQUA)]
+    f = go.Figure([line(c.index, 100 * c[k] / c[k].mean(), name, col) for k, name, col in series])
+    f.update_traces(hovertemplate="%{y:.0f}%")
+    return style(f, "Bottles per month, as % of each series' average month", "% of average month", height=380, legend=True)
+
+
+def fig_peak_to_trough(d):
+    """For the 40 biggest categories: busiest month of the year divided by the quietest, 2016 to 2025."""
+    c = by_category(d)
+    c = c[c.index.year <= 2025]  # complete years only
+    top = c.drop(columns="ALL LIQUOR").sum().nlargest(40).index.tolist() + ["ALL LIQUOR"]
+    moy = c[top].groupby(c.index.month).mean()  # average bottles in each month of the year
+    names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    t = pd.DataFrame({"ratio": moy.max() / moy.min(), "peak": [names[m - 1] for m in moy.idxmax()]}).sort_values("ratio")
+    colors = [ORANGE if k == "ALL LIQUOR" else BLUE for k in t.index]
+    f = go.Figure(go.Bar(x=t.ratio, y=t.index.str.title(), orientation="h", marker_color=colors, customdata=t.peak,
+                         hovertemplate="%{y}: busiest month %{x:.1f}x the quietest (peak in %{customdata})<extra></extra>"))
+    f.update_xaxes(title="busiest month of the year / quietest month", ticksuffix="x")
+    return style(f, "Seasonal swing of the 40 largest categories (all liquor in orange)", height=820).update_layout(
+        hovermode="closest", margin=dict(l=260))
+
+
+def fig_rtd_step(d):
+    """Ready-to-drink cocktails jumped in 2020 and stayed up; the total barely moved."""
+    c = by_category(d)
+    c = c[c.index.year <= 2025]  # complete years only
+    y = c.groupby(c.index.year)[["ALL LIQUOR", "COCKTAILS/RTD"]].sum()
+    y = 100 * y / y.loc[2019]
+    f = go.Figure([line(y.index, y["ALL LIQUOR"], "All liquor", BLUE),
+                   line(y.index, y["COCKTAILS/RTD"], "Cocktails/RTD", ORANGE)])
+    f.update_traces(mode="lines+markers", marker=dict(size=8), hovertemplate="%{y:.0f}")
+    f.update_xaxes(dtick=1)
+    return style(f, "Bottles per year, 2019 = 100", "index (2019 = 100)", legend=True)
 
 
 def fixed(anchor, what):
@@ -440,6 +493,18 @@ their orders on business days, so weekends are nearly empty even though stores s
 
 <h2>2. Demand: trend and seasonality</h2>
 {"".join(plot(f) for f in fig_demand(d))}
+<p>The statewide total barely moves: its busiest month of the year (December) is only about 1.3 times its quietest. But nobody
+asks for a forecast of all liquor in Iowa. The slices people do ask about swing far more. Cream liqueurs peak every
+November and December, and gift packs are bought in September and October ahead of the holidays, then fall away in spring:</p>
+{plot(fig_slice_seasonality(d))}
+<p>These two are not cherry-picked: 36 of the 40 largest categories swing more than the total does. Most whiskies,
+liqueurs and schnapps peak in December; gins, white and flavored rums, flavored vodkas and agave tequila peak in June;
+ready-to-drink cocktails peak in April and Irish whiskey in March, for St. Patrick's Day. Hover for each category's
+peak month:</p>
+{plot(fig_peak_to_trough(d))}
+<p>Slices also change level in ways the total hides. Ready-to-drink cocktails jumped about 70% in 2020 and never
+went back to where they were in 2019:</p>
+{plot(fig_rtd_step(d))}
 
 <h2>3. The state's own export duplicates rows</h2>
 <p>The 2022, 2025 and 2026 downloads repeat {dup_rows:,} rows verbatim across CSV parts. Left in, 2022
