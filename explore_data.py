@@ -443,7 +443,6 @@ def build_page(d):
     rc = dict(zip(d["row_counts"].tbl, d["row_counts"].n))
     m = d["monthly"]
     sd = d["store_drift"].iloc[0]
-    dup_rows = rc["raw.liquor_sales"] - rc["sales.invoice_line"]
 
     plot = Plots()  # plotly.js loaded once, from the CDN
 
@@ -452,7 +451,6 @@ def build_page(d):
         (f"${m.dollars.sum() / 1e9:.2f}B", "wholesale sales"),
         (f"{rc['sales.store']:,}", "stores"),
         (f"{rc['sales.item']:,}", "products"),
-        (f"{dup_rows / 1e6:.2f}M", "duplicate rows removed"),
     ]
     tiles_html = "".join(f'<div class="tile"><div class="v">{v}</div><div class="k">{k}</div></div>' for v, k in tiles)
 
@@ -465,8 +463,6 @@ def build_page(d):
         titos[c] = titos[c].astype(str)
 
     sus = d["suspect_lines"]
-    bs = d["bottle_sizes"].dropna()
-    top15 = bs.nlargest(15, "lines").lines.sum()
     comma = lambda v: f"{int(v):,}"
 
     body = f"""
@@ -480,10 +476,7 @@ shows how each one was fixed there, once, so no forecast has to deal with it.</p
 <div class="tiles">{tiles_html}</div>
 
 <h2>1. How many orders, and when</h2>
-<p>Every chart here counts records as the state published them, drawn as steps. Each record is one line of a
-wholesale order that an Iowa store placed with the state, which sells it the liquor; these are not retail sales. Orange is
-the share that turned out to be exact duplicates in the export (section 3), which the loader removes. Stores place
-their orders on business days, so weekends are nearly empty even though stores sell to customers then.</p>
+<p>Records (order lines) per day, month, weekday, month of year and year, as published. Orange: export duplicates, removed.</p>
 {plot(fig_daily(d))}
 {plot(fig_monthly_lines(d))}
 {plot(fig_weekday(d))}
@@ -492,83 +485,59 @@ their orders on business days, so weekends are nearly empty even though stores s
 {fixed('duplicates', 'how the duplicate rows were found and removed')}
 
 <h2>2. Demand: trend and seasonality</h2>
+<p>Statewide dollars, bottles and liters per month.</p>
 {"".join(plot(f) for f in fig_demand(d))}
-<p>The statewide total barely moves: its busiest month of the year (December) is only about 1.3 times its quietest. But nobody
-asks for a forecast of all liquor in Iowa. The slices people do ask about swing far more. Cream liqueurs peak every
-November and December, and gift packs are bought in September and October ahead of the holidays, then fall away in spring:</p>
+<p>Slices swing far more than the total.</p>
 {plot(fig_slice_seasonality(d))}
-<p>These two are not cherry-picked: 36 of the 40 largest categories swing more than the total does. Most whiskies,
-liqueurs and schnapps peak in December; gins, white and flavored rums, flavored vodkas and agave tequila peak in June;
-ready-to-drink cocktails peak in April and Irish whiskey in March, for St. Patrick's Day. Hover for each category's
-peak month:</p>
+<p>Busiest month of the year divided by the quietest, 2016 to 2025. Hover for the peak month.</p>
 {plot(fig_peak_to_trough(d))}
-<p>Slices also change level in ways the total hides. Ready-to-drink cocktails jumped about 70% in 2020 and never
-went back to where they were in 2019:</p>
+<p>Ready-to-drink cocktails stepped up in 2020 and stayed up.</p>
 {plot(fig_rtd_step(d))}
 
 <h2>3. The state's own export duplicates rows</h2>
-<p>The 2022, 2025 and 2026 downloads repeat {dup_rows:,} rows verbatim across CSV parts. Left in, 2022
-sales would be inflated by roughly 23%. The portal's own 2026 row count matches the distinct count, so the
-loader drops exact duplicates.</p>
+<p>Rows as published vs distinct rows per month.</p>
 {plot(fig_dupes(d))}
 {fixed('duplicates', 'duplicate rows: the issue and the fix')}
 
 <h2>4. Missing values move around over time</h2>
-<p>Bottle cost and retail price are blank on every line from 2016 through 2024 and are only partly filled
-after that, so any price feature has to be derived as dollars per bottle. County and address are blank on
-a few percent of early lines.</p>
+<p>Share of blank values by column and year.</p>
 {plot(fig_blanks(d))}
 {fixed('checked', 'missing prices: why no fix is needed (price = dollars / bottles)')}
 
 <h2>5. Category codes were reused for different categories</h2>
-<p>At the end of August 2016 the state reorganized its product taxonomy: about 100 category names became
-about 48, and many codes were shifted to mean something else. Code 1011400 meant "Bottled in Bond Bourbon"
-until 2016-08-25 and "Tennessee Whiskies" after. In July 2025 several names were shortened again. A naive
-join of sales to the category table labels old sales with today's name, so an agent asked for "Tennessee
-whiskey since 2016" has to notice this. The first 24 reassigned codes:</p>
+<p>Distinct category names and codes per year, and the first 24 reassigned codes.</p>
 {plot(fig_categories(d))}
 {table(cat.head(24).rename(columns={"lines": "records"}), {"records": comma})}
 {fixed('categories', 'category codes: history restated in today\'s taxonomy')}
 
 <h2>5b. A category that looks discontinued was recoded</h2>
-<p>COCKTAILS/RTD stops dead under code 1071100 on 2022-07-15 and restarts three days later under code 1071000,
-same name, same products. A forecast of "ready-to-drink cocktails" built on either code alone is wrong.</p>
+<p>Cocktails/RTD bottles per month by recorded category code.</p>
 {plot(fig_rtd(d))}
 {fixed('categories', 'the Cocktails/RTD recode: one continuous category')}
 
 <h2>6. One product, many item numbers</h2>
-<p>"Tito's" is not one row. It is several item numbers across bottle sizes and packs, and the 50 ml mini was
-renumbered in July 2020 (38180 to 38194, with a temporary 938180 in between). Across the whole catalog,
-{len(d["renumbered"])} items were renumbered like this, carrying {d["renumbered"].old_bottles.sum() / 1e6:.1f}M bottles of
-history. The largest:</p>
+<p>Tito's item numbers, then the largest of the {len(d["renumbered"])} renumbered items.</p>
 {table(titos.rename(columns={"lines": "records"}), {"records": comma, "bottles": comma})}
 {table(d["renumbered"].head(12).astype({"old_last_order": str, "new_first_order": str}), {"old_bottles": comma})}
 {fixed('renumbering', 'renumbered items joined into product families')}
 
 <h2>7. Stores drift, open and close</h2>
-<p>Of {int(sd.stores):,} stores, {int(sd.changed_name):,} changed recorded name, {int(sd.changed_address):,}
-changed address, {int(sd.changed_city):,} changed city and {int(sd.changed_county):,} changed county over
-time. {rc['stores with no county']} stores have no county at all. City spellings are not standardized either; these
-{len(d["city_variants"])} spellings each name a city also spelled another way:</p>
+<p>{int(sd.changed_name):,} of {int(sd.stores):,} stores changed name, {int(sd.changed_address):,} address,
+{int(sd.changed_city):,} city and {int(sd.changed_county):,} county; {rc['stores with no county']} have no county.
+City spellings that name the same city:</p>
 {table(d["city_variants"])}
 {fixed('cities', 'city spellings unified')}
 {plot(fig_store_openings(d))}
 
 <h2>8. Outliers and odd lines</h2>
-<p>{len(bs):,} distinct bottle sizes appear, but the 15 most common cover {top15 / bs.lines.sum():.1%} of records.
-The tail runs from {int(bs.bottle_volume_ml.min())} ml to {int(bs.bottle_volume_ml.max()):,} ml.</p>
+<p>Records by bottle size, and odd lines per year (huge_bottles: 10 liters or more).</p>
 {plot(fig_bottle_sizes(d))}
 {table(sus, {"zero_dollar": comma, "zero_bottles": comma, "huge_bottles": comma})}
 {fixed('zero-lines', 'zero lines removed')}
 {fixed('checked', 'large bottle sizes checked: genuine pallet and cask buys, kept')}
-<p class="note">Since 2022, a few thousand lines a year have zero bottles and zero dollars (likely cancelled
-lines). huge_bottles = lines with a bottle volume of 10 liters or more.</p>
 
 <h2>9. invoice_id changed meaning</h2>
-<p>Until August 2025 each order line had its own invoice_id. From September 2025 one id covers the whole
-order, and at the same time bottle prices start being filled in: signs that the state switched source
-systems. Anything that counts "orders" by invoice_id breaks across that date, so the loader keys lines on a
-new line_id.</p>
+<p>Lines per invoice_id per month: one id per line until August 2025, one per order after.</p>
 {plot(fig_lines_per_invoice(d))}
 {fixed('checked', 'invoice_id: lines keyed by a new line_id')}
 
@@ -577,8 +546,7 @@ new line_id.</p>
 {fixed('census', 'Census data lag: latest year carried forward')}
 
 <h2>11. Who orders what</h2>
-<p>Most records are small: a case or less. The largest categories, vendors and stores by wholesale dollars,
-2016 to August 2026, from the clean warehouse (categories in today's taxonomy):</p>
+<p>Order sizes, and the largest categories, vendors and stores by wholesale dollars.</p>
 {plot(fig_line_sizes(d))}
 {plot(fig_top(d["top_categories"], "Top 15 categories by sales dollars"))}
 {plot(fig_top(d["top_vendors"], "Top 15 vendors by sales dollars"))}
