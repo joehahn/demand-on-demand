@@ -89,13 +89,17 @@ footer { margin-top:48px; font-size:13px; color:var(--muted); }
 
 
 class Plots:
-    """Renders plotly figures into cards; plotly.js is loaded once, from the CDN, with the first figure."""
-    def __init__(self):
+    """Renders plotly figures into cards; plotly.js is loaded once, from the CDN, with the first figure.
+    numbered=True prefixes each title with its figure number, in the order the figures are rendered."""
+    def __init__(self, numbered=False):
         self.count = 0
+        self.numbered = numbered
 
     def __call__(self, fig):
         first = self.count == 0
         self.count += 1
+        if self.numbered:
+            fig.update_layout(title_text=f"Figure {self.count}. {fig.layout.title.text}")
         return '<div class="card">' + fig.to_html(full_html=False, include_plotlyjs="cdn" if first else False,
                                                    config={"displaylogo": False, "responsive": True}) + "</div>"
 

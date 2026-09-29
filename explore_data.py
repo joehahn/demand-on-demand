@@ -444,7 +444,7 @@ def build_page(d):
     m = d["monthly"]
     sd = d["store_drift"].iloc[0]
 
-    plot = Plots()  # plotly.js loaded once, from the CDN
+    plot = Plots(numbered=True)  # plotly.js loaded once, from the CDN; figures numbered in page order
 
     tiles = [
         (f"{rc['sales.invoice_line'] / 1e6:.1f}M", "records, 2016 to Aug 2026"),
@@ -475,7 +475,7 @@ a person reviewed and approved every fix before it went into the warehouse. <a h
 shows how each one was fixed there, once, so no forecast has to deal with it.</p>
 <div class="tiles">{tiles_html}</div>
 
-<h2>1. How many orders, and when</h2>
+<h2>How many orders, and when</h2>
 <p>Records (order lines) per day, month, weekday, month of year and year, as published. Orange: export duplicates, removed.</p>
 {plot(fig_daily(d))}
 {plot(fig_monthly_lines(d))}
@@ -484,7 +484,7 @@ shows how each one was fixed there, once, so no forecast has to deal with it.</p
 {plot(fig_yearly_lines(d))}
 {fixed('duplicates', 'how the duplicate rows were found and removed')}
 
-<h2>2. Demand: trend and seasonality</h2>
+<h2>Demand: trend and seasonality</h2>
 <p>Statewide dollars, bottles and liters per month.</p>
 {"".join(plot(f) for f in fig_demand(d))}
 <p>Slices swing far more than the total.</p>
@@ -494,34 +494,34 @@ shows how each one was fixed there, once, so no forecast has to deal with it.</p
 <p>Ready-to-drink cocktails stepped up in 2020 and stayed up.</p>
 {plot(fig_rtd_step(d))}
 
-<h2>3. The state's own export duplicates rows</h2>
+<h2>The state's own export duplicates rows</h2>
 <p>Rows as published vs distinct rows per month.</p>
 {plot(fig_dupes(d))}
 {fixed('duplicates', 'duplicate rows: the issue and the fix')}
 
-<h2>4. Missing values move around over time</h2>
+<h2>Missing values move around over time</h2>
 <p>Share of blank values by column and year.</p>
 {plot(fig_blanks(d))}
 {fixed('checked', 'missing prices: why no fix is needed (price = dollars / bottles)')}
 
-<h2>5. Category codes were reused for different categories</h2>
+<h2>Category codes were reused for different categories</h2>
 <p>Distinct category names and codes per year, and the first 24 reassigned codes.</p>
 {plot(fig_categories(d))}
 {table(cat.head(24).rename(columns={"lines": "records"}), {"records": comma})}
 {fixed('categories', 'category codes: history restated in today\'s taxonomy')}
 
-<h2>5b. A category that looks discontinued was recoded</h2>
+<h2>A category that looks discontinued was recoded</h2>
 <p>Cocktails/RTD bottles per month by recorded category code.</p>
 {plot(fig_rtd(d))}
 {fixed('categories', 'the Cocktails/RTD recode: one continuous category')}
 
-<h2>6. One product, many item numbers</h2>
+<h2>One product, many item numbers</h2>
 <p>Tito's item numbers, then the largest of the {len(d["renumbered"])} renumbered items.</p>
 {table(titos.rename(columns={"lines": "records"}), {"records": comma, "bottles": comma})}
 {table(d["renumbered"].head(12).astype({"old_last_order": str, "new_first_order": str}), {"old_bottles": comma})}
 {fixed('renumbering', 'renumbered items joined into product families')}
 
-<h2>7. Stores drift, open and close</h2>
+<h2>Stores drift, open and close</h2>
 <p>{int(sd.changed_name):,} of {int(sd.stores):,} stores changed name, {int(sd.changed_address):,} address,
 {int(sd.changed_city):,} city and {int(sd.changed_county):,} county; {rc['stores with no county']} have no county.
 City spellings that name the same city:</p>
@@ -529,23 +529,23 @@ City spellings that name the same city:</p>
 {fixed('cities', 'city spellings unified')}
 {plot(fig_store_openings(d))}
 
-<h2>8. Outliers and odd lines</h2>
+<h2>Outliers and odd lines</h2>
 <p>Records by bottle size, and odd lines per year (huge_bottles: 10 liters or more).</p>
 {plot(fig_bottle_sizes(d))}
 {table(sus, {"zero_dollar": comma, "zero_bottles": comma, "huge_bottles": comma})}
 {fixed('zero-lines', 'zero lines removed')}
 {fixed('checked', 'large bottle sizes checked: genuine pallet and cask buys, kept')}
 
-<h2>9. invoice_id changed meaning</h2>
+<h2>invoice_id changed meaning</h2>
 <p>Lines per invoice_id per month: one id per line until August 2025, one per order after.</p>
 {plot(fig_lines_per_invoice(d))}
 {fixed('checked', 'invoice_id: lines keyed by a new line_id')}
 
-<h2>10. Geography: joins to Census reference data</h2>
+<h2>Geography: joins to Census reference data</h2>
 {plot(fig_counties(d))}
 {fixed('census', 'Census data lag: latest year carried forward')}
 
-<h2>11. Who orders what</h2>
+<h2>Who orders what</h2>
 <p>Order sizes, and the largest categories, vendors and stores by wholesale dollars.</p>
 {plot(fig_line_sizes(d))}
 {plot(fig_top(d["top_categories"], "Top 15 categories by sales dollars"))}
