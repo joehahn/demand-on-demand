@@ -37,15 +37,6 @@ QUERIES = {
                count(*) AS lines, count(DISTINCT store_no) AS stores, count(DISTINCT item_no) AS items
         FROM sales.invoice_line GROUP BY 1 ORDER BY 1""",
 
-    # published rows vs de-duplicated rows, per month: the state's export bug
-    "dupes": """
-        SELECT r.month, r.published, c.distinct_rows FROM
-          (SELECT date_trunc('month', ordered_on::date)::date AS month, count(*) AS published
-           FROM raw.liquor_sales GROUP BY 1) r
-        JOIN
-          (SELECT date_trunc('month', ordered_on)::date AS month, count(*) AS distinct_rows
-           FROM sales.invoice_line GROUP BY 1) c USING (month)
-        ORDER BY 1""",
 
     # share of blank values per column per year, as published
     "blanks": """
@@ -361,14 +352,6 @@ def fig_demand(d):
     return figs
 
 
-def fig_dupes(d):
-    x = d["dupes"]
-    f = go.Figure([line(x.month, x.published, "Rows as published", ORANGE),
-                   line(x.month, x.distinct_rows, "Distinct rows (loaded)", BLUE)])
-    f.update_traces(hovertemplate="%{y:,.0f}")
-    return style(f, "The state's export repeats rows: published vs distinct records per month", "records", legend=True)
-
-
 def fig_blanks(d):
     b = d["blanks"].set_index("year")
     cols = list(b.columns)
@@ -443,6 +426,7 @@ def build_page(d):
     rc = dict(zip(d["row_counts"].tbl, d["row_counts"].n))
     m = d["monthly"]
     sd = d["store_drift"].iloc[0]
+    dup_rows = rc["raw.liquor_sales"] - rc["sales.invoice_line"]
 
     plot = Plots(numbered=True)  # plotly.js loaded once, from the CDN; figures numbered in page order
 
@@ -496,8 +480,7 @@ month, so 100% is a normal month and 300% is three times normal.</p>
 {plot(fig_rtd_step(d))}
 
 <h2>The state's own export duplicates rows</h2>
-<p>Rows as published vs distinct rows per month.</p>
-{plot(fig_dupes(d))}
+<p>The 2022, 2025 and 2026 exports repeat {dup_rows / 1e6:.1f}M rows verbatim across CSV parts: the orange in Figures 1, 2 and 5.</p>
 {fixed('duplicates', 'duplicate rows: the issue and the fix')}
 
 <h2>Missing values move around over time</h2>
