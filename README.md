@@ -2,9 +2,6 @@
 
 **Ask for a demand forecast in plain English. Get a tested forecast and dashboard in about half a minute.**
 
-**[See it live](https://joehahn.github.io/demand-on-demand/)**: example dashboards, the data problems we found,
-and how they were fixed.
-
 A business user types a question like *"monthly forecast of Tito's minis in Des Moines for the next 5 months"*.
 A single Claude agent (the Claude API, Claude Sonnet 5) turns the words into a precise request against a
 company-style Postgres warehouse of 26 million Iowa liquor orders (2016 to 2026). A fixed Python harness then builds
@@ -54,6 +51,29 @@ has to know these problems existed.
 
 **Least privilege.** Postgres runs with password authentication and separate roles. The agent's login can only read
 the clean tables, with a query time limit. Credentials live in `.env`, are read by Python, and never appear in a prompt.
+
+## See it live
+
+- **[Landing page](https://joehahn.github.io/demand-on-demand/)**: the idea in one screen, with the five example forecasts.
+- **[Data exploration](https://joehahn.github.io/demand-on-demand/data_exploration.html)**: what 26 million orders look like: volume by day, month and
+  year, seasonality (flat statewide, 3x to 8x swings in slices like cream liqueurs and gift packs), and every data
+  problem found while loading.
+- **[Data fixes](https://joehahn.github.io/demand-on-demand/data_fixes.html)**: each problem, the fix applied once in the warehouse, and before and after.
+
+**Example forecasts.** Each was made by the agent from the plain-English request shown. Each dashboard is one page
+with the forecast chart and table (with an 80% range), the backtest against "same month last year" by months ahead,
+the 96 model configurations compared, every tool call the agent made, and the exact spec and SQL that ran.
+
+| request | backtest vs same month last year |
+|---|---|
+| [Monthly forecast of Tito's minis in Des Moines for the next 5 months](https://joehahn.github.io/demand-on-demand/examples/tito_s_minis_des_moines_next_5_months.html) | 11% more accurate |
+| [What revenue should we expect from Fireball in Linn County next quarter?](https://joehahn.github.io/demand-on-demand/examples/fireball_linn_county_next_quarter.html) | 9% more accurate |
+| [Forecast ready-to-drink cocktail bottles statewide for the next 6 months](https://joehahn.github.io/demand-on-demand/examples/ready_to_drink_cocktails_statewide_next_6_months.html) | 2% less accurate |
+| [American vodka sales dollars for each of the five largest counties, next 6 months](https://joehahn.github.io/demand-on-demand/examples/american_vodka_dollars_top_5_counties_next_6_months.html) | 4% less accurate |
+| [Total liters of liquor sold statewide over the next 12 months](https://joehahn.github.io/demand-on-demand/examples/statewide_total_liters_next_12_months.html) | 4% less accurate |
+
+The misses are shown on purpose: when the model does not beat last year, the dashboard says so and says which months
+to trust less.
 
 ## Results
 
