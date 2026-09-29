@@ -482,7 +482,7 @@ month, so 100% is a normal month and 300% is three times normal.</p>
 
 <h2>The state's own export duplicates rows</h2>
 <p>The 2022, 2025 and 2026 exports repeat {dup_rows / 1e6:.1f}M rows verbatim across CSV parts: the orange in Figures 1, 2 and 5.</p>
-{fixed('duplicates', f'The {dup_rows / 1e6:.1f}M repeated rows are removed when the warehouse is built; left in, 2022 sales would be inflated by about 23%.')}
+{fixed('duplicates', f'The {dup_rows / 1e6:.1f}M repeated rows are removed when the warehouse is built.')}
 
 <h2>Missing values move around over time</h2>
 <p>Share of blank values by column and year.</p>
