@@ -311,8 +311,8 @@ def fig_slice_seasonality(d):
     series = [("ALL LIQUOR", "All liquor", BLUE), ("CREAM LIQUEURS", "Cream liqueurs", ORANGE),
               ("TEMPORARY & SPECIALTY PACKAGES", "Gift and specialty packs", AQUA)]
     f = go.Figure([line(c.index, 100 * c[k] / c[k].mean(), name, col) for k, name, col in series])
-    f.update_traces(hovertemplate="%{y:.0f}%")
-    return style(f, "Bottles per month, as % of each series' average month", "% of average month", height=380, legend=True)
+    f.update_traces(hovertemplate="%{y:.0f}% of its average month")
+    return style(f, "Monthly bottles vs each series' own average", "% of the series' average month (100% = average)", height=380, legend=True)
 
 
 def fig_peak_to_trough(d):
@@ -351,12 +351,13 @@ def fixed(anchor, what):
 
 def fig_demand(d):
     m = d["monthly"]  # the 2026 file ends on a month boundary (Aug 31), so every month is complete
+    m = with_end(m.set_index(pd.to_datetime(m.month)), "MS")  # steps: each month's value spans the whole month
     figs = []
     for col, label, fmt in [("dollars", "Sales dollars per month", "$,.3s"),
                             ("bottles", "Bottles per month", ",.3s"),
                             ("liters", "Liters per month", ",.3s")]:
-        f = go.Figure(line(m.month, m[col], label, BLUE))
-        f.update_traces(hovertemplate="%{x|%b %Y}: %{y:" + fmt + "}<extra></extra>")
+        f = go.Figure(line(m.index, m[col], label, BLUE))
+        f.update_traces(line_shape="hv", hovertemplate="%{x|%b %Y}: %{y:" + fmt + "}<extra></extra>")
         figs.append(style(f, label, height=260))
     return figs
 
@@ -487,7 +488,8 @@ shows how each one was fixed there, once, so no forecast has to deal with it.</p
 <h2>Demand: trend and seasonality</h2>
 <p>Statewide dollars, bottles and liters per month.</p>
 {"".join(plot(f) for f in fig_demand(d))}
-<p>Slices swing far more than the total.</p>
+<p>Slices swing far more than the total. Each line is that series' monthly bottles as a percent of its own average
+month, so 100% is a normal month and 300% is three times normal.</p>
 {plot(fig_slice_seasonality(d))}
 <p>Busiest month of the year divided by the quietest, 2016 to 2025. Hover for the peak month.</p>
 {plot(fig_peak_to_trough(d))}
