@@ -351,13 +351,12 @@ def fixed(anchor, what):
 
 def fig_demand(d):
     m = d["monthly"]  # the 2026 file ends on a month boundary (Aug 31), so every month is complete
-    m = with_end(m.set_index(pd.to_datetime(m.month)), "MS")  # steps: each month's value spans the whole month
     figs = []
     for col, label, fmt in [("dollars", "Sales dollars per month", "$,.3s"),
                             ("bottles", "Bottles per month", ",.3s"),
                             ("liters", "Liters per month", ",.3s")]:
-        f = go.Figure(line(m.index, m[col], label, BLUE))
-        f.update_traces(line_shape="hv", hovertemplate="%{x|%b %Y}: %{y:" + fmt + "}<extra></extra>")
+        f = go.Figure(line(m.month, m[col], label, BLUE))
+        f.update_traces(hovertemplate="%{x|%b %Y}: %{y:" + fmt + "}<extra></extra>")
         figs.append(style(f, label, height=260))
     return figs
 
