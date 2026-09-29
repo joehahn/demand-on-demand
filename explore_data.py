@@ -335,9 +335,9 @@ def fig_rtd_step(d):
     return style(f, "Bottles per year, 2019 = 100", "index (2019 = 100)", legend=True)
 
 
-def fixed(anchor, what):
-    """Link to the section of the data fixes page that explains this issue and its correction."""
-    return f'<p class="fixlink">Corrected in the warehouse: <a href="data_fixes.html#{anchor}">{what}</a></p>'
+def fixed(anchor, how):
+    """A short note on how the warehouse corrects this issue, linked to its section of the data fixes page."""
+    return f'<p class="fixlink"><strong>Correction:</strong> {how} <a href="data_fixes.html#{anchor}">Details</a></p>'
 
 
 def fig_demand(d):
@@ -466,7 +466,7 @@ shows how each one was fixed there, once, so no forecast has to deal with it.</p
 {plot(fig_weekday(d))}
 {plot(fig_month_of_year(d))}
 {plot(fig_yearly_lines(d))}
-{fixed('duplicates', 'how the duplicate rows were found and removed')}
+{fixed('duplicates', 'Exact duplicate rows (orange) are dropped when the warehouse is built, so forecasts count each order line once. The state portal\'s own 2026 row count matches the de-duplicated count.')}
 
 <h2>Demand: trend and seasonality</h2>
 <p>Statewide dollars, bottles and liters per month.</p>
@@ -478,56 +478,57 @@ month, so 100% is a normal month and 300% is three times normal.</p>
 {plot(fig_peak_to_trough(d))}
 <p>Ready-to-drink cocktails stepped up in 2020 and stayed up.</p>
 {plot(fig_rtd_step(d))}
+{fixed('categories', 'Figures 6 to 11 read the clean warehouse: duplicates and zero lines removed, categories in today\'s taxonomy.')}
 
 <h2>The state's own export duplicates rows</h2>
 <p>The 2022, 2025 and 2026 exports repeat {dup_rows / 1e6:.1f}M rows verbatim across CSV parts: the orange in Figures 1, 2 and 5.</p>
-{fixed('duplicates', 'duplicate rows: the issue and the fix')}
+{fixed('duplicates', f'The {dup_rows / 1e6:.1f}M repeated rows are removed when the warehouse is built; left in, 2022 sales would be inflated by about 23%.')}
 
 <h2>Missing values move around over time</h2>
 <p>Share of blank values by column and year.</p>
 {plot(fig_blanks(d))}
-{fixed('checked', 'missing prices: why no fix is needed (price = dollars / bottles)')}
+{fixed('checked', 'No fix needed: unit price is computed as sales dollars divided by bottles, which are always filled. Blank counties affect only a few percent of early lines, and county comes from the store table instead.')}
 
 <h2>Category codes were reused for different categories</h2>
 <p>Distinct category names and codes per year, and the first 24 reassigned codes.</p>
 {plot(fig_categories(d))}
 {table(cat.head(24).rename(columns={"lines": "records"}), {"records": comma})}
-{fixed('categories', 'category codes: history restated in today\'s taxonomy')}
+{fixed('categories', 'Every order line takes its product\'s current category, and retired codes map to the live code with the same name, so all ten years are in today\'s taxonomy.')}
 
 <h2>A category that looks discontinued was recoded</h2>
 <p>Cocktails/RTD bottles per month by recorded category code.</p>
 {plot(fig_rtd(d))}
-{fixed('categories', 'the Cocktails/RTD recode: one continuous category')}
+{fixed('categories', 'Retired code 1071100 maps to the live code 1071000, so Cocktails/RTD is one continuous series.')}
 
 <h2>One product, many item numbers</h2>
 <p>Tito's item numbers, then the largest of the {len(d["renumbered"])} renumbered items.</p>
 {table(titos.rename(columns={"lines": "records"}), {"records": comma, "bottles": comma})}
 {table(d["renumbered"].head(12).astype({"old_last_order": str, "new_first_order": str}), {"old_bottles": comma})}
-{fixed('renumbering', 'renumbered items joined into product families')}
+{fixed('renumbering', 'Each old item number joins a product family named after its current item, so a product\'s history continues across a renumbering; Tito\'s minis are one series from 2016 on.')}
 
 <h2>Stores drift, open and close</h2>
 <p>{int(sd.changed_name):,} of {int(sd.stores):,} stores changed name, {int(sd.changed_address):,} address,
 {int(sd.changed_city):,} city and {int(sd.changed_county):,} county; {rc['stores with no county']} have no county.
 City spellings that name the same city:</p>
 {table(d["city_variants"])}
-{fixed('cities', 'city spellings unified')}
+{fixed('cities', 'Each city gets one spelling in store.city, and the recorded spelling is kept in store.city_recorded.')}
 {plot(fig_store_openings(d))}
 
 <h2>Outliers and odd lines</h2>
 <p>Records by bottle size, and odd lines per year (huge_bottles: 10 liters or more).</p>
 {plot(fig_bottle_sizes(d))}
 {table(sus, {"zero_dollar": comma, "zero_bottles": comma, "huge_bottles": comma})}
-{fixed('zero-lines', 'zero lines removed')}
-{fixed('checked', 'large bottle sizes checked: genuine pallet and cask buys, kept')}
+{fixed('zero-lines', 'Lines with zero bottles or zero dollars, most likely cancelled lines, are removed.')}
+{fixed('checked', 'Very large volumes were checked and are genuine pallet and whole-cask purchases, so they are kept as recorded.')}
 
 <h2>invoice_id changed meaning</h2>
 <p>Lines per invoice_id per month: one id per line until August 2025, one per order after.</p>
 {plot(fig_lines_per_invoice(d))}
-{fixed('checked', 'invoice_id: lines keyed by a new line_id')}
+{fixed('checked', 'Every order line is keyed by a new line_id, and nothing counts orders by invoice_id, so the change of meaning has no effect.')}
 
 <h2>Geography: joins to Census reference data</h2>
 {plot(fig_counties(d))}
-{fixed('census', 'Census data lag: latest year carried forward')}
+{fixed('census', 'Census publishes population about a year late and income about two years late, so the latest published year is carried forward and flagged.')}
 
 <h2>Who orders what</h2>
 <p>Order sizes, and the largest categories, vendors and stores by wholesale dollars.</p>
