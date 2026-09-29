@@ -70,7 +70,25 @@ def model_explanation(res, unit, spec, panel):
             f"month last year. The forecast uses {what}:</p><ol>{items}</ol>{blend}")
 
 
-def fig_series(code, label, wide, bt, fc, test_start):
+def stores_section(stores, spec, unit, last_month):
+    """Which stores were added up: every store whose orders of this product in this region are in the series."""
+    if stores is None or stores.empty:
+        return ""
+    recent = stores[stores.last_12_months > 0]
+    t = stores.copy()
+    for c in ("first_order", "last_order"):
+        t[c] = t[c].astype(str)
+    t = t.rename(columns={"last_12_months": f"{unit}, last 12 months"})
+    money = "$" if unit == "dollars" else ""
+    return (f"<h3>Stores included</h3><p>The forecast adds up the orders of {len(stores):,} stores in "
+            f"{esc(spec.region.label)} that bought {esc(spec.product.label)} since {spec.start[:7]}; "
+            f"{len(recent):,} of them ordered it in the 12 months to {last_month:%b %Y}. Stores that closed still "
+            f"count in the months they were open.</p>"
+            f"<details><summary>Show the stores</summary>"
+            f"{table(t, {f'{unit}, last 12 months': lambda v: f'{money}{v:,.0f}'})}</details>")
+
+
+def fig_series(code, label, wide, bt, fc, test_start, unit):
     """Actuals, what the model would have said one month ahead during the test, and the forecast."""
     hist = wide[code].dropna().iloc[-HISTORY_MONTHS:]
     one = bt[(bt.series == code) & (bt.step == 1)].sort_values("month")
@@ -87,7 +105,7 @@ def fig_series(code, label, wide, bt, fc, test_start):
         fig.update_layout(title_text=f"{label} (not backtested)")
     fig.add_vline(x=test_start, line=dict(color="rgba(137,135,129,0.6)", width=1, dash="dash"))
     fig.update_traces(hovertemplate="%{y:,.0f}", selector=dict(type="scatter"))
-    return style(fig, label, height=360, legend=True)
+    return style(fig, label, f"{unit} per month", height=360, legend=True)
 
 
 def fig_accuracy(per_step):
@@ -103,7 +121,7 @@ def fig_accuracy(per_step):
 
 
 def build(spec, panel, res, usage=None, agent=None):
-    plot = Plots()
+    plot = Plots(numbered=True)
     wide, fc, bt, ps = panel.series, res["forecast"], res["backtest"], res["per_step"]
     labels = panel.labels
     months = f"{fc.month.min():%b %Y} to {fc.month.max():%b %Y}"
@@ -142,7 +160,7 @@ def build(spec, panel, res, usage=None, agent=None):
     ft = ft[["series", "month", "pred", "lo", "hi"]].rename(columns={"pred": "forecast", "lo": "low (10%)", "hi": "high (90%)"})
     num = lambda v: f"{v:,.0f}"
 
-    charts = "".join(plot(fig_series(c, labels.get(c, c), wide, bt, fc, res["test_window"][0]))
+    charts = "".join(plot(fig_series(c, labels.get(c, c), wide, bt, fc, res["test_window"][0], unit))
                      for c in [c for c in wide.columns if c in set(fc.series)][:MAX_PANELS])
     more = f'<p class="note">{len(wide.columns) - MAX_PANELS} more series are in the table only.</p>' \
         if len(wide.columns) > MAX_PANELS else ""
@@ -171,6 +189,10 @@ def build(spec, panel, res, usage=None, agent=None):
                 f"input tokens ({usage.get('cache_read_tokens', 0):,} read from cache) and {usage.get('output_tokens', 0):,} "
                 f"output tokens, about ${usage.get('est_cost_usd', 0):.2f}, {usage.get('agent_seconds', 0):.0f}s of agent "
                 f"time.</p>")
+    # bottles are the state's selling units, which is not always one bottle (a sleeve of minis is one unit)
+    units_note = (" Bottles are counted in the state's selling units, so a multi-pack or sleeve sold as one item "
+                  "counts as one." if unit == "bottles" else "")
+    stores_html = stores_section(panel.stores, spec, unit, wide.index[-1])
     ask_html, trace_html = "", ""
     if agent:
         assumptions = "".join(f"<li>{esc(a)}</li>" for a in agent.get("assumptions", []))
@@ -195,7 +217,7 @@ trained on.</p>
 {skipped_html}
 {charts}{more}
 <p class="note">Dashed vertical line: start of the test window. Dotted orange: what the model would have forecast one
-month ahead at each point in the test. Green band: 80% range from the backtest's own errors.</p>
+month ahead at each point in the test. Green band: 80% range from the backtest's own errors.{units_note}</p>
 {table(ft, {"forecast": num, "low (10%)": num, "high (90%)": num})}
 
 <h2>How far to trust it</h2>
@@ -209,6 +231,7 @@ actually happened and with the simplest serious baseline: the same month last ye
 export rows and zero lines removed, renumbered products joined, categories in today's taxonomy, one spelling per city.
 See <a href="https://joehahn.github.io/demand-on-demand/data_fixes.html">what was fixed</a>. A series starts at its
 first sale.</p>
+{stores_html}
 
 <h2>How the model was chosen</h2>
 <p>{len(res["grid"]) - 1} model configurations were compared on {uw[0]:%b %Y} to {uw[1]:%b %Y}, before the test window,

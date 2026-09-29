@@ -30,6 +30,7 @@ class Panel:
     start: str
     labels: dict = field(default_factory=dict)    # series code -> readable label
     pool: tuple = None                            # (companion series, their exog): same product in other counties
+    stores: pd.DataFrame = None                   # every store whose sales are in the panel, with recent volume
 
 
 def member_items(spec):
@@ -56,6 +57,22 @@ WHERE {PRODUCT_FILTER[spec.product.kind]}
 GROUP BY 1, 2
 ORDER BY 1, 2"""
     return sql, params
+
+
+def stores_sql(spec):
+    """Every store whose orders feed the panel: same product and region filters as build_sql, one row per store."""
+    return f"""
+SELECT s.store_no, s.store_name, s.city, s.county_name AS county,
+       min(l.ordered_on) AS first_order, max(l.ordered_on) AS last_order,
+       coalesce(sum(l.{spec.target}) FILTER (WHERE l.ordered_on >= %(recent)s), 0) AS last_12_months
+FROM sales.invoice_line l
+JOIN sales.item i USING (item_no)
+JOIN sales.store s USING (store_no)
+WHERE {PRODUCT_FILTER[spec.product.kind]}
+  AND {REGION_FILTER[spec.region.kind]}
+  AND l.ordered_on >= %(start)s AND l.ordered_on < %(end)s
+GROUP BY 1, 2, 3, 4
+ORDER BY last_12_months DESC, store_name"""
 
 
 def data_end():
@@ -152,6 +169,8 @@ def build(spec):
     if raw.empty:
         raise ValueError("No sales match this product and region.")
     wide = to_wide(raw, spec.start, last_month)
+    stores = db.query(stores_sql(spec), {**params, "recent": last_month - pd.DateOffset(months=11),
+                                         "end": last_month + pd.offsets.MonthBegin(1)})
 
     horizon_idx = pd.date_range(last_month + pd.offsets.MonthBegin(1), periods=spec.horizon, freq="MS")
     full_idx = wide.index.append(horizon_idx)
@@ -185,4 +204,4 @@ def build(spec):
     for k, v in params.items():  # a readable copy for the dashboard; execution used bind parameters
         display_sql = display_sql.replace(f"%({k})s", repr(v) if not isinstance(v, list) else "ARRAY" + repr(v))
     return Panel(series=wide, exog=exog, future_index=horizon_idx, sql=display_sql.strip(), data_end=end,
-                 start=spec.start, labels=labels_for(spec, wide.columns), pool=pool)
+                 start=spec.start, labels=labels_for(spec, wide.columns), pool=pool, stores=stores)

@@ -56,6 +56,8 @@ def run(spec, out_root=OUT, usage=None, agent=None, narrate=None, log=print):
     (out / "dashboard.html").write_text(dashboard.build(spec, p, res, usage, agent))
     res["forecast"].assign(label=res["forecast"].series.map(p.labels)).to_csv(out / "forecast.csv", index=False)
     res["backtest"].to_csv(out / "backtest.csv", index=False)
+    if p.stores is not None:
+        p.stores.to_csv(out / "stores.csv", index=False)
     summary = {"title": spec.title, "spec": spec.model_dump(), "best": res["best"],
                "feature_groups": res["feature_groups"], "test_rel_mae": res["test_rel_mae"],
                "per_step": res["per_step"].to_dict("records"),
