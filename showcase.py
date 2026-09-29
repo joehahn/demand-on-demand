@@ -105,7 +105,7 @@ def build():
 
     body = f"""
 <h1>demand-on-demand</h1>
-<p class="asked">Ask for a demand forecast in plain English. Get a tested forecast and dashboard in about half a minute.</p>
+<p class="asked">Ask for a demand forecast in plain English. Get a tested forecast and dashboard in under a minute.</p>
 <p>A business user types a question like <em>"monthly forecast of Tito's minis in Des Moines for the next 5 months"</em>.
 One Claude agent turns the words into a precise request against a company-style Postgres warehouse of 26 million
 Iowa liquor orders (2016 to 2026). A fixed Python harness then builds the data, tunes and tests the models against the

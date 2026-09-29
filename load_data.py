@@ -12,6 +12,7 @@ Connects as dod_owner (DOD_OWNER_DSN in .env). Never prints credentials.
 """
 import io
 import os
+import re
 import sys
 import time
 import zipfile
@@ -330,6 +331,68 @@ def item_families(conn):
     return rows
 
 
+PACK_IN_NAME = r"(?<![0-9-])([0-9]{1,2}) ?-?(?:PK|PACK)\b"   # "4 PACK", "4PK", "6-PACK"; not "8-8PK"
+MULTI_PACK_PRICE_PER_ML = 0.10  # a 50 ml bottle priced over $5 is almost certainly more than one bottle
+SMALL_BOTTLE_ML = 200           # sleeves and packs are of small bottles; a larger size change is a real resize
+
+
+def item_units(conn):
+    """Bottles per selling unit for items the state sells as a sleeve or pack of minis but counts as one "bottle".
+    Returns (item_no, units_per_sale, bottle_ml, evidence) rows. units_per_sale is NULL when an item is priced like
+    a multi-pack but nothing says how many bottles are in it; those stay in selling units and are only flagged."""
+    # 1. recorded volume: until mid-2019 a sleeve was recorded at its total volume (600 ml = 12 x 50 ml), then at one
+    #    bottle's volume, while the price per unit stayed the same (same sleeve, new convention). Compare each item's
+    #    current volume with the volume it had before, and the price in the year before and after the switch
+    cands = conn.execute("""
+        WITH last AS (SELECT DISTINCT ON (item_no) item_no, bottle_volume_ml_recorded AS post_ml FROM sales.invoice_line
+                      ORDER BY item_no, ordered_on DESC, line_id DESC),
+             prev AS (SELECT DISTINCT ON (l.item_no) l.item_no, l.bottle_volume_ml_recorded AS pre_ml, l.ordered_on AS switch
+                      FROM sales.invoice_line l JOIN last USING (item_no)
+                      WHERE l.bottle_volume_ml_recorded > last.post_ml ORDER BY l.item_no, l.ordered_on DESC, l.line_id DESC),
+             price AS (SELECT l.item_no,
+                   sum(l.sales_dollars) FILTER (WHERE l.ordered_on <= p.switch)
+                     / nullif(sum(l.sales_bottles_recorded) FILTER (WHERE l.ordered_on <= p.switch), 0) AS p_pre,
+                   sum(l.sales_dollars) FILTER (WHERE l.ordered_on > p.switch)
+                     / nullif(sum(l.sales_bottles_recorded) FILTER (WHERE l.ordered_on > p.switch), 0) AS p_post
+                 FROM sales.invoice_line l JOIN prev p USING (item_no)
+                 WHERE l.ordered_on BETWEEN p.switch - 365 AND p.switch + 365 GROUP BY 1)
+        SELECT item_no, pre_ml, post_ml, switch, p_pre, p_post FROM prev JOIN last USING (item_no) JOIN price USING (item_no)
+        WHERE post_ml <= %s""", (SMALL_BOTTLE_ML,)).fetchall()
+    rows = {}
+    for item, pre_ml, post_ml, switch, p_pre, p_post in cands:
+        n = round(pre_ml / post_ml)
+        whole = n >= 2 and abs(pre_ml / post_ml - n) <= 0.02 * n
+        steady = p_pre and p_post and 0.67 <= p_post / p_pre <= 1.5
+        if whole and steady:
+            rows[item] = (item, n, post_ml, f"recorded as {pre_ml} ml until {switch}")
+
+    # 2. product family: a renumbered mini (Tito's 38180 -> 38194) keeps its family's sleeve size
+    fam = conn.execute("SELECT item_no, family_item_no, bottle_volume_ml FROM sales.item").fetchall()
+    by_family = {}
+    for item, family, ml in fam:
+        if item in rows and rows[item][2] == ml:
+            by_family[family] = rows[item]
+    for item, family, ml in fam:
+        known = by_family.get(family)
+        if item not in rows and known and known[2] == ml:
+            rows[item] = (item, known[1], ml, f"same product family as item {known[0]}")
+
+    # 3. name: "MINI 4 PACK", "4PK" on a small bottle (larger packs, e.g. cans, are recorded at the pack's volume)
+    stats = conn.execute("""
+        SELECT i.item_no, i.item_desc, i.bottle_volume_ml, sum(l.sales_dollars) / sum(l.sales_bottles_recorded)
+        FROM sales.item i JOIN sales.invoice_line l USING (item_no)
+        WHERE i.bottle_volume_ml <= 100 GROUP BY 1, 2, 3""").fetchall()
+    for item, desc, ml, price in stats:
+        if item in rows:
+            continue
+        m = re.search(PACK_IN_NAME, desc or "")
+        if m and int(m.group(1)) >= 2:
+            rows[item] = (item, int(m.group(1)), ml, "pack size in the item name")
+        elif price / ml > MULTI_PACK_PRICE_PER_ML:
+            rows[item] = (item, None, ml, f"priced like a multi-pack (${price:.2f} for {ml} ml); pack size unknown")
+    return sorted(rows.values())
+
+
 CITY_ABBREVIATIONS = {"MT": "MOUNT", "ST": "SAINT", "FT": "FORT"}
 
 
@@ -412,6 +475,47 @@ def clean():
                       "the same name (sales.category_crosswalk). Fixes the 2016-08-29 reassignment and the 2022 "
                       "Cocktails/RTD recode.", restated))
 
+        # multi-bottle selling units: the state counts a sleeve or pack of minis as one "bottle". Keep what was
+        # recorded, then count real bottles where the pack size is known, and compute liters as bottles x size
+        # (which also fixes Nov 2025 - Jan 2026, when liters were truncated to whole liters)
+        conn.execute("""ALTER TABLE sales.invoice_line ADD COLUMN IF NOT EXISTS sales_bottles_recorded integer,
+                        ADD COLUMN IF NOT EXISTS sales_liters_recorded numeric,
+                        ADD COLUMN IF NOT EXISTS bottle_volume_ml_recorded integer""")
+        conn.execute("""UPDATE sales.invoice_line SET sales_bottles_recorded = sales_bottles,
+                        sales_liters_recorded = sales_liters, bottle_volume_ml_recorded = bottle_volume_ml
+                        WHERE sales_bottles_recorded IS NULL""")
+        units = item_units(conn)
+        copy_rows(conn, "sales.item_units", "item_no text PRIMARY KEY, units_per_sale integer, bottle_ml integer, "
+                  "evidence text NOT NULL", units)
+        conn.execute("""UPDATE sales.invoice_line SET sales_bottles = sales_bottles_recorded,
+                        bottle_volume_ml = bottle_volume_ml_recorded,
+                        sales_liters = sales_bottles_recorded * bottle_volume_ml_recorded / 1000.0
+                        WHERE sales_bottles IS DISTINCT FROM sales_bottles_recorded
+                           OR bottle_volume_ml IS DISTINCT FROM bottle_volume_ml_recorded
+                           OR sales_liters IS DISTINCT FROM sales_bottles_recorded * bottle_volume_ml_recorded / 1000.0""")
+        # a line recorded at a sleeve's total volume (before 2019-08) holds that many bottles; later lines hold N
+        n = ("(CASE WHEN l.bottle_volume_ml_recorded >= 2 * u.bottle_ml "
+             "THEN round(l.bottle_volume_ml_recorded::numeric / u.bottle_ml)::int ELSE u.units_per_sale END)")
+        conn.execute(f"""UPDATE sales.invoice_line l SET sales_bottles = l.sales_bottles_recorded * {n},
+                         bottle_volume_ml = u.bottle_ml, sales_liters = l.sales_bottles_recorded * {n} * u.bottle_ml / 1000.0
+                         FROM sales.item_units u WHERE u.item_no = l.item_no AND u.units_per_sale IS NOT NULL""")
+        conn.execute("""UPDATE sales.item i SET total_bottles = s.bottles
+                        FROM (SELECT item_no, sum(sales_bottles) AS bottles FROM sales.invoice_line GROUP BY 1) s
+                        WHERE s.item_no = i.item_no""")
+        # recorded liters are rounded to 2 decimals everywhere; a truncated line is off by at least 0.01 liters
+        truncated = conn.execute("SELECT count(*) FROM sales.invoice_line WHERE abs(sales_liters_recorded "
+                                 "- sales_bottles_recorded * bottle_volume_ml_recorded / 1000.0) >= 0.01").fetchone()[0]
+        fixes.append(("liters_truncated", "Liters recorded as whole liters (Nov 2025 - Jan 2026; 0.75 l became 0) "
+                      "recomputed as bottles x bottle volume; sales_liters_recorded keeps the original.", truncated))
+        known = sum(1 for u in units if u[1])
+        converted = conn.execute("SELECT count(*) FROM sales.invoice_line WHERE sales_bottles <> sales_bottles_recorded"
+                                 ).fetchone()[0]
+        fixes.append(("multi_bottle_units", f"{known} items sold as a sleeve or pack of minis but counted as one "
+                      "bottle now count real bottles (sales.item_units: pack size from the sleeve volume recorded "
+                      "until mid-2019, the product family, or the item name); sales_bottles_recorded keeps the "
+                      f"original. {len(units) - known} more are priced like multi-packs with no known pack size; "
+                      "they stay in selling units and are flagged in sales.item_units.", converted))
+
         # keep the source spelling first, so re-running this stage always starts from what was recorded
         conn.execute("ALTER TABLE sales.store ADD COLUMN IF NOT EXISTS city_recorded text")
         conn.execute("UPDATE sales.store SET city_recorded = city WHERE city_recorded IS NULL")
@@ -461,6 +565,7 @@ TABLE_NOTES = {
     "sales.item": "Liquor products. Attributes are the most recently recorded values. Use family_item_no for a product across renumberings and category_current for its category.",
     "sales.item_family": "Renumbered items: each old item_no and the current item_no of its product family.",
     "sales.category_crosswalk": "Retired category codes and the live code with the same name.",
+    "sales.item_units": "Items sold as a sleeve or pack of minis: bottles per selling unit and the evidence for it. units_per_sale is NULL when the item is priced like a multi-pack but its pack size is unknown.",
     "sales.city_crosswalk": "City spelling variants and the one name used in store.city.",
     "meta.data_fixes": "Every data-quality fix applied to the warehouse, with the number of rows affected.",
     "sales.vendor": "Liquor vendors / distillers / importers.",
@@ -480,13 +585,16 @@ COLUMN_NOTES = {
         "item_no": "Product ordered; joins sales.item.",
         "vendor_no": "Vendor of the product; joins sales.vendor.",
         "category_code": "Product category on the order date; joins sales.category.",
-        "pack": "Bottles per case.",
-        "bottle_volume_ml": "Volume of one bottle in milliliters.",
+        "pack": "Selling units per case.",
+        "bottle_volume_ml": "Volume of one bottle in milliliters (for mini sleeves and packs, one mini; see sales.item_units).",
+        "bottle_volume_ml_recorded": "bottle_volume_ml as recorded by the state (before 2019-08 a mini sleeve was recorded at its total volume).",
         "state_bottle_cost": "Price the state paid the vendor per bottle, in dollars.",
         "state_bottle_retail": "Price the retailer paid the state per bottle, in dollars.",
-        "sales_bottles": "Number of bottles ordered.",
+        "sales_bottles": "Number of bottles ordered: a sleeve or pack of minis counts each mini when its pack size is known (sales.item_units).",
+        "sales_bottles_recorded": "Bottles as recorded by the state: selling units, so a sleeve of 12 minis counts as 1.",
         "sales_dollars": "Total order line value in dollars.",
-        "sales_liters": "Total liters ordered.",
+        "sales_liters": "Total liters ordered: sales_bottles x bottle_volume_ml / 1000.",
+        "sales_liters_recorded": "Liters as recorded by the state (truncated to whole liters Nov 2025 - Jan 2026).",
     },
     "sales.store": {
         "store_no": "Store number.", "store_name": "Store name.", "address": "Street address.",
@@ -501,6 +609,8 @@ COLUMN_NOTES = {
         "family_item_no": "Current item number of this product's family; equals item_no unless the item was renumbered.",
         "category_current": "The item's category in today's taxonomy; use it for category-level analysis over any period.",
     },
+    "sales.item_units": {"item_no": "Item number.", "units_per_sale": "Bottles in one selling unit (a sleeve or pack); NULL if unknown.",
+                         "bottle_ml": "Volume of one bottle in milliliters.", "evidence": "How the pack size is known, or why the item is flagged."},
     "sales.vendor": {"vendor_no": "Vendor number.", "vendor_name": "Vendor name."},
     "sales.category": {"category_code": "Category code.", "category_name": "Category name."},
     "ref.calendar": {

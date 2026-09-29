@@ -71,8 +71,8 @@ low because stores stocked up already, and since 2023 each year looks much like 
 a hard baseline to beat, and the harness only lets a model take over as far as it beats it on data it hasn't seen.
 
 On a benchmark of 30 forecasts sampled from the warehouse (products, categories and vendors; counties and statewide;
-bottles, dollars and liters; 3 to 12 months ahead), the model beat that baseline on 21, with a median error 8% lower
-(14.1% monthly error versus 17.3%). On the other 9 it did not, and the
+bottles, dollars and liters; 3 to 12 months ahead), the model beat that baseline on 23, with a median error 12% lower
+(15.0% monthly error versus 16.0%). On the other 7 it did not, and the
 [benchmark report](https://github.com/joehahn/demand-on-demand/blob/main/benchmark/report.md) lists every one of
 them. The dashboard for each forecast says which case you are in.
 

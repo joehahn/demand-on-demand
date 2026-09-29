@@ -65,14 +65,14 @@ https://github.com/joehahn/demand-on-demand
 
 ---
 
-## Post 4: it beat last year on 21 of 30. Here are the other 9.
+## Post 4: it beat last year on 23 of 30. Here are the other 7.
 
 Every forecast in my demo is compared with the simplest honest benchmark: "the same month last year."
 
 For Iowa liquor, that benchmark is hard to beat. October is the peak every year, December is low because stores
 stocked up already, and recent years look alike.
 
-On 30 sampled forecasts, the model beat it 21 times, with a median error 8% lower. On 9 it did not, including Irish
+On 30 sampled forecasts, the model beat it 23 times, with a median error 12% lower. On 7 it did not, including Irish
 whiskey statewide.
 
 I publish all 30, because a forecast you can't check isn't worth much. The pipeline only lets a model take over as

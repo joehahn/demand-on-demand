@@ -1,6 +1,6 @@
 # demand-on-demand
 
-**Ask for a demand forecast in plain English. Get a tested forecast and dashboard in about half a minute.**
+**Ask for a demand forecast in plain English. Get a tested forecast and dashboard in under a minute.**
 
 A business user types a question like *"monthly forecast of Tito's minis in Des Moines for the next 5 months"*.
 A single Claude agent (the Claude API, Claude Sonnet 5) turns the words into a precise request against a
@@ -10,9 +10,9 @@ publishes a dashboard that says how far to trust the answer.
 
 | | |
 |---|---|
-| Plain English to dashboard | about 30 seconds (15 s agent, 15 s harness) |
+| Plain English to dashboard | about 40 seconds (median of the five examples: 24 s agent, 18 s harness) |
 | Claude API cost per request | about $0.02 |
-| Forecast accuracy | beats "same month last year" on 21 of 30 sampled forecasts; median error 8% lower |
+| Forecast accuracy | beats "same month last year" on 23 of 30 sampled forecasts; median error 12% lower |
 | Agent accuracy | 38 of 38 eval runs resolved the request exactly or correctly declined it |
 
 **Author:** Joseph M. Hahn, Ph.D., independent AI and machine learning consultant  
@@ -45,7 +45,8 @@ model is used only when it beats it.
 **Clean data, fixed once.** The public data has real problems, documented on the
 [data exploration page](https://joehahn.github.io/demand-on-demand/data_exploration.html): the state's export repeats
 1.5 million rows; category codes were reassigned in 2016 and a category was recoded in 2022; 254 products were
-renumbered; cities are spelled several ways. The loader fixes each one once, in the warehouse, and the
+renumbered; a sleeve of 12 minis is counted as one bottle; liters were rounded down to whole liters for three
+months; cities are spelled several ways. The loader fixes each one once, in the warehouse, and the
 [data fixes page](https://joehahn.github.io/demand-on-demand/data_fixes.html) shows before and after. No forecast
 has to know these problems existed.
 
@@ -66,11 +67,11 @@ the 96 model configurations compared, every tool call the agent made, and the ex
 
 | request | backtest vs same month last year |
 |---|---|
-| [Monthly forecast of Tito's minis in Des Moines for the next 5 months](https://joehahn.github.io/demand-on-demand/examples/tito_s_minis_des_moines_next_5_months.html) | 11% more accurate |
+| [Monthly forecast of Tito's minis in Des Moines for the next 5 months](https://joehahn.github.io/demand-on-demand/examples/tito_s_minis_des_moines_next_5_months.html) | 8% more accurate |
 | [What revenue should we expect from Fireball in Linn County next quarter?](https://joehahn.github.io/demand-on-demand/examples/fireball_linn_county_next_quarter.html) | 9% more accurate |
-| [Forecast ready-to-drink cocktail bottles statewide for the next 6 months](https://joehahn.github.io/demand-on-demand/examples/ready_to_drink_cocktails_statewide_next_6_months.html) | 2% less accurate |
+| [Forecast ready-to-drink cocktail bottles statewide for the next 6 months](https://joehahn.github.io/demand-on-demand/examples/ready_to_drink_cocktails_statewide_next_6_months.html) | 9% more accurate |
 | [American vodka sales dollars for each of the five largest counties, next 6 months](https://joehahn.github.io/demand-on-demand/examples/american_vodka_dollars_top_5_counties_next_6_months.html) | 4% less accurate |
-| [Total liters of liquor sold statewide over the next 12 months](https://joehahn.github.io/demand-on-demand/examples/statewide_total_liters_next_12_months.html) | 4% less accurate |
+| [Total liters of liquor sold statewide over the next 12 months](https://joehahn.github.io/demand-on-demand/examples/statewide_total_liters_next_12_months.html) | 11% less accurate |
 
 The misses are shown on purpose: when the model does not beat last year, the dashboard says so and says which months
 to trust less.
@@ -78,9 +79,9 @@ to trust less.
 ## Results
 
 - [benchmark/report.md](benchmark/report.md): 30 forecasts sampled from the warehouse (products, categories, vendors;
-  counties and statewide; bottles, dollars, liters; 3 to 12 months). The model beat "same month last year" on 21;
-  median monthly error 14.1% vs 17.3%. Iowa liquor demand is very regular year to year, so last year is a hard baseline,
-  and on the other 9 it was not beaten. The report lists every forecast, the misses included.
+  counties and statewide; bottles, dollars, liters; 3 to 12 months). The model beat "same month last year" on 23;
+  median monthly error 15.0% vs 16.0%. Iowa liquor demand is very regular year to year, so last year is a hard baseline,
+  and on the other 7 it was not beaten. The report lists every forecast, the misses included.
 - [evals/report.md](evals/report.md): 19 test requests, 2 runs each, scored on product, place, measure, horizon and
   breakout, plus requests that should be declined.
 - [evals/grounding.md](evals/grounding.md): every number in the dashboard summaries traced to the harness's results.

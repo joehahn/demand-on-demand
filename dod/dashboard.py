@@ -76,8 +76,6 @@ def stores_section(stores, spec, unit, last_month):
         return ""
     recent = stores[stores.last_12_months > 0]
     t = stores.copy()
-    for c in ("first_order", "last_order"):
-        t[c] = t[c].astype(str)
     t = t.rename(columns={"last_12_months": f"{unit}, last 12 months"})
     money = "$" if unit == "dollars" else ""
     return (f"<h3>Stores included</h3><p>The forecast adds up the orders of {len(stores):,} stores in "
@@ -189,9 +187,14 @@ def build(spec, panel, res, usage=None, agent=None):
                 f"input tokens ({usage.get('cache_read_tokens', 0):,} read from cache) and {usage.get('output_tokens', 0):,} "
                 f"output tokens, about ${usage.get('est_cost_usd', 0):.2f}, {usage.get('agent_seconds', 0):.0f}s of agent "
                 f"time.</p>")
-    # bottles are the state's selling units, which is not always one bottle (a sleeve of minis is one unit)
-    units_note = (" Bottles are counted in the state's selling units, so a multi-pack or sleeve sold as one item "
-                  "counts as one." if unit == "bottles" else "")
+    # a sleeve or pack of minis counts each bottle when its size is known; name the items where it is not
+    units_note = ""
+    if unit in ("bottles", "liters") and panel.unknown_packs:
+        names = ", ".join(n.title() for n in panel.unknown_packs[:3])
+        more = f" and {len(panel.unknown_packs) - 3} more" if len(panel.unknown_packs) > 3 else ""
+        counts = "only one bottle's volume" if unit == "liters" else "as one bottle"
+        units_note = (f" {len(panel.unknown_packs)} item(s) in this product ({esc(names)}{more}) are sold in sleeves or "
+                      f"packs of unknown size, so each pack counts {counts}.")
     stores_html = stores_section(panel.stores, spec, unit, wide.index[-1])
     ask_html, trace_html = "", ""
     if agent:

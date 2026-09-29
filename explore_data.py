@@ -156,6 +156,18 @@ QUERIES = {
         FROM sales.invoice_line l JOIN sales.item i USING (item_no) JOIN sales.category c ON c.category_code = i.category_current
         GROUP BY 1, 2 ORDER BY 1, 2""",
 
+    # as recorded: volume per selling unit of the mini sleeves and packs, and liters vs bottles x volume
+    "mini_units": """
+        SELECT date_trunc('month', l.ordered_on)::date AS month,
+               1000 * sum(l.sales_liters_recorded) / sum(l.sales_bottles_recorded) AS ml_per_unit,
+               sum(l.sales_dollars) / sum(l.sales_bottles_recorded) AS dollars_per_unit
+        FROM sales.invoice_line l JOIN sales.item_units u USING (item_no)
+        WHERE u.units_per_sale IS NOT NULL GROUP BY 1 ORDER BY 1""",
+    "liters_recorded": """
+        SELECT date_trunc('month', ordered_on)::date AS month, sum(sales_liters_recorded) AS recorded,
+               sum(sales_bottles_recorded * bottle_volume_ml_recorded / 1000.0) AS computed
+        FROM sales.invoice_line WHERE ordered_on >= '2024-01-01' GROUP BY 1 ORDER BY 1""",
+
     "row_counts": """
         SELECT 'raw.liquor_sales' AS tbl, count(*) AS n FROM raw.liquor_sales
         UNION ALL SELECT 'sales.invoice_line', count(*) FROM sales.invoice_line
@@ -333,6 +345,22 @@ def fig_rtd_step(d):
     f.update_traces(mode="lines+markers", marker=dict(size=8), hovertemplate="%{y:.0f}")
     f.update_xaxes(dtick=1)
     return style(f, "Bottles per year, 2019 = 100", "index (2019 = 100)", legend=True)
+
+
+def fig_mini_units(d):
+    m = d["mini_units"]
+    f = go.Figure([line(m.month, m.ml_per_unit, "ml per unit, as recorded", ORANGE),
+                   line(m.month, m.dollars_per_unit, "dollars per unit", BLUE)])
+    f.update_traces(hovertemplate="%{y:,.1f}")
+    return style(f, "Mini sleeves and packs: recorded volume and price per selling unit", legend=True)
+
+
+def fig_liters_recorded(d):
+    x = d["liters_recorded"]
+    f = go.Figure([line(x.month, x.recorded, "liters as recorded", ORANGE),
+                   line(x.month, x.computed, "bottles x bottle volume", BLUE, dash="dot")])
+    f.update_traces(hovertemplate="%{y:,.3s}")
+    return style(f, "Liters per month, statewide, as recorded vs computed", "liters", legend=True)
 
 
 def fixed(anchor, how):
@@ -520,6 +548,15 @@ City spellings that name the same city:</p>
 {table(sus, {"zero_dollar": comma, "zero_bottles": comma, "huge_bottles": comma})}
 {fixed('zero-lines', 'Lines with zero bottles or zero dollars, most likely cancelled lines, are removed.')}
 {fixed('checked', 'Very large volumes were checked and are genuine pallet and whole-cask purchases, so they are kept as recorded.')}
+
+<h2>A bottle is not always a bottle</h2>
+<p>Volume and price per selling unit of minis sold in sleeves and packs (orange: volume drops tenfold in mid-2019 while
+price is unchanged).</p>
+{plot(fig_mini_units(d))}
+{fixed('units', 'Where the pack size is known, a sleeve or pack counts each mini as a bottle, and liters are bottles times one mini\'s volume. Items with no evidence of their pack size stay in selling units and are flagged.')}
+<p>Recorded liters vs bottles times bottle volume, statewide.</p>
+{plot(fig_liters_recorded(d))}
+{fixed('liters', 'Liters are recomputed as bottles times bottle volume on every line, which restores Nov 2025 to Jan 2026, when liters were rounded down to whole liters.')}
 
 <h2>invoice_id changed meaning</h2>
 <p>Lines per invoice_id per month: one id per line until August 2025, one per order after.</p>

@@ -31,6 +31,7 @@ class Panel:
     labels: dict = field(default_factory=dict)    # series code -> readable label
     pool: tuple = None                            # (companion series, their exog): same product in other counties
     stores: pd.DataFrame = None                   # every store whose sales are in the panel, with recent volume
+    unknown_packs: list = field(default_factory=list)  # items in the product sold in packs of unknown size
 
 
 def member_items(spec):
@@ -47,6 +48,7 @@ def build_sql(spec, items=None):
     sql = f"""
 SELECT date_trunc('month', l.ordered_on)::date AS month,
        {SERIES_EXPR[spec.series_by]} AS series,
+       l.store_no,
        sum(l.{spec.target}) AS value
 FROM sales.invoice_line l
 JOIN sales.item i USING (item_no)
@@ -54,25 +56,33 @@ JOIN sales.store s USING (store_no)
 WHERE {PRODUCT_FILTER[spec.product.kind]}
   AND {REGION_FILTER[spec.region.kind]}
   AND l.ordered_on >= %(start)s
-GROUP BY 1, 2
-ORDER BY 1, 2"""
+GROUP BY 1, 2, 3
+ORDER BY 1, 2, 3"""
     return sql, params
 
 
-def stores_sql(spec):
-    """Every store whose orders feed the panel: same product and region filters as build_sql, one row per store."""
-    return f"""
-SELECT s.store_no, s.store_name, s.city, s.county_name AS county,
-       min(l.ordered_on) AS first_order, max(l.ordered_on) AS last_order,
-       coalesce(sum(l.{spec.target}) FILTER (WHERE l.ordered_on >= %(recent)s), 0) AS last_12_months
-FROM sales.invoice_line l
-JOIN sales.item i USING (item_no)
-JOIN sales.store s USING (store_no)
-WHERE {PRODUCT_FILTER[spec.product.kind]}
-  AND {REGION_FILTER[spec.region.kind]}
-  AND l.ordered_on >= %(start)s AND l.ordered_on < %(end)s
-GROUP BY 1, 2, 3, 4
-ORDER BY last_12_months DESC, store_name"""
+def store_list(raw, last_month):
+    """Every store whose orders feed the panel, from the main query's per-store rows: first and last month with
+    orders, and volume over the last 12 complete months. Store names come from sales.store."""
+    raw = raw[pd.to_datetime(raw.month) <= last_month]
+    recent = pd.to_datetime(raw.month) > last_month - pd.DateOffset(months=12)
+    g = raw.groupby("store_no")
+    out = pd.DataFrame({"first_month": g.month.min().astype(str).str[:7], "last_month": g.month.max().astype(str).str[:7],
+                        "last_12_months": raw[recent].groupby("store_no").value.sum()}).fillna({"last_12_months": 0})
+    info = db.query("SELECT store_no, store_name, city, county_name AS county FROM sales.store WHERE store_no = ANY(%s)",
+                    (list(out.index),)).set_index("store_no")
+    out = info.join(out).reset_index().sort_values(["last_12_months", "store_name"], ascending=[False, True])
+    return out[["store_no", "store_name", "city", "county", "first_month", "last_month", "last_12_months"]]
+
+
+def unknown_packs(spec, items):
+    """Items in this product that the state sells as a sleeve or pack of unknown size: they count one bottle per pack
+    (sales.item_units, units_per_sale NULL). Largest first."""
+    where = {"item": "u.item_no = ANY(%(items)s)", "category": "u.item_no = ANY(%(items)s)",
+             "vendor": "i.vendor_no = ANY(%(product)s)", "all": "TRUE"}[spec.product.kind]
+    return list(db.query(f"""SELECT i.item_desc FROM sales.item_units u JOIN sales.item i USING (item_no)
+                             WHERE u.units_per_sale IS NULL AND {where} ORDER BY i.total_bottles DESC NULLS LAST""",
+                         {"items": items, "product": spec.product.codes}).item_desc)
 
 
 def data_end():
@@ -169,8 +179,7 @@ def build(spec):
     if raw.empty:
         raise ValueError("No sales match this product and region.")
     wide = to_wide(raw, spec.start, last_month)
-    stores = db.query(stores_sql(spec), {**params, "recent": last_month - pd.DateOffset(months=11),
-                                         "end": last_month + pd.offsets.MonthBegin(1)})
+    stores = store_list(raw, last_month)
 
     horizon_idx = pd.date_range(last_month + pd.offsets.MonthBegin(1), periods=spec.horizon, freq="MS")
     full_idx = wide.index.append(horizon_idx)
@@ -204,4 +213,5 @@ def build(spec):
     for k, v in params.items():  # a readable copy for the dashboard; execution used bind parameters
         display_sql = display_sql.replace(f"%({k})s", repr(v) if not isinstance(v, list) else "ARRAY" + repr(v))
     return Panel(series=wide, exog=exog, future_index=horizon_idx, sql=display_sql.strip(), data_end=end,
-                 start=spec.start, labels=labels_for(spec, wide.columns), pool=pool, stores=stores)
+                 start=spec.start, labels=labels_for(spec, wide.columns), pool=pool, stores=stores,
+                 unknown_packs=unknown_packs(spec, items))

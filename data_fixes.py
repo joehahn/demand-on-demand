@@ -55,9 +55,34 @@ QUERIES = {
         SELECT x.category_code AS retired_code, x.current_code, c.category_name
         FROM sales.category_crosswalk x JOIN sales.category c ON c.category_code = x.current_code ORDER BY 3""",
     "tito_minis": """
-        SELECT date_trunc('month', l.ordered_on)::date AS month, l.item_no, i.family_item_no, sum(l.sales_bottles) AS bottles
+        SELECT date_trunc('month', l.ordered_on)::date AS month, l.item_no, i.family_item_no,
+               sum(l.sales_bottles_recorded) AS bottles
         FROM sales.invoice_line l JOIN sales.item i USING (item_no)
         WHERE i.family_item_no = '38194' GROUP BY 1, 2, 3 ORDER BY 1""",
+    # mini sleeves: liters as recorded fall ~10x on 2019-08-01 although the same sleeves kept selling
+    "mini_liters": """
+        SELECT date_trunc('month', l.ordered_on)::date AS month, sum(l.sales_liters_recorded) AS as_recorded,
+               sum(l.sales_liters) AS clean
+        FROM sales.invoice_line l JOIN sales.item_units u USING (item_no)
+        WHERE u.units_per_sale IS NOT NULL GROUP BY 1 ORDER BY 1""",
+    "units_evidence": """
+        SELECT CASE WHEN u.units_per_sale IS NULL THEN 'flagged: pack size unknown'
+                    WHEN u.evidence LIKE 'recorded as%%' THEN 'sleeve volume recorded earlier'
+                    WHEN u.evidence LIKE 'same product family%%' THEN 'product family'
+                    ELSE 'pack size in the item name' END AS evidence,
+               count(DISTINCT u.item_no) AS items, sum(l.sales_bottles_recorded) AS units_as_recorded,
+               sum(l.sales_bottles) AS bottles_clean
+        FROM sales.item_units u JOIN sales.invoice_line l USING (item_no) GROUP BY 1 ORDER BY 3 DESC""",
+    "units_top": """
+        SELECT u.item_no, i.item_desc, u.units_per_sale AS bottles_per_unit, u.bottle_ml AS ml, u.evidence,
+               sum(l.sales_bottles_recorded) AS units_as_recorded
+        FROM sales.item_units u JOIN sales.item i USING (item_no) JOIN sales.invoice_line l USING (item_no)
+        GROUP BY 1, 2, 3, 4, 5 ORDER BY 6 DESC""",
+    # liters truncated to whole liters, Nov 2025 - Jan 2026
+    "liters_truncated": """
+        SELECT date_trunc('month', ordered_on)::date AS month, sum(sales_liters_recorded) AS as_recorded,
+               sum(sales_bottles_recorded * bottle_volume_ml_recorded / 1000.0) AS clean
+        FROM sales.invoice_line WHERE ordered_on >= '2025-01-01' GROUP BY 1 ORDER BY 1""",
     "families": """
         SELECT f.item_no AS old_item, f.family_item_no AS current_item, o.item_desc, o.bottle_volume_ml AS ml,
                o.last_order_on AS old_last_order, n.first_order_on AS new_first_order, o.total_bottles AS old_bottles
@@ -130,8 +155,16 @@ def build(d):
     fig_tm = go.Figure([line(items.index, items[c], f"item {c} as recorded", col, dash="dot")
                         for c, col in zip(["38180", "938180"], [ORANGE, AQUA]) if c in items])
     fig_tm.add_trace(line(fam.index, fam.values, "family 38194, clean", BLUE))
-    fig_tm = style(fig_tm.update_traces(hovertemplate="%{y:,.0f}"), "Tito's 50 ml mini bottles per month, statewide",
-                   legend=True)
+    fig_tm = style(fig_tm.update_traces(hovertemplate="%{y:,.0f}"),
+                   "Tito's 50 ml mini sleeves per month, statewide (units as recorded)", legend=True)
+    ml = d["mini_liters"]
+    fig_ml = before_after(ml.month, [ml.as_recorded], ml.clean, "Liters per month of minis sold in sleeves and packs",
+                          "as recorded", "clean")
+    lt = d["liters_truncated"]
+    fig_lt = before_after(lt.month, [lt.as_recorded], lt.clean, "Liters per month, statewide, 2025 to 2026",
+                          "as recorded", "clean")
+    known = d["units_top"][d["units_top"].bottles_per_unit.notna()].head(12)
+    flagged = d["units_top"][d["units_top"].bottles_per_unit.isna()].head(12).drop(columns=["bottles_per_unit", "ml"])
 
     fams = d["families"].astype({"old_last_order": str, "new_first_order": str})
     body = f"""
@@ -168,17 +201,39 @@ history is continuous. Tito's 50 ml mini, before and after:</p>
 <p>The 20 largest renumberings:</p>
 {table(fams.head(20), {"old_bottles": comma})}
 
-<h2 id="cities">5. City spellings</h2>
+<h2 id="units">5. A sleeve of minis counted as one bottle</h2>
+<p>The state counts a sleeve or pack of 50 ml minis as one "bottle": Tito's mini (item 38194) sells at $19.20 per
+"bottle", a sleeve of 12. Until mid-2019 such an item was recorded at the sleeve's total volume (600 ml), and from
+then on at one mini's volume (50 ml) with the same price, so liters for minis dropped about tenfold overnight. Some
+packs switched the same way in August 2025, when the state changed source systems.
+Where the pack size is known, sales_bottles now counts real bottles and liters are bottles times volume; the originals
+stay in sales_bottles_recorded and sales_liters_recorded. {n("multi_bottle_units"):,} lines changed.</p>
+{plot(fig_ml)}
+{table(d["units_evidence"], {"units_as_recorded": comma, "bottles_clean": comma})}
+<p>The largest converted items:</p>
+{table(known, {"units_as_recorded": comma, "bottles_per_unit": comma})}
+<p>Items priced like a multi-pack (over $0.10 per ml) but with no evidence of the pack size are not converted, since
+a guess would put a wrong multiplier into their history. They stay in selling units and are flagged in
+<code>sales.item_units</code>. The largest:</p>
+{table(flagged, {"units_as_recorded": comma})}
+
+<h2 id="liters">6. Liters truncated to whole liters</h2>
+<p>From November 2025 through January 2026 the state recorded liters rounded down to whole liters, so 10.5 liters
+became 10 and a 750 ml line became 0. {n("liters_truncated"):,} lines are affected. Liters are now bottles times
+bottle volume on every line, which matches what was recorded in every other month.</p>
+{plot(fig_lt)}
+
+<h2 id="cities">7. City spellings</h2>
 <p>Each city now has one spelling in <code>store.city</code>; the source spelling is kept in
 <code>store.city_recorded</code>.</p>
 {table(d["cities"])}
 
-<h2 id="census">6. Census data lags sales</h2>
+<h2 id="census">8. Census data lags sales</h2>
 <p>Census publishes county population about a year late and income about two years late. The latest published year
 is carried forward, flagged, so every sales month has a reference value:</p>
 {table(d["census"])}
 
-<h2 id="checked">7. Checked and left as is</h2>
+<h2 id="checked">9. Checked and left as is</h2>
 <p><strong>Large-volume lines</strong> (6 liters or more) looked like errors but are genuine: pallet shippers and
 whole-cask purchases. <strong>Missing prices</strong> before September 2025 need no fix, because unit price is
 dollars divided by bottles. <strong>invoice_id</strong> changed meaning in September 2025, so lines are keyed by the
