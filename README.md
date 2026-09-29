@@ -18,9 +18,9 @@ publishes a dashboard that says how far to trust the answer.
 | Forecast accuracy | beats "same month last year" on 21 of 30 sampled forecasts; median error 8% lower |
 | Agent accuracy | 38 of 38 eval runs resolved the request exactly or correctly declined it |
 
-Built with [Claude Code](https://claude.com/claude-code) by **Joseph M. Hahn, Ph.D.**, an independent AI and machine
-learning consultant: [jmh-datasciences.com](https://jmh-datasciences.com) ·
-[LinkedIn](https://www.linkedin.com/in/hahnjoe/)
+**Author:** Joseph M. Hahn, Ph.D., independent AI and machine learning consultant  
+[jmh-datasciences.com](https://jmh-datasciences.com) · [LinkedIn](https://www.linkedin.com/in/hahnjoe) · jmh.datasciences@gmail.com  
+**Built end-to-end with Claude Code.** · **License:** [MIT](#license-and-data)
 
 ## How it works
 
