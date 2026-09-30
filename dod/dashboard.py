@@ -110,17 +110,32 @@ def read_as_html(spec, unit, months, wide, assumptions_html):
 
 
 def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
-    """Actuals, what the model would have said one month ahead during the test, and the forecast."""
+    """Actuals, what the model would have said 1 to N months ahead during the test (one at a time, picked with
+    buttons), and the forecast."""
     hist = wide[code].dropna().iloc[-HISTORY_MONTHS:]
-    one = bt[(bt.series == code) & (bt.step == 1)].sort_values("month")
+    mine = bt[bt.series == code]
+    steps = sorted(mine.step.unique())
+    one = mine[mine.step == 1]
     f = fc[fc.series == code].sort_values("month")
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=list(f.month) + list(f.month[::-1]), y=list(f.hi) + list(f.lo[::-1]),
                              fill="toself", fillcolor="rgba(27,175,122,0.18)", line=dict(width=0), mode="lines",
                              hoverinfo="skip", name="80% range"))
     fig.add_trace(line(hist.index, hist.values, "Actual", BLUE))
-    fig.add_trace(line(one.month, one.pred, "Backtest, 1 month ahead", ORANGE, dash="dot"))
+    for k in steps:  # one dotted line per horizon; only 1 month ahead shows until another is picked
+        b = mine[mine.step == k].sort_values("month")
+        fig.add_trace(line(b.month, b.pred, f"Backtest, {k} month{'s' if k > 1 else ''} ahead", ORANGE, dash="dot"))
+        fig.data[-1].visible = bool(k == 1)
     fig.add_trace(line(f.month, f.pred, "Forecast", AQUA))
+    if len(steps) > 1:
+        shown = lambda k: [True, True] + [j == k for j in steps] + [True]
+        fig.update_layout(updatemenus=[dict(
+            type="buttons", direction="right", showactive=True, active=0, x=1, xanchor="right", y=1.02, yanchor="bottom",
+            pad=dict(r=0, t=0), font=dict(size=11), bgcolor="rgba(0,0,0,0)",
+            buttons=[dict(label=f"{k}", method="restyle", args=[{"visible": shown(k)}]) for k in steps])])
+        fig.add_annotation(text="backtest, months ahead:", x=1, xref="paper", xanchor="right", xshift=-34 * len(steps),
+                           y=1.02, yref="paper", yanchor="bottom", yshift=4, showarrow=False,
+                           font=dict(size=11, color="rgba(137,135,129,1)"))
     fig.update_traces(selector=dict(name="Forecast"), mode="lines+markers", marker=dict(size=8))
     if len(one) == 0:
         fig.update_layout(title_text=f"{label} (not backtested)")
@@ -258,7 +273,7 @@ def build(spec, panel, res, usage=None, agent=None):
 regression and LightGBM, each with different targets, inputs and history lengths{", with or without other counties" if pooling_tried else ""});
 chosen: {esc(short_model(res))}.</li>
 <li><strong>Test</strong> ({tw[0]:%b %Y} to {tw[1]:%b %Y}): that model retrained each month on earlier months only; dotted
-orange is its 1-month-ahead forecast.</li>
+orange is its forecast 1 to {max(ps.step)} months ahead (pick above the chart).</li>
 <li><strong>Forecast</strong> ({months}): retrained on {pd.Timestamp(panel.start):%b %Y} to {wide.index[-1]:%b %Y}, then applied.
 Green band: the range that held 80% of outcomes in the Test period.{units_note}</li>
 </ul>
