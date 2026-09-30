@@ -81,7 +81,7 @@ def features_section(spec, panel, res, unit, fc):
     ens = res.get("ensemble") or []
     if not ens:
         return ""
-    code = panel.series.columns[0]
+    code = panel.series.iloc[-12:].sum().idxmax()  # a breakout shows its largest series
     y = panel.series[code].dropna()
     lag_sets = [c["lags"] if isinstance(c["lags"], list) else list(range(1, c["lags"] + 1)) for c in ens]
     all_lags = sorted(set().union(*lag_sets))
@@ -104,7 +104,9 @@ def features_section(spec, panel, res, unit, fc):
     t = t.rename_axis("month").reset_index()
     money = "$" if unit == "dollars" else ""
     num = lambda v: v if isinstance(v, str) else f"{money}{v:,.0f}"
-    fmt = {c: num for c in t.columns if c not in ("month", "change vs 12 months back")}
+    plain = lambda v: f"{v:,.0f}"
+    measured = [f"{unit} (target)"] + [c for c in t.columns if c.endswith(" back")]  # in the forecast's unit
+    fmt = {c: num if c in measured else plain for c in t.columns if c not in ("month", "change vs 12 months back")}
     fmt["change vs 12 months back"] = lambda v: f"{v:+.0%}"
     rows = table(t, fmt)  # the "to forecast" cell makes the target a text column; align it with the numbers
     target = esc(f"{unit} (target)")
