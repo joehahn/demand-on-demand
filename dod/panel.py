@@ -67,13 +67,16 @@ def store_list(raw, last_month):
     raw = raw[pd.to_datetime(raw.month) <= last_month]
     recent = pd.to_datetime(raw.month) > last_month - pd.DateOffset(months=12)
     g = raw.groupby("store_no")
+    last12 = raw[recent & (raw.value > 0)].groupby("store_no")
     out = pd.DataFrame({"first_month": g.month.min().astype(str).str[:7], "last_month": g.month.max().astype(str).str[:7],
-                        "last_12_months": raw[recent].groupby("store_no").value.sum()}).fillna({"last_12_months": 0})
+                        "last_12_months": last12.value.sum(), "months_ordering": last12.month.nunique()}
+                       ).fillna({"last_12_months": 0, "months_ordering": 0})
     info = db.query("SELECT store_no, store_name, city, county_name AS county, lat, lon FROM sales.store "
                     "WHERE store_no = ANY(%s)",
                     (list(out.index),)).set_index("store_no")
     out = info.join(out).reset_index().sort_values(["last_12_months", "store_name"], ascending=[False, True])
-    return out[["store_no", "store_name", "city", "county", "first_month", "last_month", "last_12_months", "lat", "lon"]]
+    return out[["store_no", "store_name", "city", "county", "first_month", "last_month", "last_12_months",
+                "months_ordering", "lat", "lon"]]
 
 
 def unknown_packs(spec, items):

@@ -128,6 +128,26 @@ def features_section(spec, panel, res, unit, fc):
             f"month to forecast.</p>{rows}" + (f"<p class=\"note\">{' '.join(esc(n) for n in notes)}</p>" if notes else ""))
 
 
+BIG_BUYER_SHARE = 0.25  # name a store on the dashboard when it has more than this share of the last 12 months
+
+
+def big_buyer_note(stores, unit, n_series):
+    """One store with a large share of recent volume, ordering on and off, makes the monthly total hard to predict:
+    say so next to the forecast range. Single-series forecasts only (a breakout would need a share per series)."""
+    if stores is None or stores.empty or n_series != 1 or stores.last_12_months.sum() <= 0:
+        return ""
+    top = stores.sort_values("last_12_months", ascending=False).iloc[0]
+    share = top.last_12_months / stores.last_12_months.sum()
+    if share <= BIG_BUYER_SHARE:
+        return ""
+    money = "$" if unit == "dollars" else ""
+    per = top.last_12_months / max(top.months_ordering, 1)
+    per = round(per, -max(int(np.floor(np.log10(per))) - 1, 0)) if per >= 1 else per  # "about": two significant figures
+    return (f"<li><strong>One big buyer:</strong> {esc(top.store_name)} placed {share:.0%} of the last 12 months' "
+            f"{unit}, ordering in {int(top.months_ordering)} of those months (about {money}{per:,.0f} each time). Months it "
+            f"orders or skips swing the total, which is part of why the range is wide.</li>")
+
+
 def fig_store_map(stores, unit):
     """Where the stores are: dot size is each store's last-12-months volume; grey dots have not ordered lately."""
     s = stores.dropna(subset=["lat", "lon"])
@@ -169,7 +189,7 @@ def stores_section(stores, spec, unit, last_month, plot):
     if stores is None or stores.empty:
         return ""
     recent = stores[stores.last_12_months > 0]
-    t = stores.drop(columns=["lat", "lon"], errors="ignore")
+    t = stores.drop(columns=["lat", "lon", "months_ordering"], errors="ignore")
     t = t.rename(columns={"last_12_months": f"{unit}, last 12 months"})
     fig = fig_store_map(stores, unit) if {"lat", "lon"} <= set(stores.columns) else None
     money = "$" if unit == "dollars" else ""
@@ -371,6 +391,7 @@ chosen: {esc(short_model(res))}.</li>
 orange is its forecast 1 to {max(ps.step)} months ahead (pick above the chart).</li>
 <li><strong>Forecast</strong> ({months}): retrained on {pd.Timestamp(panel.start):%b %Y} to {wide.index[-1]:%b %Y}, then applied.
 Green band: the range that held 80% of outcomes in the Test period.{units_note}</li>
+{big_buyer_note(panel.stores, unit, wide.shape[1])}
 </ul>
 {table(ft, {"forecast": num, "low (10%)": num, "high (90%)": num})}
 
