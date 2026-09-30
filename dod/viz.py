@@ -93,10 +93,12 @@ footer { margin-top:48px; font-size:13px; color:var(--muted); }
 
 class Plots:
     """Renders plotly figures into cards; plotly.js is loaded once, from the CDN, with the first figure.
-    numbered=True prefixes each title with its figure number, in the order the figures are rendered."""
-    def __init__(self, numbered=False):
+    numbered=True prefixes each title with its figure number, in the order the figures are rendered.
+    toolbar=False hides Plotly's hover toolbar (zoom, pan, download), which can cover controls at a chart's top right."""
+    def __init__(self, numbered=False, toolbar=True):
         self.count = 0
         self.numbered = numbered
+        self.toolbar = toolbar
 
     def __call__(self, fig):
         first = self.count == 0
@@ -104,7 +106,8 @@ class Plots:
         if self.numbered:
             fig.update_layout(title_text=f"Figure {self.count}. {fig.layout.title.text}")
         return '<div class="card">' + fig.to_html(full_html=False, include_plotlyjs="cdn" if first else False,
-                                                   config={"displaylogo": False, "responsive": True}) + "</div>"
+                                                   config={"displaylogo": False, "responsive": True,
+                                                           "displayModeBar": self.toolbar}) + "</div>"
 
 
 def page(title, body):

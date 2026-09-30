@@ -3,6 +3,7 @@ and exactly what ran."""
 import html
 import json
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
@@ -70,18 +71,56 @@ def model_explanation(res, unit, spec, panel):
             f"month last year. The forecast uses {what}:</p><ol>{items}</ol>{blend}")
 
 
-def stores_section(stores, spec, unit, last_month):
+def fig_store_map(stores, unit):
+    """Where the stores are: dot size is each store's last-12-months volume; grey dots have not ordered lately."""
+    s = stores.dropna(subset=["lat", "lon"])
+    if s.empty:
+        return None
+    money = "$" if unit == "dollars" else ""
+    active, idle = s[s.last_12_months > 0], s[s.last_12_months <= 0]
+    size = lambda v: 6 + 24 * np.sqrt(v / s.last_12_months.max()) if s.last_12_months.max() > 0 else 8
+    fig = go.Figure([
+        go.Scattermap(lat=idle.lat, lon=idle.lon, mode="markers", name="no orders in the last 12 months",
+                      marker=dict(size=6, color="rgba(137,135,129,0.7)"), text=idle.store_name,
+                      hovertemplate="%{text}<extra>no recent orders</extra>"),
+        go.Scattermap(lat=active.lat, lon=active.lon, mode="markers", name=f"{unit}, last 12 months (dot size)",
+                      marker=dict(size=size(active.last_12_months), color=BLUE, opacity=0.75), text=active.store_name,
+                      customdata=active.last_12_months,
+                      hovertemplate="%{text}<br>" + money + "%{customdata:,.0f} " + unit + ", last 12 months<extra></extra>"),
+    ])
+    # frame the stores: zoom from the wider of the latitude and longitude spans, ignoring the odd far-off store
+    # (one licensee is in Colorado) so a statewide map still frames Iowa
+    lat, lon = s.lat.quantile([0.01, 0.99]), s.lon.quantile([0.01, 0.99])
+    # web-map zoom z shows 512 * 2^z / 360 pixels per degree of longitude (latitude ~1.3x more in Iowa); fit the
+    # stores into about 700 x 300 pixels of the map
+    lon_span = max(lon.iloc[1] - lon.iloc[0], 0.01)
+    lat_span = max(lat.iloc[1] - lat.iloc[0], 0.01) * 1.33
+    zoom = float(np.clip(min(np.log2(700 * 360 / (512 * lon_span)), np.log2(300 * 360 / (512 * lat_span))), 3, 13))
+    # CARTO's light basemap: no key, works from any page (OpenStreetMap's own servers block pages opened as files)
+    fig.update_layout(map=dict(style="carto-positron", zoom=zoom,
+                               center=dict(lat=float(s.lat.median()), lon=float(s.lon.median()))),
+                      margin=dict(l=0, r=0, t=40, b=0), height=380, showlegend=True,
+                      legend=dict(orientation="h", y=1.0, x=1, xanchor="right", yanchor="bottom"),
+                      title=dict(text="Stores included", x=0, xanchor="left", font=dict(size=15)),
+                      paper_bgcolor="rgba(0,0,0,0)",
+                      font=dict(family='system-ui, -apple-system, "Segoe UI", sans-serif', size=12))  # as in viz.style
+    return fig
+
+
+def stores_section(stores, spec, unit, last_month, plot):
     """Which stores were added up: every store whose orders of this product in this region are in the series."""
     if stores is None or stores.empty:
         return ""
     recent = stores[stores.last_12_months > 0]
-    t = stores.copy()
+    t = stores.drop(columns=["lat", "lon"], errors="ignore")
     t = t.rename(columns={"last_12_months": f"{unit}, last 12 months"})
+    fig = fig_store_map(stores, unit) if {"lat", "lon"} <= set(stores.columns) else None
     money = "$" if unit == "dollars" else ""
     return (f"<h3>Stores included</h3><p>The forecast adds up the orders of {len(stores):,} stores in "
             f"{esc(spec.region.label)} that bought {esc(spec.product.label)} since {spec.start[:7]}; "
             f"{len(recent):,} of them ordered it in the 12 months to {last_month:%b %Y}. Stores that closed still "
             f"count in the months they were open.</p>"
+            + (plot(fig) if fig is not None else "") +
             f"<details><summary>Show the stores</summary>"
             f"{table(t, {f'{unit}, last 12 months': lambda v: f'{money}{v:,.0f}'})}</details>")
 
@@ -177,7 +216,7 @@ def fig_accuracy(per_step):
 
 
 def build(spec, panel, res, usage=None, agent=None):
-    plot = Plots(numbered=True)
+    plot = Plots(numbered=True, toolbar=False)
     wide, fc, bt, ps = panel.series, res["forecast"], res["backtest"], res["per_step"]
     labels = panel.labels
     months = f"{fc.month.min():%b %Y} to {fc.month.max():%b %Y}"
@@ -250,7 +289,6 @@ def build(spec, panel, res, usage=None, agent=None):
         units_note = (f" {len(panel.unknown_packs)} item(s) in this product ({esc(names)}{more}) are sold in sleeves or "
                       f"packs of unknown size, so each pack counts {counts}.")
     pooling_tried = "True" in set(res["grid"].get("pool", pd.Series(dtype=str)).astype(str))
-    stores_html = stores_section(panel.stores, spec, unit, wide.index[-1])
     ask_html, trace_html = "", ""
     if agent:
         assumptions = "".join(f"<li>{esc(a)}</li>" for a in agent.get("assumptions", []))
@@ -289,7 +327,7 @@ actually happened and with the simplest serious baseline: the same month last ye
 export rows and zero lines removed, renumbered products joined, categories in today's taxonomy, one spelling per city.
 See <a href="https://joehahn.github.io/demand-on-demand/data_fixes.html">what was fixed</a>. A series starts at its
 first sale.</p>
-{stores_html}
+{stores_section(panel.stores, spec, unit, wide.index[-1], plot)}
 
 <h2>How the model was chosen</h2>
 <p>Model: {esc(model_name)}; {verdict} over a {len(bt.origin.unique())}-origin backtest on {tw[0]:%b %Y} to

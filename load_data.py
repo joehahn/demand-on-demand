@@ -6,10 +6,13 @@ Stages (run all by default, or name one):
     python load_data.py raw        # zips -> raw.liquor_sales (all text, dirt preserved)
     python load_data.py curate     # raw -> sales.* star schema (typed, still dirty values)
     python load_data.py ref        # ref.calendar, ref.county_demographics
+    python load_data.py clean      # data fixes (meta.data_fixes)
+    python load_data.py geocode    # store coordinates (Census geocoder, ZIP centers for the rest)
     python load_data.py meta       # meta.column_notes data dictionary + COMMENT ON
 
 Connects as dod_owner (DOD_OWNER_DSN in .env). Never prints credentials.
 """
+import csv
 import io
 import os
 import re
@@ -600,6 +603,8 @@ COLUMN_NOTES = {
         "store_no": "Store number.", "store_name": "Store name.", "address": "Street address.",
         "city": "City, one spelling per city.", "city_recorded": "City as recorded by the source.", "zip_code": "ZIP code.", "county_fips": "5-digit county FIPS code; joins ref.county_population and ref.county_income.",
         "county_name": "County name.", "first_order_on": "Date of the store's first order.", "last_order_on": "Date of the store's latest order.",
+        "lat": "Latitude of the store.", "lon": "Longitude of the store.",
+        "geo_source": "How lat/lon were found: street address (Census geocoder) or ZIP code center.",
     },
     "sales.item": {
         "item_no": "Item number.", "item_desc": "Product description.", "vendor_no": "Vendor; joins sales.vendor.",
@@ -645,7 +650,55 @@ def meta():
         print("  comments written")
 
 
-STAGES = {"download": download, "raw": raw, "curate": curate, "ref": ref, "clean": clean, "meta": meta}
+GEOCODER = "https://geocoding.geo.census.gov/geocoder/locations/addressbatch"
+ZIP_CENTERS = "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2024_Gazetteer/2024_Gaz_zcta_national.zip"
+
+
+def geocode():
+    """Store coordinates for maps: the Census Bureau batch geocoder matches street addresses; stores it cannot match
+    get their ZIP code's center. Sends only store numbers and the stores' public business addresses, once: both
+    downloads are cached in $DOD_DATA_DIR, so re-running this stage makes no web calls."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with connect() as conn:
+        stores = conn.execute("SELECT store_no, address, city, left(zip_code, 5) FROM sales.store").fetchall()
+        matched = DATA_DIR / "census_geocoder_stores.csv"
+        if not matched.exists():
+            buf = io.StringIO()
+            csv.writer(buf).writerows((no, addr or "", city or "", "IA", zip5 or "") for no, addr, city, zip5 in stores)
+            r = requests.post(GEOCODER, data={"benchmark": "Public_AR_Current"},
+                              files={"addressFile": ("stores.csv", buf.getvalue())}, timeout=900)
+            r.raise_for_status()
+            matched.write_text(r.text)
+        coords = {}
+        for row in csv.reader(io.StringIO(matched.read_text())):
+            if len(row) > 5 and row[2] == "Match" and row[5]:
+                lon, lat = map(float, row[5].split(","))
+                coords[row[0]] = (lat, lon, "street address (Census geocoder)")
+
+        centers_zip = DATA_DIR / "zcta_gazetteer.zip"
+        if not centers_zip.exists():
+            centers_zip.write_bytes(requests.get(ZIP_CENTERS, timeout=300).content)
+        with zipfile.ZipFile(centers_zip) as z:
+            gaz = pd.read_csv(z.open(z.namelist()[0]), sep="\t", dtype={"GEOID": str})
+        gaz.columns = [c.strip() for c in gaz.columns]
+        center = dict(zip(gaz.GEOID, zip(gaz.INTPTLAT, gaz.INTPTLONG)))
+        for no, _, _, zip5 in stores:
+            if no not in coords and zip5 in center:
+                coords[no] = (*center[zip5], "ZIP code center")
+
+        conn.execute("ALTER TABLE sales.store ADD COLUMN IF NOT EXISTS lat double precision, "
+                     "ADD COLUMN IF NOT EXISTS lon double precision, ADD COLUMN IF NOT EXISTS geo_source text")
+        conn.execute("UPDATE sales.store SET lat = NULL, lon = NULL, geo_source = NULL")
+        with conn.cursor() as cur:
+            cur.executemany("UPDATE sales.store SET lat = %s, lon = %s, geo_source = %s WHERE store_no = %s",
+                            [(lat, lon, src, no) for no, (lat, lon, src) in coords.items()])
+        by = pd.Series([v[2] for v in coords.values()]).value_counts()
+        print(f"  {len(stores):,} stores: " + ", ".join(f"{n:,} by {k}" for k, n in by.items())
+              + f", {len(stores) - len(coords):,} not placed")
+
+
+STAGES = {"download": download, "raw": raw, "curate": curate, "ref": ref, "clean": clean, "geocode": geocode,
+          "meta": meta}
 
 if __name__ == "__main__":
     names = sys.argv[1:] or list(STAGES)
