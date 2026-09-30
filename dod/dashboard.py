@@ -86,6 +86,16 @@ def stores_section(stores, spec, unit, last_month):
             f"{table(t, {f'{unit}, last 12 months': lambda v: f'{money}{v:,.0f}'})}</details>")
 
 
+def read_as_html(spec, unit, months, wide, assumptions_html):
+    """How the request was read, as one line of short phrases, with the agent's assumptions one click away."""
+    n = wide.shape[1]
+    series = "one total" if spec.series_by == "none" else f"{n} series, one per {spec.series_by}"
+    parts = [spec.product.label, spec.region.label, f"{unit} per month", months, series]
+    why = (f'<details class="note"><summary>Why it was read this way</summary><ul>{assumptions_html}</ul></details>'
+           if assumptions_html else "")
+    return f'<p class="readas"><span>Read as</span> {" &middot; ".join(esc(x) for x in parts)}</p>{why}'
+
+
 def fig_series(code, label, wide, bt, fc, test_start, unit):
     """Actuals, what the model would have said one month ahead during the test, and the forecast."""
     hist = wide[code].dropna().iloc[-HISTORY_MONTHS:]
@@ -199,10 +209,8 @@ def build(spec, panel, res, usage=None, agent=None):
     ask_html, trace_html = "", ""
     if agent:
         assumptions = "".join(f"<li>{esc(a)}</li>" for a in agent.get("assumptions", []))
-        ask_html = (f'<p class="asked">Asked: &ldquo;{esc(agent["request"])}&rdquo;</p>'
-                    + (f'<p>{esc(agent["summary"])}</p>' if agent.get("summary") else "")
-                    + (f'<p class="note">Assumptions the agent made:</p><ul class="note">{assumptions}</ul>'
-                       if assumptions else ""))
+        ask_html = (f'<p class="asked">&ldquo;{esc(agent["request"])}&rdquo;</p>' + read_as_html(spec, unit, months, wide, assumptions)
+                    + (f'<p class="headline">{esc(agent["summary"])}</p>' if agent.get("summary") else ""))
         tr = pd.DataFrame(agent.get("trace", []))
         if not tr.empty:
             trace_html = ("<h2>What the agent did</h2><p>Every tool call, in order. All tools are read-only; the only "
@@ -211,11 +219,7 @@ def build(spec, panel, res, usage=None, agent=None):
 
     body = f"""
 <h1>{esc(spec.title)}</h1>
-{ask_html}
-<p>{esc(spec.product.label)} in {esc(spec.region.label)}: monthly {unit}, {months}. Model: {esc(model_name)},
-{verdict} over a {len(bt.origin.unique())}-origin backtest on {tw[0]:%b %Y} to {tw[1]:%b %Y}, months the model never
-trained on.</p>
-{model_explanation(res, unit, spec, panel)}
+{ask_html or read_as_html(spec, unit, months, wide, "")}
 <div class="tiles">{tiles_html}</div>
 {skipped_html}
 {charts}{more}
@@ -237,9 +241,11 @@ first sale.</p>
 {stores_html}
 
 <h2>How the model was chosen</h2>
-<p>{len(res["grid"]) - 1} model configurations were compared on {uw[0]:%b %Y} to {uw[1]:%b %Y}, before the test window,
-together with the baseline; a model had to beat the baseline there to be used. Feature groups were then kept or dropped on
-the same tuning window. The test window below was not used for any choice.</p>
+<p>Model: {esc(model_name)}; {verdict} over a {len(bt.origin.unique())}-origin backtest on {tw[0]:%b %Y} to
+{tw[1]:%b %Y}, months the model never trained on.</p>
+{model_explanation(res, unit, spec, panel)}
+<p>Every configuration, with the baseline (a model had to beat it on the tuning window to be used). Feature groups were
+then kept or dropped on the same tuning window; the test window was not used for any choice.</p>
 {table(grid)}
 <p>Final choice, also on the tuning window: how many of the top configurations to average, and how much weight
 to give them against "same month last year" (tuning error vs baseline, lower is better):</p>

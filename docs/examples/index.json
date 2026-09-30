@@ -4,49 +4,49 @@
   "slug": "tito_s_minis_des_moines_next_5_months",
   "title": "Tito's minis, Des Moines, next 5 months",
   "rel_mae": 0.9203106741783796,
-  "summary": "Tito's minis in Des Moines are forecast at about 30,900 bottles over the next five months, up 7% from the same period last year (28,800). The biggest year-over-year gains are expected in November and January, both up 18%, while September and October look roughly flat. This forecast is built on a ridge model that has been backtested against a simple seasonal-naive baseline and comes out about 8% more accurate overall, though error rates are still fairly high (roughly 37-39% depending on how far ahead you look), so treat the totals as directional rather than precise.",
-  "cost": 0.0163,
-  "agent_seconds": 11.0,
-  "harness_seconds": 13.2
+  "summary": "Next 5 months: about 30,900 bottles forecast for Des Moines, up 7% from the same months last year. This forecast is 8% more accurate than simply repeating last year.",
+  "cost": 0.024,
+  "agent_seconds": 14.4,
+  "harness_seconds": 12.3
  },
  {
   "request": "What revenue should we expect from Fireball in Linn County next quarter?",
   "slug": "fireball_linn_county_next_quarter",
-  "title": "Fireball revenue, Linn County, next quarter",
-  "rel_mae": 0.9113992202439343,
-  "summary": "Fireball revenue in Linn County is forecast at about $554,000 for the next quarter, down 4% from the same three months last year's $578,000. The decline is front-loaded, with September down 11% year over year before November turns positive at +4%. Backtesting shows the model is about 9% more accurate than a simple seasonal-naive baseline across 1-3 month horizons, giving reasonable confidence in the trend, though actual results could still vary from these estimates. No series were skipped or left unvalidated.",
-  "cost": 0.0332,
-  "agent_seconds": 23.8,
-  "harness_seconds": 18.4
+  "title": "Fireball, Linn County, next quarter",
+  "rel_mae": 0.911381813080197,
+  "summary": "Fireball in Linn County is forecast at about $553,000 next quarter, down 4% from the same months last year, and the model is 9% more accurate than simply repeating last year's numbers.",
+  "cost": 0.03,
+  "agent_seconds": 23.2,
+  "harness_seconds": 18.6
  },
  {
   "request": "American vodka sales dollars for each of the five largest counties, next 6 months",
   "slug": "american_vodka_dollars_top_5_counties_next_6_months",
-  "title": "American Vodka, Top 5 Counties by Population, next 6 months",
+  "title": "American Vodka dollar sales, top 5 counties, next 6 months",
   "rel_mae": 1.040802073497476,
-  "summary": "American vodka sales across the top 5 counties are forecast at about $15.3 million over the next six months, roughly +1% compared to the same months last year's $15.2 million. Monthly performance is mixed, with November standing out at +10% while September and January are down slightly (-2% each). This forecast is about 4% less accurate than a simple seasonal-naive baseline, and accuracy tends to weaken further out, with months 4 and 6 rated worse than baseline, so treat later months with some caution.",
-  "cost": 0.0239,
-  "agent_seconds": 25.6,
-  "harness_seconds": 20.8
+  "summary": "American Vodka sales across the top 5 counties are forecast at $15.3 million over the next 6 months, up 1% from the same period last year, though the model runs 4% less accurate than simply repeating last year's numbers.",
+  "cost": 0.0182,
+  "agent_seconds": 22.8,
+  "harness_seconds": 20.6
  },
  {
   "request": "Forecast ready-to-drink cocktail bottles statewide for the next 6 months",
   "slug": "ready_to_drink_cocktails_statewide_next_6_months",
   "title": "Ready-to-drink cocktails, statewide, next 6 months",
   "rel_mae": 0.9119053523146939,
-  "summary": "Statewide ready-to-drink cocktail sales are forecast at about 338,000 bottles over the next six months, down 8% from 368,000 bottles in the same months last year. The steepest declines are expected in October (-16%) and January (-11%), while February is projected roughly flat (+0%). Backtesting shows the model is about 9% more accurate than a simple seasonal-naive baseline, with errors of roughly 10-12% depending on how far ahead the month is, so treat the forecast as directionally reliable but not precise. Only one series, Cocktails/RTD Iowa, was forecast here, with no unvalidated series noted.",
-  "cost": 0.0141,
-  "agent_seconds": 16.6,
-  "harness_seconds": 16.5
+  "summary": "Next 6 months: about 338,000 bottles of RTD cocktails statewide, down 8% from the same months last year. This forecast is 9% more accurate than simply repeating last year.",
+  "cost": 0.0125,
+  "agent_seconds": 16.9,
+  "harness_seconds": 16.7
  },
  {
   "request": "Total liters of liquor sold statewide over the next 12 months",
   "slug": "statewide_total_liters_next_12_months",
-  "title": "Total liquor sales, statewide, next 12 months",
+  "title": "Statewide total liters, next 12 months",
   "rel_mae": 1.1144782601190484,
-  "summary": "Statewide liquor sales over the next 12 months are forecast at about 22.3 million liters, up +1% versus the same months last year (22.2 million liters). Monthly changes vary, ranging from about -5% to +5%, with early months like September (+3%) and January (+5%) trending up and others like October (-4%) and May (-5%) trending down. In backtesting, this model was about 11% less accurate than a simple seasonal-naive baseline, performing on par in the mid-range months (3-6 months ahead) but noticeably worse in the near term and beyond 6 months, so treat longer-horizon figures with some caution. All products are covered under a single Iowa series, with no unvalidated or skipped series noted.",
-  "cost": 0.0129,
-  "agent_seconds": 27.1,
-  "harness_seconds": 30.9
+  "summary": "Next 12 months forecast at 22.3 million liters, up +1% from the same months last year. Trust is limited: this forecast is 11% less accurate than simply repeating last year's pattern.",
+  "cost": 0.0119,
+  "agent_seconds": 23.0,
+  "harness_seconds": 27.1
  }
 ]
