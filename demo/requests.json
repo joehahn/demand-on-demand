@@ -1,0 +1,16 @@
+[
+ {"id": "titos_minis_des_moines", "request": "Monthly forecast of Tito's minis in Des Moines for the next 5 months",
+  "shows": "a product and a city: the agent finds both mini items (single and 4-pack) and keeps West Des Moines out"},
+ {"id": "fireball_linn_revenue", "request": "What revenue should we expect from Fireball in Linn County next quarter?",
+  "shows": "business words: 'revenue' becomes dollars, 'next quarter' becomes 3 months"},
+ {"id": "vodka_top_counties", "request": "American vodka sales dollars for each of the five largest counties, next 6 months",
+  "shows": "a breakout: the agent looks up the five largest counties and forecasts each one"},
+ {"id": "cream_liqueur_holidays", "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
+  "shows": "a seasonal category: cream liqueurs peak in November and December"},
+ {"id": "bdi_store", "request": "Forecast Tito's minis ordered by Hy-Vee #3 BDI in Des Moines for the next 6 months",
+  "shows": "one big buyer: a single store that orders in large, irregular lumps, and a dashboard that says how far to trust it"},
+ {"id": "rtd_cocktails_recode", "request": "Forecast ready-to-drink cocktail bottles statewide for the next 6 months",
+  "shows": "clean data: this category changed its code in 2022, and the warehouse joins the two into one history"},
+ {"id": "chicago", "request": "Forecast Tito's vodka sales in Chicago for the next 5 months",
+  "shows": "an honest no: Chicago is not in Iowa, so the agent declines instead of guessing"}
+]

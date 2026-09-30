@@ -57,7 +57,8 @@
   "id": "titos_minis_des_moines",
   "tags": [
    "resolution",
-   "dev"
+   "dev",
+   "demo"
   ],
   "request": "monthly forecast of Tito's minis in Des Moines for the next 5 months",
   "expect": {
@@ -131,7 +132,8 @@
   "tags": [
    "resolution",
    "breakout",
-   "fresh"
+   "fresh",
+   "demo"
   ],
   "request": "American vodka sales dollars for each of the five largest counties, next 6 months",
   "expect": {
@@ -161,7 +163,8 @@
   "id": "chicago",
   "tags": [
    "refusal",
-   "dev"
+   "dev",
+   "demo"
   ],
   "request": "Forecast Tito's vodka sales in Chicago for the next 5 months",
   "expect": {
@@ -210,7 +213,8 @@
   "tags": [
    "resolution",
    "target",
-   "fresh"
+   "fresh",
+   "demo"
   ],
   "request": "What revenue should we expect from Fireball in Linn County next quarter?",
   "expect": {
@@ -337,7 +341,8 @@
  {
   "id": "rtd_cocktails_recode",
   "tags": [
-   "fresh"
+   "fresh",
+   "demo"
   ],
   "request": "Forecast ready-to-drink cocktail bottles statewide for the next 6 months",
   "expect": {
@@ -425,6 +430,57 @@
    },
    "region": {
     "kind": "statewide"
+   }
+  }
+ },
+ {
+  "id": "cream_liqueur_holidays",
+  "tags": [
+   "demo",
+   "vague",
+   "fresh"
+  ],
+  "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
+  "expect": {
+   "status": "ok",
+   "target": "sales_bottles",
+   "series_by": "none",
+   "product": {
+    "kind": "category",
+    "must": [
+     "1081200"
+    ]
+   },
+   "region": {
+    "kind": "statewide"
+   }
+  }
+ },
+ {
+  "id": "bdi_store",
+  "tags": [
+   "demo",
+   "resolution",
+   "store",
+   "fresh"
+  ],
+  "request": "Forecast Tito's minis ordered by Hy-Vee #3 BDI in Des Moines for the next 6 months",
+  "expect": {
+   "status": "ok",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "series_by": "none",
+   "product": {
+    "kind": "item",
+    "must": [
+     "38194"
+    ]
+   },
+   "region": {
+    "kind": "store",
+    "must": [
+     "2633"
+    ]
    }
   }
  }
