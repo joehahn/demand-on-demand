@@ -173,9 +173,10 @@ def build(spec, panel, res, usage=None, agent=None):
     tiles = [
         (f"{money}{total:,.0f}", f"forecast {unit}, {months}"),
         (f"{yoy:+.1%}", "vs the same months last year"),
-        (f"{bt.dropna(subset=['actual']).pipe(lambda d: (d.actual - d.pred).abs().sum() / d.actual.sum()):.1%}",
-         "average backtest error"),
-        (f"{rel:.2f}", "error relative to baseline (below 1 is better)"),
+        (f"{bt.dropna(subset=['actual']).pipe(lambda d: (d.actual - d.pred).abs().sum() / d.actual.sum()):.0%}",
+         f"typical monthly miss in the Test period ({res['test_window'][0]:%b %Y} to {res['test_window'][1]:%b %Y})"),
+        (f"{round(abs(1 - rel) * 100)}%", ("more" if rel < 1 else "less") + " accurate than repeating the same month "
+         "last year" if round(abs(1 - rel) * 100) else "as accurate as repeating the same month last year"),
     ]
     tiles_html = "".join(f'<div class="tile"><div class="v">{esc(v)}</div><div class="k">{esc(k)}</div></div>'
                          for v, k in tiles)
