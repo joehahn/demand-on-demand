@@ -86,6 +86,19 @@ def stores_section(stores, spec, unit, last_month):
             f"{table(t, {f'{unit}, last 12 months': lambda v: f'{money}{v:,.0f}'})}</details>")
 
 
+def short_model(res):
+    """The chosen model in a few words, e.g. 'the average of 2 ridge regressions and 1 LightGBM, blended 50/50
+    with the same month last year'."""
+    if res["best"]["model"] == "seasonal_naive":
+        return "the same month last year (no model beat it)"
+    names = {"ridge": ("ridge regression", "ridge regressions"), "lightgbm": ("LightGBM", "LightGBMs")}
+    counts = pd.Series([c["model"] for c in res["ensemble"]]).value_counts()
+    parts = [f"{n} {names[m][n > 1]}" for m, n in counts.items()]
+    what = ("the average of " + " and ".join(parts)) if len(res["ensemble"]) > 1 else f"a {names[counts.index[0]][0]}"
+    w = res.get("model_share", 1)
+    return what + (f", blended {w:.0%} with {1 - w:.0%} same month last year" if w < 1 else "")
+
+
 def read_as_html(spec, unit, months, wide, assumptions_html):
     """How the request was read, as one line of short phrases, with the agent's assumptions one click away."""
     n = wide.shape[1]
@@ -224,6 +237,7 @@ def build(spec, panel, res, usage=None, agent=None):
         counts = "only one bottle's volume" if unit == "liters" else "as one bottle"
         units_note = (f" {len(panel.unknown_packs)} item(s) in this product ({esc(names)}{more}) are sold in sleeves or "
                       f"packs of unknown size, so each pack counts {counts}.")
+    pooling_tried = "True" in set(res["grid"].get("pool", pd.Series(dtype=str)).astype(str))
     stores_html = stores_section(panel.stores, spec, unit, wide.index[-1])
     ask_html, trace_html = "", ""
     if agent:
@@ -243,11 +257,13 @@ def build(spec, panel, res, usage=None, agent=None):
 {skipped_html}
 {charts}{more}
 <ul class="note">
-<li><strong>Model selection</strong> ({uw[0]:%b %Y} to {uw[1]:%b %Y}): the best of {len(res["grid"]) - 1} configurations is chosen.</li>
-<li><strong>Test</strong> ({tw[0]:%b %Y} to {tw[1]:%b %Y}): retrained each month on earlier months only; dotted orange is its
-1-month-ahead forecast.</li>
+<li><strong>Model selection</strong> ({uw[0]:%b %Y} to {uw[1]:%b %Y}): {len(res["grid"]) - 1} setups compared (ridge
+regression and LightGBM, each with different targets, inputs and history lengths{", with or without other counties" if pooling_tried else ""});
+chosen: {esc(short_model(res))}.</li>
+<li><strong>Test</strong> ({tw[0]:%b %Y} to {tw[1]:%b %Y}): that model retrained each month on earlier months only; dotted
+orange is its 1-month-ahead forecast.</li>
 <li><strong>Forecast</strong> ({months}): retrained on {pd.Timestamp(panel.start):%b %Y} to {wide.index[-1]:%b %Y}, then applied.
-Green band: 80% range.{units_note}</li>
+Green band: the range that held 80% of outcomes in the Test period.{units_note}</li>
 </ul>
 {table(ft, {"forecast": num, "low (10%)": num, "high (90%)": num})}
 
