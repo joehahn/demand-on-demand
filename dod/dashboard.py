@@ -48,7 +48,7 @@ def model_explanation(res, unit, spec, panel):
     other = spec.series_by == "county" or spec.region.kind == "county"
     pooled = f"the same product in the {n_comp} busiest {'other ' if other else ''}counties"
     tuning = res["grid"][res["grid"].model != "seasonal_naive"].rel_mae.tolist()  # same order as the ranking
-    items = "".join(f"<li>{esc(describe_config(c, unit, own, pooled))}. Tuning error {tuning[i]:.3f} vs the "
+    items = "".join(f"<li>{esc(describe_config(c, unit, own, pooled))}. Selection error {tuning[i]:.3f} vs the "
                     f"baseline.</li>" for i, c in enumerate(ens))
     b = res["blend"]
     alone = lambda k: b[(b.models_averaged == k) & (b.model_share == 1.0)].tuning_rel_mae.iloc[0]
@@ -56,17 +56,17 @@ def model_explanation(res, unit, spec, panel):
     what = ("the average of the top " + str(len(ens)) if len(ens) > 1 else "the single best")
     if w == 1.0:
         blend = (f"<p>The models alone scored better than any mix with last year's numbers, so the forecast is "
-                 f"{what} with no blending (tuning error {chosen:.3f}).</p>")
+                 f"{what} with no blending (selection error {chosen:.3f}).</p>")
     else:
         sizes = " or ".join(str(k) for k in sorted(b.models_averaged.unique()))
         compare = f"{alone(1):.3f} for the best model alone" + (
             f" and {alone(len(ens)):.3f} for the {len(ens)}-model average alone" if len(ens) > 1 else "")
         blend = (f"<p>Each month's forecast is then {w:.0%} this model {'average' if len(ens) > 1 else 'forecast'} "
                  f"plus {1 - w:.0%} of what sold in the same month last year. That mix scored {chosen:.3f} on the "
-                 f"tuning window, the best of every combination tried ({sizes} models, 0% to 100% model), vs "
+                 f"model-selection window, the best of every combination tried ({sizes} models, 0% to 100% model), vs "
                  f"{compare}. The pieces make different mistakes, so the mix partly cancels them.</p>")
     return (f"<p><strong>How this forecast is made.</strong> {n_grid} model configurations were scored on "
-            f"{uw[0]:%b %Y} to {uw[1]:%b %Y}, before the test window; a tuning error below 1 beats repeating the same "
+            f"{uw[0]:%b %Y} to {uw[1]:%b %Y}, before the test window; a selection error below 1 beats repeating the same "
             f"month last year. The forecast uses {what}:</p><ol>{items}</ol>{blend}")
 
 
@@ -96,7 +96,7 @@ def read_as_html(spec, unit, months, wide, assumptions_html):
     return f'<p class="readas"><span>Read as</span> {" &middot; ".join(esc(x) for x in parts)}</p>{why}'
 
 
-def fig_series(code, label, wide, bt, fc, windows, unit):
+def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
     """Actuals, what the model would have said one month ahead during the test, and the forecast."""
     hist = wide[code].dropna().iloc[-HISTORY_MONTHS:]
     one = bt[(bt.series == code) & (bt.step == 1)].sort_values("month")
@@ -111,14 +111,23 @@ def fig_series(code, label, wide, bt, fc, windows, unit):
     fig.update_traces(selector=dict(name="Forecast"), mode="lines+markers", marker=dict(size=8))
     if len(one) == 0:
         fig.update_layout(title_text=f"{label} (not backtested)")
-    # the three periods: model chosen (tuning), model tested (rolling backtest), model applied (forecast)
+    # the three periods: model chosen (selection), model tested (rolling backtest), model applied (forecast)
     (tune_start, _), (test_start, _) = windows
     first_fc, end = f.month.min(), f.month.max() + pd.offsets.MonthBegin(1)
-    for x0, x1, name, shade in [(max(tune_start, hist.index[0]), test_start, "Tuning", 0.05),
+    for x0, x1, name, shade in [(max(tune_start, hist.index[0]), test_start, "Model selection", 0.05),
                                 (test_start, first_fc, "Test", 0.10), (first_fc, end, "Forecast", 0.05)]:
         fig.add_vrect(x0=x0, x1=x1, fillcolor=f"rgba(137,135,129,{shade})", line_width=0, layer="below",
                       annotation_text=name, annotation_position="top left", annotation_font_size=11,
                       annotation_font_color="rgba(137,135,129,1)")
+    # an arrow over the months the final model is trained on, ending where it is applied
+    grey = "rgba(137,135,129,1)"
+    top = max(hist.max(), f.hi.max())
+    fig.update_yaxes(range=[0, top * 1.3])   # headroom above the data for the arrow
+    fig.add_annotation(x=first_fc, y=top * 1.12, xref="x", yref="y", ax=hist.index[0], ay=0, axref="x", ayref="pixel",
+                       text="", showarrow=True, arrowhead=2, arrowsize=1.2, arrowwidth=1.5, arrowcolor=grey)
+    fig.add_annotation(x=hist.index[0] + (first_fc - hist.index[0]) / 2, y=top * 1.12, xref="x", yref="y",
+                       yanchor="bottom", yshift=2, showarrow=False, font=dict(size=11, color=grey),
+                       text=f"final model trained on {pd.Timestamp(train_start):%b %Y} to {wide.index[-1]:%b %Y}")
     fig.update_traces(hovertemplate="%{y:,.0f}", selector=dict(type="scatter"))
     fig = style(fig, label, f"{unit} per month", height=390, legend=True)
     return fig.update_layout(legend=dict(orientation="h", y=-0.12, yanchor="top", x=0, xanchor="left"))  # clear of long titles
@@ -153,7 +162,7 @@ def build(spec, panel, res, usage=None, agent=None):
     best = res["best"]
     ens = res.get("ensemble") or []
     if best["model"] == "seasonal_naive":
-        model_name = "seasonal naive (same month last year), since no model beat it on the tuning window"
+        model_name = "seasonal naive (same month last year), since no model beat it in model selection"
     else:
         top = f"the average of the top {len(ens)}" if len(ens) > 1 else "the best"
         share = res.get("model_share", 1)
@@ -176,7 +185,8 @@ def build(spec, panel, res, usage=None, agent=None):
     ft = ft[["series", "month", "pred", "lo", "hi"]].rename(columns={"pred": "forecast", "lo": "low (10%)", "hi": "high (90%)"})
     num = lambda v: f"{v:,.0f}"
 
-    charts = "".join(plot(fig_series(c, labels.get(c, c), wide, bt, fc, (res["tune_window"], res["test_window"]), unit))
+    charts = "".join(plot(fig_series(c, labels.get(c, c), wide, bt, fc, (res["tune_window"], res["test_window"]), unit,
+                                    panel.start))
                      for c in [c for c in wide.columns if c in set(fc.series)][:MAX_PANELS])
     more = f'<p class="note">{len(wide.columns) - MAX_PANELS} more series are in the table only.</p>' \
         if len(wide.columns) > MAX_PANELS else ""
@@ -195,7 +205,7 @@ def build(spec, panel, res, usage=None, agent=None):
 
     grid = res["grid"].head(10).dropna(axis=1, how="all").copy()   # hide parameters no shown model uses
     grid["rel_mae"] = grid.rel_mae.map("{:.3f}".format)
-    grid = grid.rename(columns={"rel_mae": "tuning error vs baseline"}).fillna("")
+    grid = grid.rename(columns={"rel_mae": "selection error vs baseline"}).fillna("")
     abl = res["ablation"].assign(rel_mae=res["ablation"].rel_mae.map("{:.3f}".format))
     tw, uw = res["test_window"], res["tune_window"]
     cost = ""
@@ -231,12 +241,13 @@ def build(spec, panel, res, usage=None, agent=None):
 <div class="tiles">{tiles_html}</div>
 {skipped_html}
 {charts}{more}
-<p class="note"><strong>Tuning</strong> ({uw[0]:%b %Y} to {uw[1]:%b %Y}): {len(res["grid"]) - 1} model configurations were
-compared and the model was chosen. <strong>Test</strong> ({tw[0]:%b %Y} to {tw[1]:%b %Y}): at every month the chosen model was
-retrained on all earlier months and forecast the months ahead, so it never saw what it predicted; dotted orange is its
-1-month-ahead forecast. <strong>Forecast</strong> ({months}): the model retrained on all history, {pd.Timestamp(panel.start):%b %Y} through
-{wide.index[-1]:%b %Y}, and applied to the next {len(fc.month.unique())} months. Green band: 80% range from the test
-errors.{units_note}</p>
+<ul class="note">
+<li><strong>Model selection</strong> ({uw[0]:%b %Y} to {uw[1]:%b %Y}): the best of {len(res["grid"]) - 1} configurations is chosen.</li>
+<li><strong>Test</strong> ({tw[0]:%b %Y} to {tw[1]:%b %Y}): retrained each month on earlier months only; dotted orange is its
+1-month-ahead forecast.</li>
+<li><strong>Forecast</strong> ({months}): retrained on {pd.Timestamp(panel.start):%b %Y} to {wide.index[-1]:%b %Y}, then applied.
+Green band: 80% range.{units_note}</li>
+</ul>
 {table(ft, {"forecast": num, "low (10%)": num, "high (90%)": num})}
 
 <h2>How far to trust it</h2>
@@ -256,12 +267,12 @@ first sale.</p>
 <p>Model: {esc(model_name)}; {verdict} over a {len(bt.origin.unique())}-origin backtest on {tw[0]:%b %Y} to
 {tw[1]:%b %Y}, months the model never trained on.</p>
 {model_explanation(res, unit, spec, panel)}
-<p>Every configuration, with the baseline (a model had to beat it on the tuning window to be used). Feature groups were
-then kept or dropped on the same tuning window; the test window was not used for any choice.</p>
+<p>Every configuration, with the baseline (a model had to beat it in model selection to be used). Feature groups were
+then kept or dropped on the same months; the test window was not used for any choice.</p>
 {table(grid)}
-<p>Final choice, also on the tuning window: how many of the top configurations to average, and how much weight
-to give them against "same month last year" (tuning error vs baseline, lower is better):</p>
-{table(res["blend"], {"tuning_rel_mae": lambda v: f"{v:.3f}", "model_share": lambda v: f"{v:.0%}"}) if len(res.get("blend", [])) else ""}
+<p>Final choice, also in model selection: how many of the top configurations to average, and how much weight
+to give them against "same month last year" (selection error vs baseline, lower is better):</p>
+{table(res["blend"].rename(columns={"tuning_rel_mae": "selection_error"}), {"selection_error": lambda v: f"{v:.3f}", "model_share": lambda v: f"{v:.0%}"}) if len(res.get("blend", [])) else ""}
 <p>Feature choice, scored on the test window for the record (below 1 beats the baseline):</p>
 {table(abl)}
 
