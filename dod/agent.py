@@ -78,13 +78,12 @@ def narrate(client, facts, usage):
     """Plain-English summary written only from the harness's numbers."""
     msg = client.messages.create(
         model=MODEL, max_tokens=2000,
-        system="You write the one-line summary at the top of a forecast dashboard for a business reader who will give it "
-               "a few seconds: one or two short sentences, at most 40 words, with the forecast total, its change from "
-               "the same months last year, and how far to trust it. "
+        system="You write the first sentence of the summary at the top of a forecast dashboard, for a business reader who "
+               "will give it a few seconds: one short sentence, at most 30 words, with the forecast total and its change "
+               "from the same months last year. Do not discuss accuracy; a sentence about it is added after yours. "
                "Quote only numbers and percentages that appear in the facts JSON; never compute new ones (no ranges you "
                "derived yourself). Round large numbers to about three significant figures ($15.2 million, 53,000 "
-               "bottles); a forecast is not precise to the unit. For trust, use the backtest against the seasonal-naive "
-               "baseline (\"8% more accurate than repeating last year\"). Mention unvalidated or skipped series only if there are any. Do not name the model. No em dashes.",
+               "bottles); a forecast is not precise to the unit. Mention unvalidated or skipped series only if there are any. Do not name the model. No em dashes.",
         messages=[{"role": "user", "content": json.dumps(facts, default=str)}],
         output_config={"effort": "low", "format": {"type": "json_schema", "schema": {
             "type": "object", "properties": {"summary": {"type": "string"}},

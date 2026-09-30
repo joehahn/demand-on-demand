@@ -89,14 +89,14 @@ def stores_section(stores, spec, unit, last_month):
 def read_as_html(spec, unit, months, wide, assumptions_html):
     """How the request was read, as one line of short phrases, with the agent's assumptions one click away."""
     n = wide.shape[1]
-    series = "one total" if spec.series_by == "none" else f"{n} series, one per {spec.series_by}"
-    parts = [spec.product.label, spec.region.label, f"{unit} per month", months, series]
+    series = "combined into one forecast" if spec.series_by == "none" else f"one forecast per {spec.series_by} ({n})"
+    parts = [spec.product.label, spec.region.label, f"{unit} per month", months.replace(" ", "\u00a0"), series]
     why = (f'<details class="note"><summary>Why it was read this way</summary><ul>{assumptions_html}</ul></details>'
            if assumptions_html else "")
     return f'<p class="readas"><span>Read as</span> {" &middot; ".join(esc(x) for x in parts)}</p>{why}'
 
 
-def fig_series(code, label, wide, bt, fc, test_start, unit):
+def fig_series(code, label, wide, bt, fc, windows, unit):
     """Actuals, what the model would have said one month ahead during the test, and the forecast."""
     hist = wide[code].dropna().iloc[-HISTORY_MONTHS:]
     one = bt[(bt.series == code) & (bt.step == 1)].sort_values("month")
@@ -111,9 +111,17 @@ def fig_series(code, label, wide, bt, fc, test_start, unit):
     fig.update_traces(selector=dict(name="Forecast"), mode="lines+markers", marker=dict(size=8))
     if len(one) == 0:
         fig.update_layout(title_text=f"{label} (not backtested)")
-    fig.add_vline(x=test_start, line=dict(color="rgba(137,135,129,0.6)", width=1, dash="dash"))
+    # the three periods: model chosen (tuning), model tested (rolling backtest), model applied (forecast)
+    (tune_start, _), (test_start, _) = windows
+    first_fc, end = f.month.min(), f.month.max() + pd.offsets.MonthBegin(1)
+    for x0, x1, name, shade in [(max(tune_start, hist.index[0]), test_start, "Tuning", 0.05),
+                                (test_start, first_fc, "Test", 0.10), (first_fc, end, "Forecast", 0.05)]:
+        fig.add_vrect(x0=x0, x1=x1, fillcolor=f"rgba(137,135,129,{shade})", line_width=0, layer="below",
+                      annotation_text=name, annotation_position="top left", annotation_font_size=11,
+                      annotation_font_color="rgba(137,135,129,1)")
     fig.update_traces(hovertemplate="%{y:,.0f}", selector=dict(type="scatter"))
-    return style(fig, label, f"{unit} per month", height=360, legend=True)
+    fig = style(fig, label, f"{unit} per month", height=390, legend=True)
+    return fig.update_layout(legend=dict(orientation="h", y=-0.12, yanchor="top", x=0, xanchor="left"))  # clear of long titles
 
 
 def fig_accuracy(per_step):
@@ -168,7 +176,7 @@ def build(spec, panel, res, usage=None, agent=None):
     ft = ft[["series", "month", "pred", "lo", "hi"]].rename(columns={"pred": "forecast", "lo": "low (10%)", "hi": "high (90%)"})
     num = lambda v: f"{v:,.0f}"
 
-    charts = "".join(plot(fig_series(c, labels.get(c, c), wide, bt, fc, res["test_window"][0], unit))
+    charts = "".join(plot(fig_series(c, labels.get(c, c), wide, bt, fc, (res["tune_window"], res["test_window"]), unit))
                      for c in [c for c in wide.columns if c in set(fc.series)][:MAX_PANELS])
     more = f'<p class="note">{len(wide.columns) - MAX_PANELS} more series are in the table only.</p>' \
         if len(wide.columns) > MAX_PANELS else ""
@@ -223,8 +231,12 @@ def build(spec, panel, res, usage=None, agent=None):
 <div class="tiles">{tiles_html}</div>
 {skipped_html}
 {charts}{more}
-<p class="note">Dashed vertical line: start of the test window. Dotted orange: what the model would have forecast one
-month ahead at each point in the test. Green band: 80% range from the backtest's own errors.{units_note}</p>
+<p class="note"><strong>Tuning</strong> ({uw[0]:%b %Y} to {uw[1]:%b %Y}): {len(res["grid"]) - 1} model configurations were
+compared and the model was chosen. <strong>Test</strong> ({tw[0]:%b %Y} to {tw[1]:%b %Y}): at every month the chosen model was
+retrained on all earlier months and forecast the months ahead, so it never saw what it predicted; dotted orange is its
+1-month-ahead forecast. <strong>Forecast</strong> ({months}): the model retrained on all history, {pd.Timestamp(panel.start):%b %Y} through
+{wide.index[-1]:%b %Y}, and applied to the next {len(fc.month.unique())} months. Green band: 80% range from the test
+errors.{units_note}</p>
 {table(ft, {"forecast": num, "low (10%)": num, "high (90%)": num})}
 
 <h2>How far to trust it</h2>
@@ -234,7 +246,7 @@ actually happened and with the simplest serious baseline: the same month last ye
 {table(ps_show)}
 
 <h2>The data</h2>
-<p>Monthly {unit} from {panel.start[:7]} through {wide.index[-1]:%b %Y}, read from the clean warehouse: duplicate
+<p>Monthly {unit} from {pd.Timestamp(panel.start):%b %Y} through {wide.index[-1]:%b %Y}, read from the clean warehouse: duplicate
 export rows and zero lines removed, renumbered products joined, categories in today's taxonomy, one spelling per city.
 See <a href="https://joehahn.github.io/demand-on-demand/data_fixes.html">what was fixed</a>. A series starts at its
 first sale.</p>

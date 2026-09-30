@@ -41,6 +41,14 @@ def facts_for(spec, p, res):
             "unvalidated": [p.labels.get(c, c) for c in res["unvalidated"]]}
 
 
+def trust_sentence(rel):
+    """The accuracy half of the summary, worded the same way on every dashboard (from the backtest, not the LLM)."""
+    pct = round(abs(1 - rel) * 100)
+    if pct == 0:
+        return "This forecast is about as accurate as simply repeating last year's outcome."
+    return f"This forecast is {pct}% {'more' if rel < 1 else 'less'} accurate than simply repeating last year's outcome."
+
+
 def run(spec, out_root=OUT, usage=None, agent=None, narrate=None, log=print):
     t0 = time.time()
     log(f"== {spec.title}")
@@ -50,7 +58,7 @@ def run(spec, out_root=OUT, usage=None, agent=None, narrate=None, log=print):
     res = model.run(p.series, p.exog, p.future_index, spec.horizon, spec.features, log=log, pool=p.pool)
     facts = facts_for(spec, p, res)
     if narrate:
-        agent["summary"] = narrate(facts)
+        agent["summary"] = narrate(facts) + " " + trust_sentence(res["test_rel_mae"])
     out = out_root / spec.slug
     out.mkdir(parents=True, exist_ok=True)
     (out / "dashboard.html").write_text(dashboard.build(spec, p, res, usage, agent))

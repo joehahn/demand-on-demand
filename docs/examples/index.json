@@ -4,49 +4,49 @@
   "slug": "tito_s_minis_des_moines_next_5_months",
   "title": "Tito's minis, Des Moines, next 5 months",
   "rel_mae": 0.9203106741783796,
-  "summary": "Next 5 months: about 30,900 bottles forecast for Des Moines, up 7% from the same months last year. This forecast is 8% more accurate than simply repeating last year.",
-  "cost": 0.024,
-  "agent_seconds": 14.4,
-  "harness_seconds": 12.3
+  "summary": "Des Moines Tito's minis are forecast at about 30,900 bottles over the next 5 months, up 7% from the same months last year. This forecast is 8% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0234,
+  "agent_seconds": 13.0,
+  "harness_seconds": 11.6
  },
  {
   "request": "What revenue should we expect from Fireball in Linn County next quarter?",
   "slug": "fireball_linn_county_next_quarter",
-  "title": "Fireball, Linn County, next quarter",
+  "title": "Fireball, Linn County, next quarter revenue",
   "rel_mae": 0.911381813080197,
-  "summary": "Fireball in Linn County is forecast at about $553,000 next quarter, down 4% from the same months last year, and the model is 9% more accurate than simply repeating last year's numbers.",
-  "cost": 0.03,
-  "agent_seconds": 23.2,
-  "harness_seconds": 18.6
+  "summary": "Fireball in Linn County is forecast to bring in about $553,000 next quarter, down 4% from the same months last year. This forecast is 9% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0292,
+  "agent_seconds": 20.3,
+  "harness_seconds": 18.4
  },
  {
   "request": "American vodka sales dollars for each of the five largest counties, next 6 months",
   "slug": "american_vodka_dollars_top_5_counties_next_6_months",
-  "title": "American Vodka dollar sales, top 5 counties, next 6 months",
+  "title": "American Vodka dollars, top 5 counties, next 6 months",
   "rel_mae": 1.040802073497476,
-  "summary": "American Vodka sales across the top 5 counties are forecast at $15.3 million over the next 6 months, up 1% from the same period last year, though the model runs 4% less accurate than simply repeating last year's numbers.",
-  "cost": 0.0182,
-  "agent_seconds": 22.8,
-  "harness_seconds": 20.6
+  "summary": "American Vodka sales across the top 5 counties are forecast at $15.3 million over the next 6 months, up about 1% from the same period last year. This forecast is 4% less accurate than simply repeating last year's outcome.",
+  "cost": 0.0177,
+  "agent_seconds": 19.4,
+  "harness_seconds": 20.5
  },
  {
   "request": "Forecast ready-to-drink cocktail bottles statewide for the next 6 months",
   "slug": "ready_to_drink_cocktails_statewide_next_6_months",
   "title": "Ready-to-drink cocktails, statewide, next 6 months",
   "rel_mae": 0.9119053523146939,
-  "summary": "Next 6 months: about 338,000 bottles of RTD cocktails statewide, down 8% from the same months last year. This forecast is 9% more accurate than simply repeating last year.",
-  "cost": 0.0125,
-  "agent_seconds": 16.9,
-  "harness_seconds": 16.7
+  "summary": "Statewide ready-to-drink cocktails are forecast at 338,000 bottles over the next 6 months, down 8% from the same months last year. This forecast is 9% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0129,
+  "agent_seconds": 16.4,
+  "harness_seconds": 17.1
  },
  {
   "request": "Total liters of liquor sold statewide over the next 12 months",
   "slug": "statewide_total_liters_next_12_months",
   "title": "Statewide total liters, next 12 months",
   "rel_mae": 1.1144782601190484,
-  "summary": "Next 12 months forecast at 22.3 million liters, up +1% from the same months last year. Trust is limited: this forecast is 11% less accurate than simply repeating last year's pattern.",
-  "cost": 0.0119,
-  "agent_seconds": 23.0,
-  "harness_seconds": 27.1
+  "summary": "Statewide forecast totals 22.3 million liters over the next 12 months, up 1% from the same months last year. This forecast is 11% less accurate than simply repeating last year's outcome.",
+  "cost": 0.0118,
+  "agent_seconds": 30.3,
+  "harness_seconds": 32.0
  }
 ]
