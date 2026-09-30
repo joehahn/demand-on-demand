@@ -71,6 +71,63 @@ def model_explanation(res, unit, spec, panel):
             f"month last year. The forecast uses {what}:</p><ol>{items}</ol>{blend}")
 
 
+FEATURE_NAMES = {"calendar": "calendar (month of year, business days, holidays)", "population": "county population"}
+FEATURE_COLUMNS = {"calendar": ["month_of_year", "business_days", "holidays"], "population": ["population"]}
+
+
+def features_section(spec, panel, res, unit, fc):
+    """The table the model learns from, for the first series: the target and the inputs it sees in each row,
+    ending with the first month to forecast (inputs known, target not)."""
+    ens = res.get("ensemble") or []
+    if not ens:
+        return ""
+    code = panel.series.columns[0]
+    y = panel.series[code].dropna()
+    lag_sets = [c["lags"] if isinstance(c["lags"], list) else list(range(1, c["lags"] + 1)) for c in ens]
+    all_lags = sorted(set().union(*lag_sets))
+    shown = [k for k in all_lags if k in (1, 2, 3, 12)] or all_lags[:4]
+    first_fc = fc.month.min()
+    months = list(y.index[-5:]) + [first_fc]
+    t = pd.DataFrame(index=months)
+    t[f"{unit} (target)"] = [y.get(m, "to forecast") for m in months]
+    for k in shown:
+        t[f"{k} month{'s' if k > 1 else ''} back"] = [y.get(m - pd.DateOffset(months=k)) for m in months]
+    targets = {c["target"] for c in ens}
+    if "yoy" in targets and 12 in shown:  # a model predicting the change from last year sees this as its target
+        t["change vs 12 months back"] = [y[m] / y[m - pd.DateOffset(months=12)] - 1 if m in y.index else None
+                                         for m in months]
+    chosen = res.get("feature_groups", [])
+    ex = panel.exog[code]
+    for col in [c for g in chosen for c in FEATURE_COLUMNS[g] if c in ex.columns]:
+        t[col.replace("_", " ")] = [ex[col].get(m) for m in months]
+    t.index = [f"{m:%Y-%m}" for m in months]
+    t = t.rename_axis("month").reset_index()
+    money = "$" if unit == "dollars" else ""
+    num = lambda v: v if isinstance(v, str) else f"{money}{v:,.0f}"
+    fmt = {c: num for c in t.columns if c not in ("month", "change vs 12 months back")}
+    fmt["change vs 12 months back"] = lambda v: f"{v:+.0%}"
+    rows = table(t, fmt)  # the "to forecast" cell makes the target a text column; align it with the numbers
+    target = esc(f"{unit} (target)")
+    rows = rows.replace(f'<th class="">{target}</th>', f'<th class="num">{target}</th>').replace(
+        '<td class="">to forecast</td>', '<td class="num">to forecast</td>')
+    wider = [c for c in lag_sets if len(c) > len(shown)]
+    notes = []
+    if wider:
+        notes.append(f"The LightGBM model uses all {max(all_lags)} months back, not only the ones shown.")
+    dropped = [g for g in spec.features if g not in chosen]
+    if dropped:
+        notes.append("Tried in model selection and left out, because the model did better without them: "
+                     + " and ".join(FEATURE_NAMES.get(g, g) for g in dropped) + ".")
+    if any(c.get("pool") for c in ens) and panel.pool is not None:
+        n = sum(bool(c.get("pool")) for c in ens)
+        who = "The model also learns" if len(ens) == 1 else f"{n} of the {len(ens)} averaged models also learn{'s' if n == 1 else ''}"
+        notes.append(f"Pooled: {who} from the same table for this product in the {panel.pool[0].shape[1]} busiest counties.")
+    label = panel.labels.get(code, code) if panel.series.shape[1] > 1 else ""
+    return (f"<h3>What the model sees</h3><p>One row per month: {unit} sold (what the model predicts) and the same "
+            f"series earlier (what it predicts from){', for ' + esc(label) if label else ''}. The last row is the first "
+            f"month to forecast.</p>{rows}" + (f"<p class=\"note\">{' '.join(esc(n) for n in notes)}</p>" if notes else ""))
+
+
 def fig_store_map(stores, unit):
     """Where the stores are: dot size is each store's last-12-months volume; grey dots have not ordered lately."""
     s = stores.dropna(subset=["lat", "lon"])
@@ -327,6 +384,7 @@ actually happened and with the simplest serious baseline: the same month last ye
 export rows and zero lines removed, renumbered products joined, categories in today's taxonomy, one spelling per city.
 See <a href="https://joehahn.github.io/demand-on-demand/data_fixes.html">what was fixed</a>. A series starts at its
 first sale.</p>
+{features_section(spec, panel, res, unit, fc)}
 {stores_section(panel.stores, spec, unit, wide.index[-1], plot)}
 
 <h2>How the model was chosen</h2>
