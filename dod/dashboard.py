@@ -147,15 +147,18 @@ def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
 
 
 def fig_accuracy(per_step):
-    fig = go.Figure([
-        go.Bar(x=per_step.step, y=per_step.wape * 100, name="Model", marker_color=BLUE),
-        go.Bar(x=per_step.step, y=per_step.wape_naive * 100, name="Same month last year", marker_color=ORANGE),
-    ])
-    fig.update_traces(hovertemplate="%{y:.1f}% error<extra>%{fullData.name}</extra>")
+    """Typical miss by months ahead, model vs same month last year. Dots and lines, not bars, so the axis can zoom
+    to the data's range without exaggerating the gap."""
+    fig = go.Figure([line(per_step.step, per_step.wape * 100, "Model", BLUE),
+                     line(per_step.step, per_step.wape_naive * 100, "Same month last year", ORANGE)])
+    fig.update_traces(mode="lines+markers", marker=dict(size=9), hovertemplate="%{y:.1f}%<extra>%{fullData.name}</extra>")
+    lo = min(per_step.wape.min(), per_step.wape_naive.min()) * 100
+    hi = max(per_step.wape.max(), per_step.wape_naive.max()) * 100
+    pad = max((hi - lo) * 0.4, 2)
+    fig.update_yaxes(range=[max(0, lo - pad), hi + pad], ticksuffix="%")
     fig.update_xaxes(title="months ahead", dtick=1)
-    fig.update_layout(barmode="group", bargap=0.3, bargroupgap=0.08)
-    return style(fig, "Backtest error by months ahead (lower is better)", "% error (WAPE)", height=300,
-                 legend=True).update_layout(hovermode="x unified")
+    return style(fig, "Typical miss in the Test period, by months ahead (lower is better)", "typical miss (% of actual)",
+                 height=300, legend=True).update_layout(hovermode="x unified")
 
 
 def build(spec, panel, res, usage=None, agent=None):
@@ -204,12 +207,6 @@ def build(spec, panel, res, usage=None, agent=None):
                      for c in [c for c in wide.columns if c in set(fc.series)][:MAX_PANELS])
     more = f'<p class="note">{len(wide.columns) - MAX_PANELS} more series are in the table only.</p>' \
         if len(wide.columns) > MAX_PANELS else ""
-
-    ps_show = ps.assign(wape=ps.wape.map("{:.1%}".format), wape_naive=ps.wape_naive.map("{:.1%}".format),
-                        skill_vs_naive=ps.skill_vs_naive.map("{:+.0%}".format))[
-        ["step", "folds", "wape", "wape_naive", "skill_vs_naive", "reliability"]].rename(
-        columns={"step": "months ahead", "wape": "model error", "wape_naive": "baseline error",
-                 "skill_vs_naive": "improvement"})
 
     skipped_html = "".join(f'<p class="warn">Not forecast: {esc(labels.get(c, c))}, {esc(why)}.</p>'
                            for c, why in res.get("skipped", {}).items())
@@ -268,10 +265,9 @@ Green band: the range that held 80% of outcomes in the Test period.{units_note}<
 {table(ft, {"forecast": num, "low (10%)": num, "high (90%)": num})}
 
 <h2>How far to trust it</h2>
-<p>Every month in the test window was forecast by a model trained only on earlier months, then compared with what
+<p>Every month in the Test period was forecast by a model trained only on earlier months, then compared with what
 actually happened and with the simplest serious baseline: the same month last year.</p>
 {plot(fig_accuracy(ps))}
-{table(ps_show)}
 
 <h2>The data</h2>
 <p>Monthly {unit} from {pd.Timestamp(panel.start):%b %Y} through {wide.index[-1]:%b %Y}, read from the clean warehouse: duplicate
