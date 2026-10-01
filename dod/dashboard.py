@@ -490,10 +490,11 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
         tr = pd.DataFrame(agent.get("trace", []))
         if not tr.empty:
             steps = "".join(f"<li>{esc(agent_step(t))}</li>" for t in agent.get("trace", []))
-            trace_html = ("<h2>What the agent did</h2><p>How Claude turned the request into the spec above. Its tools only "
-                          "look things up; it never writes the SQL or the models, and the harness checks the spec it "
-                          f"submits.</p><ol>{steps}</ol><details><summary>The raw tool calls</summary>"
-                          + table(tr[["turn", "tool", "input", "result"]]) + "</details>")
+            trace_html = ("<h2>What the agent did</h2><p>How the AI agent (Claude) turned the request into what "
+                          "\u201cRead as\u201d shows at the top: the exact products, place, measure and months. Its tools "
+                          "only look things up; it never writes the SQL or the models, and the harness checks the request "
+                          f"before running it.</p><ol>{steps}</ol><details><summary>The raw tool calls</summary>"
+                          + table(tr[["turn", "tool", "input", "result"]], nowrap=("turn", "tool"), mono=("result",), wide=("input",)) + "</details>")
 
     body = f"""
 <h1>{esc(spec.title)}</h1>

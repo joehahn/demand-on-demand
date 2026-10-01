@@ -31,8 +31,10 @@ def line(x, y, name, color, dash=None):
     return go.Scatter(x=x, y=y, name=name, mode="lines", line=dict(color=color, width=2, dash=dash))
 
 
-def table(df, fmt=None, bold=()):
-    """An HTML table; fmt maps a column to a formatter, bold lists columns whose cells are bold."""
+def table(df, fmt=None, bold=(), nowrap=(), mono=(), wide=()):
+    """An HTML table; fmt maps a column to a formatter, bold lists columns whose cells are bold, nowrap lists columns
+    kept on one line, mono lists columns shown in a fixed-width font with their spacing kept (text tables), wide lists
+    columns given a minimum width so a long neighbor cannot squeeze them."""
     fmt = fmt or {}
     numeric = {c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])}
     # a newline in a column name becomes a line break in its header
@@ -46,7 +48,11 @@ def table(df, fmt=None, bold=()):
             s = fmt[c](v) if c in fmt and pd.notna(v) else ("" if pd.isna(v) else str(v))
             num = pd.api.types.is_number(v) and not isinstance(v, bool)
             s = f"<strong>{html.escape(s)}</strong>" if c in bold else html.escape(s)
-            cells.append(f'<td class="{"num" if num else ""}">{s}</td>')
+            keep = (' style="white-space:nowrap"' if c in nowrap else
+                    ' style="white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:11px;min-width:440px"'
+                    if c in mono else
+                    ' style="min-width:260px"' if c in wide else "")
+            cells.append(f'<td class="{"num" if num else ""}"{keep}>{s}</td>')
         rows.append("<tr>" + "".join(cells) + "</tr>")
     return f'<div class="tbl"><table><thead><tr>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
 
