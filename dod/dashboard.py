@@ -59,7 +59,7 @@ def grid_words(grid):
                       lags_words(r.lags), "all years" if r.train_years in (None, "None") else f"last {r.train_years} years",
                       "yes" if str(r.pool) == "True" else "no", f"{r.rel_mae:.3f}"))
     return pd.DataFrame(rows, columns=["algorithm", "size", "predicts", "inputs", "history", "other counties",
-                                       "selection error vs baseline"])
+                                       "error vs last year (smaller is better)"])
 
 
 def forecast_parts(res):
@@ -83,8 +83,8 @@ def model_explanation(res, unit, spec, panel):
     """How the forecast is made, in a few sentences and one small table."""
     uw, tw = res["tune_window"], res["test_window"]
     parts = forecast_parts(res)
-    t = pd.DataFrame(parts, columns=["part", "weight", "settings", "selection error"])
-    tbl = table(t, {"weight": lambda v: f"{v:.0%}", "selection error": lambda v: f"{v:.2f}"})
+    t = pd.DataFrame(parts, columns=["part", "weight", "settings", "error vs last year (smaller is better)"])
+    tbl = table(t, {"weight": lambda v: f"{v:.0%}", "error vs last year (smaller is better)": lambda v: f"{v:.2f}"})
     rel = res["test_rel_mae"]
     pct = round(abs(1 - rel) * 100)
     test = (f"{pct}% {'more' if rel < 1 else 'less'} accurate than last year alone" if pct
@@ -97,8 +97,8 @@ def model_explanation(res, unit, spec, panel):
     chosen = b[(b.models_averaged == len(res["ensemble"])) & (b.model_share == res["model_share"])].tuning_rel_mae.iloc[0]
     lead = "Each month's forecast is this weighted mix." if len(parts) > 1 else "Each month's forecast comes from this model."
     return (f"<p><strong>How this forecast is made.</strong> {lead} The weights won "
-            f"model selection ({uw[0]:%b %Y} to {uw[1]:%b %Y}): error {chosen:.2f}, against 1.00 for last year alone and "
-            f"{best_alone:.2f} for the best single model (below 1 beats last year). In the Test period ({tw[0]:%b %Y} "
+            f"model selection ({uw[0]:%b %Y} to {uw[1]:%b %Y}): their total misses were {chosen:.2f} times those of last "
+            f"year alone, against {best_alone:.2f} for the best single model (smaller is better; 1.00 = as good as last year). In the Test period ({tw[0]:%b %Y} "
             f"to {tw[1]:%b %Y}) the mix was {test}.</p>{tbl}")
 
 
@@ -443,8 +443,8 @@ first sale.</p>
 or dropped on the same months; the test window was not used for any choice.</p>
 {table(grid)}
 <p>Final choice, also in model selection: how many of the top configurations to average, and how much weight
-to give them against "same month last year" (selection error vs baseline, lower is better):</p>
-{table(res["blend"].rename(columns={"tuning_rel_mae": "selection_error"}), {"selection_error": lambda v: f"{v:.3f}", "model_share": lambda v: f"{v:.0%}"}) if len(res.get("blend", [])) else ""}
+to give them against "same month last year" (error vs last year, smaller is better):</p>
+{table(res["blend"].rename(columns={"tuning_rel_mae": "error vs last year (smaller is better)"}), {"error vs last year (smaller is better)": lambda v: f"{v:.3f}", "model_share": lambda v: f"{v:.0%}"}) if len(res.get("blend", [])) else ""}
 <p>Feature choice, scored on the test window for the record (below 1 beats the baseline):</p>
 {table(abl)}
 
