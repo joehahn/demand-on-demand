@@ -89,13 +89,14 @@ def model_explanation(res, unit, spec, panel):
     pct = round(abs(1 - rel) * 100)
     test = (f"{pct}% {'more' if rel < 1 else 'less'} accurate than last year alone" if pct
             else "about as accurate as last year alone")
-    if len(parts) == 1:
+    if [p[0] for p in parts] == ["same month last year"]:
         return (f"<p><strong>How this forecast is made.</strong> No model beat simply repeating the same month last "
                 f"year in model selection ({uw[0]:%b %Y} to {uw[1]:%b %Y}), so that is the forecast.</p>")
     b = res["blend"]
     best_alone = b[(b.models_averaged == 1) & (b.model_share == 1.0)].tuning_rel_mae.iloc[0]
     chosen = b[(b.models_averaged == len(res["ensemble"])) & (b.model_share == res["model_share"])].tuning_rel_mae.iloc[0]
-    return (f"<p><strong>How this forecast is made.</strong> Each month's forecast is this weighted mix. The weights won "
+    lead = "Each month's forecast is this weighted mix." if len(parts) > 1 else "Each month's forecast comes from this model."
+    return (f"<p><strong>How this forecast is made.</strong> {lead} The weights won "
             f"model selection ({uw[0]:%b %Y} to {uw[1]:%b %Y}): error {chosen:.2f}, against 1.00 for last year alone and "
             f"{best_alone:.2f} for the best single model (below 1 beats last year). In the Test period ({tw[0]:%b %Y} "
             f"to {tw[1]:%b %Y}) the mix was {test}.</p>{tbl}")
@@ -239,8 +240,11 @@ def short_model(res):
     """The chosen mix in a few words, e.g. '50% same month last year, 33% ridge regression, 17% LightGBM'."""
     parts = pd.DataFrame(forecast_parts(res), columns=["part", "weight", "settings", "err"])
     mix = parts.groupby("part", sort=False).weight.sum()
-    if len(mix) == 1:
+    if list(mix.index) == ["same month last year"]:
         return "the same month last year (no model beat it)"
+    if len(mix) == 1:  # one algorithm, no blend with last year: "a ridge regression", "the average of 3 ridge regressions"
+        n, name = len(parts), mix.index[0]
+        return f"a {name}" if n == 1 else f"the average of {n} {name}{'s' if name != 'LightGBM' else ' models'}"
     return ", ".join(f"{v:.0%} {k}" for k, v in mix.items() if v > 0)
 
 
