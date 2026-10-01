@@ -283,6 +283,27 @@ def sql_words(spec, panel):
             f"from {spec.start[:7]} on.")
 
 
+SITE = "https://joehahn.github.io/demand-on-demand"
+# the harness's SQL always reads these three tables; what each one decides in this forecast
+TABLES_USED = [("sales.invoice_line", "summed by month: the series being forecast"),
+               ("sales.item", "which order lines belong to the product"),
+               ("sales.store", "which stores are in the place")]
+
+
+def agent_knowledge():
+    """How the agent knows the tables and columns: the dictionary it reads, and the tables this forecast used."""
+    from .agent import schema_rows   # imported here: the agent module imports the harness, which imports this one
+    rows = schema_rows()
+    notes = rows.groupby("tbl").table_note.first()
+    t = pd.DataFrame([(tbl, role, notes.get(tbl, "")) for tbl, role in TABLES_USED],
+                     columns=["table", "used for", "what the agent is told about it"])
+    return (f"<p><strong>How it knows the tables and columns.</strong> At the start of every request the agent reads the "
+            f"warehouse's <a href=\"{SITE}/data_dictionary.html\">data dictionary</a> from the database: "
+            f"{rows.tbl.nunique()} tables and {len(rows)} columns, each described in a sentence. Its search tools then "
+            f"find the actual names below. This forecast's data came from three of the tables:</p>"
+            + table(t, bold=("table",), nowrap=("table",)))
+
+
 def big_buyer_note(stores, unit, n_series):
     """One store with a large share of recent volume, ordering on and off, makes the monthly total hard to predict:
     say so next to the forecast range. Single-series forecasts only (a breakout would need a share per series)."""
@@ -527,7 +548,8 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
             trace_html = ("<h2>What the agent did</h2><p>How the AI agent (Claude) turned the request into what "
                           "\u201cRead as\u201d shows at the top: the exact products, place, measure and months. Its tools "
                           "only look things up; it never writes the SQL or the models, and the harness checks the request "
-                          f"before running it.</p><ol>{steps}</ol><details><summary>The raw tool calls</summary>"
+                          f"before running it.</p>{agent_knowledge()}<p><strong>What it did, step by step:</strong></p>"
+                          f"<ol>{steps}</ol><details><summary>The raw tool calls</summary>"
                           + table(tr[["turn", "tool", "input", "result"]], nowrap=("turn", "tool"), mono=("result",), wide=("input",)) + "</details>")
 
     body = f"""

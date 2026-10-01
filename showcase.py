@@ -116,8 +116,9 @@ simplest honest benchmark, the same month last year, and publishes a dashboard t
 {DIAGRAM}
 <ul>
 <li><strong>The AI decides what to forecast; code decides how.</strong> The agent resolves products, places, measures
-and horizons with read-only tools, and hands over a spec. It never writes the SQL, the train/test split, the metrics
-or the charts. Those are fixed code, the same for every request.</li>
+and horizons with read-only tools, and hands over a spec. It knows the warehouse from a
+<a href="data_dictionary.html">data dictionary</a> of every table and column, read from the database. It never writes
+the SQL, the train/test split, the metrics or the charts. Those are fixed code, the same for every request.</li>
 <li><strong>Honest accuracy.</strong> Every forecast is backtested on the last 24 months, which no choice ever saw.
 Model settings are tuned on the two years before that, and "same month last year" is always a candidate: a model is
 used only as far as it beats it.</li>

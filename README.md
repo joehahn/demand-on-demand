@@ -60,6 +60,8 @@ the clean tables, with a query time limit. Credentials live in `.env`, are read 
   year, seasonality (flat statewide, 3x to 8x swings in slices like cream liqueurs and gift packs), and every data
   problem found while loading.
 - **[Data fixes](https://joehahn.github.io/demand-on-demand/data_fixes.html)**: each problem, the fix applied once in the warehouse, and before and after.
+- **[Data dictionary](https://joehahn.github.io/demand-on-demand/data_dictionary.html)**: every table and column, exactly as the
+  agent is told about them at the start of each request (written once in `load_data.py`, stored as database comments).
 
 **Example forecasts.** Each was made by the agent from the plain-English request shown. Each dashboard is one page
 with how the request was read, the forecast chart and table (with an 80% range), the backtest against "same month last
@@ -111,7 +113,7 @@ hand-written spec without the agent.
 | path | what it does |
 |---|---|
 | `load_data.py` | one-time pull of Iowa Liquor Sales 2016 onward into Postgres: raw, curated star schema, Census reference tables, the clean stage, and the data dictionary |
-| `explore_data.py`, `data_fixes.py` | the two data pages in `docs/` |
+| `explore_data.py`, `data_fixes.py`, `data_dictionary.py` | the three data pages in `docs/` |
 | `dod/agent.py`, `dod/tools.py` | the Claude agent and its read-only tools |
 | `dod/spec.py`, `dod/panel.py`, `dod/model.py`, `dod/dashboard.py`, `dod/run.py` | the fixed harness |
 | `evals/`, `benchmark/` | agent evals, summary grounding, forecast-accuracy benchmark |

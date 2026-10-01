@@ -24,24 +24,29 @@ PRICES = {  # $ per 1M tokens: input, output, cache write, cache read
 MAX_TURNS = 12
 
 
-def schema_text():
-    rows = db.query("""
+def schema_rows():
+    """The warehouse as the agent sees it: every table and column it may query, with the descriptions written by
+    load_data.py (TABLE_NOTES, COLUMN_NOTES) and stored as Postgres comments. The data dictionary page uses this too."""
+    cols = db.query("""
         SELECT c.table_schema || '.' || c.table_name AS tbl, c.column_name, c.data_type,
                col_description((c.table_schema || '.' || c.table_name)::regclass, c.ordinal_position) AS note
         FROM information_schema.columns c WHERE c.table_schema IN ('sales', 'ref')
         ORDER BY c.table_schema, c.table_name, c.ordinal_position""")
-    # each table's own description too (COMMENT ON TABLE, written by load_data.py meta from TABLE_NOTES)
-    notes = dict(db.query("""
-        SELECT n.nspname || '.' || c.relname AS tbl, obj_description(c.oid, 'pg_class') AS note
+    tables = db.query("""
+        SELECT n.nspname || '.' || c.relname AS tbl, obj_description(c.oid, 'pg_class') AS table_note
         FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-        WHERE n.nspname IN ('sales', 'ref') AND c.relkind = 'r'""").itertuples(index=False, name=None))
+        WHERE n.nspname IN ('sales', 'ref') AND c.relkind = 'r'""")
+    return cols.merge(tables, on="tbl", how="left")
+
+
+def schema_text():
+    """The schema part of the agent's instructions: one line per table, its description, then its columns."""
     out = []
-    for tbl, g in rows.groupby("tbl", sort=False):
-        about = f" [{notes[tbl]}]" if notes.get(tbl) else ""
+    for tbl, g in schema_rows().groupby("tbl", sort=False):
+        about = f" [{g.table_note.iloc[0]}]" if isinstance(g.table_note.iloc[0], str) else ""
         out.append(f"{tbl}{about}: " + "; ".join(f"{r.column_name} {r.data_type}" + (f" ({r.note})" if r.note else "")
                                                  for r in g.itertuples()))
     return "\n".join(out)
-
 
 SYSTEM = """You are the forecasting analyst for a company that sells to Iowa liquor retailers. A business user asks for a
 demand forecast in plain English. Your job is to turn the request into a precise spec for the forecasting harness,
