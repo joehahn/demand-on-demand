@@ -30,10 +30,16 @@ def schema_text():
                col_description((c.table_schema || '.' || c.table_name)::regclass, c.ordinal_position) AS note
         FROM information_schema.columns c WHERE c.table_schema IN ('sales', 'ref')
         ORDER BY c.table_schema, c.table_name, c.ordinal_position""")
+    # each table's own description too (COMMENT ON TABLE, written by load_data.py meta from TABLE_NOTES)
+    notes = dict(db.query("""
+        SELECT n.nspname || '.' || c.relname AS tbl, obj_description(c.oid, 'pg_class') AS note
+        FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname IN ('sales', 'ref') AND c.relkind = 'r'""").itertuples(index=False, name=None))
     out = []
     for tbl, g in rows.groupby("tbl", sort=False):
-        out.append(f"{tbl}: " + "; ".join(f"{r.column_name} {r.data_type}" + (f" ({r.note})" if r.note else "")
-                                          for r in g.itertuples()))
+        about = f" [{notes[tbl]}]" if notes.get(tbl) else ""
+        out.append(f"{tbl}{about}: " + "; ".join(f"{r.column_name} {r.data_type}" + (f" ({r.note})" if r.note else "")
+                                                 for r in g.itertuples()))
     return "\n".join(out)
 
 

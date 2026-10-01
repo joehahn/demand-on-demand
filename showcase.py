@@ -140,7 +140,7 @@ last year" on <strong>{beat}</strong>, with a median error {1 - bench.rel_mae.me
 (median monthly error {bench.model_error.median():.1%} vs {bench.baseline_error.median():.1%}). Retail demand here is
 very regular year to year, so last year is a hard baseline to beat, and on the rest it was not beaten.
 <a href="{REPO}/blob/main/benchmark/report.md">Full benchmark</a>.</p>
-<p><strong>Agent accuracy.</strong> {n_ok} of {n_runs} runs across 19 test requests produced exactly the right
+<p><strong>Agent accuracy.</strong> {n_ok} of {n_runs} runs across {n_runs // 2} test requests produced exactly the right
 product, place, measure and horizon, or correctly declined (a city outside Iowa, a 24-month horizon, a product too new
 to forecast). Every number in the dashboard summaries is checked against the harness's results.
 <a href="{REPO}/blob/main/evals/report.md">Eval report</a>.</p>

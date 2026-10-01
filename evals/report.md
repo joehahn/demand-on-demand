@@ -1,21 +1,23 @@
 # Agent eval report
 
-19 cases, 38 runs, model `claude-sonnet-5`, 2026-09-27 12:55.
+21 cases, 42 runs, model `claude-sonnet-5`, 2026-09-30 22:11.
 
-- Runs fully correct: **38/38** (100%)
-- Cases correct on every run: **19/19**
-- Cost: $0.56 total, $0.015 per run; median 15s and 4 tool calls per run
+- Runs fully correct: **42/42** (100%)
+- Cases correct on every run: **21/21**
+- Cost: $0.68 total, $0.016 per run; median 20s and 4 tool calls per run
 
 | tag | runs correct |
 |---|---|
 | breakout | 2/2 |
+| demo | 14/14 |
 | dev | 10/10 |
-| fresh | 28/28 |
+| fresh | 32/32 |
 | refusal | 6/6 |
-| resolution | 18/18 |
+| resolution | 20/20 |
+| store | 2/2 |
 | target | 4/4 |
 | too_new | 2/2 |
-| vague | 4/4 |
+| vague | 6/6 |
 | vendor | 2/2 |
 
 | case | runs correct | failures |
@@ -39,3 +41,5 @@
 | hawkeye_johnson | 2/2 |  |
 | ames_whiskey | 2/2 |  |
 | vague_vodka | 2/2 |  |
+| cream_liqueur_holidays | 2/2 |  |
+| bdi_store | 2/2 |  |

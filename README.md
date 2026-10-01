@@ -13,7 +13,7 @@ publishes a dashboard that says how far to trust the answer.
 | Plain English to dashboard | about 40 seconds (median of the three examples: 20 s agent, 18 s harness) |
 | Claude API cost per request | about $0.02 |
 | Forecast accuracy | beats "same month last year" on 23 of 30 sampled forecasts; median error 12% lower |
-| Agent accuracy | 38 of 38 eval runs resolved the request exactly or correctly declined it |
+| Agent accuracy | 42 of 42 eval runs resolved the request exactly or correctly declined it |
 
 **Author:** Joseph M. Hahn, Ph.D., independent AI and machine learning consultant  
 [jmh-datasciences.com](https://jmh-datasciences.com) · [LinkedIn](https://www.linkedin.com/in/hahnjoe) · jmh.datasciences@gmail.com  
@@ -85,7 +85,7 @@ the agent evals: `python demo.py --check`.
   counties and statewide; bottles, dollars, liters; 3 to 12 months). The model beat "same month last year" on 23;
   median monthly error 15.0% vs 16.0%. Iowa liquor demand is very regular year to year, so last year is a hard baseline,
   and on the other 7 it was not beaten. The report lists every forecast, the misses included.
-- [evals/report.md](evals/report.md): 19 test requests, 2 runs each, scored on product, place, measure, horizon and
+- [evals/report.md](evals/report.md): 21 test requests, 2 runs each, scored on product, place, measure, horizon and
   breakout, plus requests that should be declined.
 - [evals/grounding.md](evals/grounding.md): every number in the dashboard summaries traced to the harness's results.
 
