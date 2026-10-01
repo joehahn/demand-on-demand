@@ -19,6 +19,7 @@ def esc(s):
     return html.escape(str(s))
 
 
+ERR_LABEL = "error vs last year\n(smaller is better)"   # the newline breaks the column header in two
 PREDICTS = {"level": "the monthly value", "diff": "change from last month", "yoy": "change from the same month last year"}
 
 
@@ -27,7 +28,7 @@ def lags_words(v):
     return f"the last {v} months" if isinstance(v, int) else ", ".join(map(str, v[:-1])) + f" and {v[-1]} months back"
 
 
-def search_space(res):
+def search_space(res, n_counties=15):
     """What model selection chose among, read from the harness's own settings so it cannot drift from the code."""
     pooled = "True" in set(res["grid"].get("pool", pd.Series(dtype=str)).astype(str))
     rows = [("Algorithm", "ridge regression; LightGBM (gradient-boosted trees)", len(model.FAMILY)),
@@ -37,7 +38,8 @@ def search_space(res):
             ("Inputs", "; ".join(lags_words(l) for l in model.COMMON["lags"]), len(model.COMMON["lags"])),
             ("History used", "; ".join("all years" if y is None else f"the last {y} years" for y in model.COMMON["train_years"]),
              len(model.COMMON["train_years"])),
-            ("Other counties", "this series only; also the same product in the busiest counties" if pooled
+            ("Other counties", "learn from this forecast's own history only; or also from the same product's history in "
+             f"the {n_counties} busiest counties (more examples of its seasonality and trend)" if pooled
              else "this series only (no other counties to learn from)", 2 if pooled else 1)]
     t = pd.DataFrame(rows, columns=["setting", "options", "choices"])
     count = " \u00d7 ".join(map(str, t.choices)) + f" = {int(t.choices.prod())}"
@@ -59,7 +61,7 @@ def grid_words(grid):
                       lags_words(r.lags), "all years" if r.train_years in (None, "None") else f"last {r.train_years} years",
                       "yes" if str(r.pool) == "True" else "no", f"{r.rel_mae:.3f}"))
     return pd.DataFrame(rows, columns=["algorithm", "size", "predicts", "inputs", "history", "other counties",
-                                       "error vs last year (smaller is better)"])
+                                       ERR_LABEL])
 
 
 def forecast_parts(res):
@@ -83,8 +85,8 @@ def model_explanation(res, unit, spec, panel):
     """How the forecast is made, in a few sentences and one small table."""
     uw, tw = res["tune_window"], res["test_window"]
     parts = forecast_parts(res)
-    t = pd.DataFrame(parts, columns=["part", "weight", "settings", "error vs last year (smaller is better)"])
-    tbl = table(t, {"weight": lambda v: f"{v:.0%}", "error vs last year (smaller is better)": lambda v: f"{v:.2f}"})
+    t = pd.DataFrame(parts, columns=["part", "weight", "settings", ERR_LABEL])
+    tbl = table(t, {"weight": lambda v: f"{v:.0%}", ERR_LABEL: lambda v: f"{v:.2f}"})
     rel = res["test_rel_mae"]
     pct = round(abs(1 - rel) * 100)
     test = (f"{pct}% {'more' if rel < 1 else 'less'} accurate than last year alone" if pct
@@ -374,7 +376,7 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
                             f'Treat it as indicative.</p>' for c in res.get("unvalidated", []))
 
     grid = grid_words(res["grid"].head(10))
-    space_html, space_count = search_space(res)
+    space_html, space_count = search_space(res, 0 if panel.pool is None else panel.pool[0].shape[1])
     abl = res["ablation"].assign(rel_mae=res["ablation"].rel_mae.map("{:.3f}".format))
     tw, uw = res["test_window"], res["tune_window"]
     cost = ""
@@ -444,7 +446,7 @@ or dropped on the same months; the test window was not used for any choice.</p>
 {table(grid)}
 <p>Final choice, also in model selection: how many of the top configurations to average, and how much weight
 to give them against "same month last year" (error vs last year, smaller is better):</p>
-{table(res["blend"].rename(columns={"tuning_rel_mae": "error vs last year (smaller is better)"}), {"error vs last year (smaller is better)": lambda v: f"{v:.3f}", "model_share": lambda v: f"{v:.0%}"}) if len(res.get("blend", [])) else ""}
+{table(res["blend"].rename(columns={"tuning_rel_mae": ERR_LABEL}), {ERR_LABEL: lambda v: f"{v:.3f}", "model_share": lambda v: f"{v:.0%}"}) if len(res.get("blend", [])) else ""}
 <p>Feature choice, scored on the test window for the record (below 1 beats the baseline):</p>
 {table(abl)}
 

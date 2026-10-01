@@ -34,7 +34,9 @@ def line(x, y, name, color, dash=None):
 def table(df, fmt=None):
     fmt = fmt or {}
     numeric = {c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])}
-    head = "".join(f'<th class="{"num" if c in numeric else ""}">{html.escape(str(c))}</th>' for c in df.columns)
+    # a newline in a column name becomes a line break in its header
+    head = "".join(f'<th class="{"num" if c in numeric else ""}">{html.escape(str(c)).replace(chr(10), "<br>")}</th>'
+                   for c in df.columns)
     rows = []
     for _, r in df.iterrows():
         cells = []
