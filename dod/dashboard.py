@@ -64,6 +64,25 @@ def grid_words(grid):
                                        ERR_LABEL])
 
 
+def blend_details(res):
+    """The last step of model selection, collapsed: every way of combining the top configurations with last year,
+    and the one chosen (lowest error)."""
+    b = res.get("blend")
+    if b is None or not len(b):
+        return ""
+    # the row the harness used (ties go to fewer models, then more weight on them; see model.run)
+    hit = b[(b.models_averaged == len(res.get("ensemble") or [])) & (b.model_share == res.get("model_share"))]
+    chosen = hit.index[0] if len(hit) else None
+    t = pd.DataFrame({"models averaged": b.models_averaged.astype(int),
+                      "weight on the models": b.model_share.map(lambda v: f"{v:.0%}"),
+                      "weight on last year": (1 - b.model_share).map(lambda v: f"{v:.0%}"),
+                      ERR_LABEL: b.tuning_rel_mae.map(lambda v: f"{v:.3f}"),
+                      "": ["\u2190 chosen" if i == chosen else "" for i in b.index]})
+    return ("<details><summary>How the weights were chosen</summary><p>Every way of combining the best configuration, "
+            "or the average of the best few, with same month last year, scored in model selection. The lowest error "
+            "wins; it sets the weights in the table above.</p>" + table(t) + "</details>")
+
+
 def forecast_parts(res):
     """The forecast as a weighted mix: last year's same month (the baseline) plus each averaged model.
     Returns (name, weight, settings, selection error) rows, from the harness's own results."""
@@ -86,7 +105,7 @@ def model_explanation(res, unit, spec, panel):
     uw, tw = res["tune_window"], res["test_window"]
     parts = forecast_parts(res)
     t = pd.DataFrame(parts, columns=["part", "weight", "settings", ERR_LABEL])
-    tbl = table(t, {"weight": lambda v: f"{v:.0%}", ERR_LABEL: lambda v: f"{v:.2f}"})
+    tbl = table(t, {"weight": lambda v: f"{v:.0%}", ERR_LABEL: lambda v: f"{v:.2f}"}, bold=("part", "weight"))
     rel = res["test_rel_mae"]
     pct = round(abs(1 - rel) * 100)
     test = (f"{pct}% {'more' if rel < 1 else 'less'} accurate than last year alone" if pct
@@ -441,12 +460,11 @@ first sale.</p>
 {model_explanation(res, unit, spec, panel)}
 <p>What was compared: every combination of these settings ({space_count} configurations):</p>
 {space_html}
-<p>The 10 best, with the baseline (a model had to beat it in model selection to be used). Feature groups were then kept
-or dropped on the same months; the test window was not used for any choice.</p>
-{table(grid)}
-<p>Final choice, also in model selection: how many of the top configurations to average, and how much weight
-to give them against "same month last year" (error vs last year, smaller is better):</p>
-{table(res["blend"].rename(columns={"tuning_rel_mae": ERR_LABEL}), {ERR_LABEL: lambda v: f"{v:.3f}", "model_share": lambda v: f"{v:.0%}"}) if len(res.get("blend", [])) else ""}
+<details><summary>The 10 best configurations</summary>
+<p>With the baseline (a model had to beat it in model selection to be used). Feature groups were then kept or dropped
+on the same months; the test window was not used for any choice.</p>
+{table(grid)}</details>
+{blend_details(res)}
 <p>Feature choice, scored on the test window for the record (below 1 beats the baseline):</p>
 {table(abl)}
 

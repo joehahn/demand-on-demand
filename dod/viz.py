@@ -31,7 +31,8 @@ def line(x, y, name, color, dash=None):
     return go.Scatter(x=x, y=y, name=name, mode="lines", line=dict(color=color, width=2, dash=dash))
 
 
-def table(df, fmt=None):
+def table(df, fmt=None, bold=()):
+    """An HTML table; fmt maps a column to a formatter, bold lists columns whose cells are bold."""
     fmt = fmt or {}
     numeric = {c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])}
     # a newline in a column name becomes a line break in its header
@@ -44,7 +45,8 @@ def table(df, fmt=None):
             v = r[c]
             s = fmt[c](v) if c in fmt and pd.notna(v) else ("" if pd.isna(v) else str(v))
             num = pd.api.types.is_number(v) and not isinstance(v, bool)
-            cells.append(f'<td class="{"num" if num else ""}">{html.escape(s)}</td>')
+            s = f"<strong>{html.escape(s)}</strong>" if c in bold else html.escape(s)
+            cells.append(f'<td class="{"num" if num else ""}">{s}</td>')
         rows.append("<tr>" + "".join(cells) + "</tr>")
     return f'<div class="tbl"><table><thead><tr>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
 
