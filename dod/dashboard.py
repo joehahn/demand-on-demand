@@ -1,5 +1,6 @@
 """One self-contained HTML page per forecast: the answer, how much to trust it, what was done to the data,
 and exactly what ran."""
+import ast
 import html
 import json
 
@@ -7,6 +8,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
+from . import model
 from .viz import AQUA, BLUE, ORANGE, Plots, line, page, style, table
 
 MAX_PANELS = 8   # small multiples beyond this fold into the table only
@@ -15,6 +17,49 @@ HISTORY_MONTHS = 48
 
 def esc(s):
     return html.escape(str(s))
+
+
+PREDICTS = {"level": "the monthly value", "diff": "change from last month", "yoy": "change from the same month last year"}
+
+
+def lags_words(v):
+    v = ast.literal_eval(v) if isinstance(v, str) else v   # grid values are stored as text, e.g. "[1, 2, 3, 12]"
+    return f"the last {v} months" if isinstance(v, int) else ", ".join(map(str, v[:-1])) + f" and {v[-1]} months back"
+
+
+def search_space(res):
+    """What model selection chose among, read from the harness's own settings so it cannot drift from the code."""
+    pooled = "True" in set(res["grid"].get("pool", pd.Series(dtype=str)).astype(str))
+    rows = [("Algorithm", "ridge regression; LightGBM (gradient-boosted trees)", len(model.FAMILY)),
+            ("Model size", "ridge: regularization " + " or ".join(f"{a:g}" for a in model.FAMILY["ridge"]["alpha"])
+             + "; LightGBM: " + " or ".join(map(str, model.FAMILY["lightgbm"]["num_leaves"])) + " leaves per tree", 2),
+            ("Predicts", "; ".join(PREDICTS[t] for t in model.COMMON["target"]), len(model.COMMON["target"])),
+            ("Inputs", "; ".join(lags_words(l) for l in model.COMMON["lags"]), len(model.COMMON["lags"])),
+            ("History used", "; ".join("all years" if y is None else f"the last {y} years" for y in model.COMMON["train_years"]),
+             len(model.COMMON["train_years"])),
+            ("Other counties", "this series only; also the same product in the busiest counties" if pooled
+             else "this series only (no other counties to learn from)", 2 if pooled else 1)]
+    t = pd.DataFrame(rows, columns=["setting", "options", "choices"])
+    count = " \u00d7 ".join(map(str, t.choices)) + f" = {int(t.choices.prod())}"
+    return table(t, {"choices": lambda v: f"{v}"}), count
+
+
+def grid_words(grid):
+    """The top configurations in plain words, with their selection error."""
+    def size(r):
+        if r.model == "ridge":
+            return f"regularization {float(r.alpha):g}"
+        return f"{int(float(r.num_leaves))} leaves" if r.model == "lightgbm" else ""
+    rows = []
+    for r in grid.itertuples():
+        if r.model == "seasonal_naive":
+            rows.append(("same month last year (baseline)", "", "", "", "", "", f"{r.rel_mae:.3f}"))
+            continue
+        rows.append(({"ridge": "ridge regression", "lightgbm": "LightGBM"}[r.model], size(r), PREDICTS[r.target],
+                      lags_words(r.lags), "all years" if r.train_years in (None, "None") else f"last {r.train_years} years",
+                      "yes" if str(r.pool) == "True" else "no", f"{r.rel_mae:.3f}"))
+    return pd.DataFrame(rows, columns=["algorithm", "size", "predicts", "inputs", "history", "other counties",
+                                       "selection error vs baseline"])
 
 
 def describe_config(cfg, unit, own, pooled):
@@ -356,9 +401,8 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
                             f'test window, so its forecast comes from the pooled model with no track record of its own. '
                             f'Treat it as indicative.</p>' for c in res.get("unvalidated", []))
 
-    grid = res["grid"].head(10).dropna(axis=1, how="all").copy()   # hide parameters no shown model uses
-    grid["rel_mae"] = grid.rel_mae.map("{:.3f}".format)
-    grid = grid.rename(columns={"rel_mae": "selection error vs baseline"}).fillna("")
+    grid = grid_words(res["grid"].head(10))
+    space_html, space_count = search_space(res)
     abl = res["ablation"].assign(rel_mae=res["ablation"].rel_mae.map("{:.3f}".format))
     tw, uw = res["test_window"], res["tune_window"]
     cost = ""
@@ -423,8 +467,10 @@ first sale.</p>
 <p>Model: {esc(model_name)}; {verdict} over a {len(bt.origin.unique())}-origin backtest on {tw[0]:%b %Y} to
 {tw[1]:%b %Y}, months the model never trained on.</p>
 {model_explanation(res, unit, spec, panel)}
-<p>Every configuration, with the baseline (a model had to beat it in model selection to be used). Feature groups were
-then kept or dropped on the same months; the test window was not used for any choice.</p>
+<p>What was compared: every combination of these settings ({space_count} configurations):</p>
+{space_html}
+<p>The 10 best, with the baseline (a model had to beat it in model selection to be used). Feature groups were then kept
+or dropped on the same months; the test window was not used for any choice.</p>
 {table(grid)}
 <p>Final choice, also in model selection: how many of the top configurations to average, and how much weight
 to give them against "same month last year" (selection error vs baseline, lower is better):</p>
