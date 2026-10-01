@@ -121,3 +121,5 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
 8. Demo (2026-09-30): `python demo.py` runs canned requests from demo/requests.json live (`--rehearse`, `--replay`,
    `--check`); the 7 requests are tagged "demo" in evals/cases.json. Big-buyer split experiment: not adopted
    (benchmark/big_buyers.md); dashboards name a store with > 25% of the last 12 months instead.
+   Finer hyperparameter grid (288 configs): not adopted (benchmark/grid_experiment.md: 20 vs 23 of 30, median 0.931 vs
+   0.880, 2x slower).
