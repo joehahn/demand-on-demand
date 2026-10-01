@@ -396,7 +396,11 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
 
     grid = grid_words(res["grid"].head(10))
     space_html, space_count = search_space(res, 0 if panel.pool is None else panel.pool[0].shape[1])
-    abl = res["ablation"].assign(rel_mae=res["ablation"].rel_mae.map("{:.3f}".format))
+    # an after-the-fact check: how each feature choice would have scored in the Test period (never used to choose)
+    names = {"seasonal naive baseline": "same month last year (baseline)"}
+    abl = pd.DataFrame({"inputs besides past sales": [names.get(f, f.replace("chosen: none", "chosen: none (past sales only)"))
+                                                      for f in res["ablation"].features],
+                        "error vs last year, Test period\n(smaller is better)": res["ablation"].rel_mae.map("{:.3f}".format)})
     tw, uw = res["test_window"], res["tune_window"]
     cost = ""
     if usage:
@@ -465,8 +469,10 @@ first sale.</p>
 on the same months; the test window was not used for any choice.</p>
 {table(grid)}</details>
 {blend_details(res)}
-<p>Feature choice, scored on the test window for the record (below 1 beats the baseline):</p>
-{table(abl)}
+<details><summary>Feature choice, checked afterward</summary><p>Whether to add calendar or population inputs was
+decided in model selection. For the record, here is how each choice would have scored in the Test period, which no
+choice ever saw; the Test period can disagree with the selection.</p>
+{table(abl)}</details>
 
 {trace_html}
 <h2>Exactly what ran</h2>
