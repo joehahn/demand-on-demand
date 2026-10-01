@@ -163,7 +163,7 @@ def fig_store_map(stores, unit):
                       marker=dict(size=6, color="rgba(137,135,129,0.7)"), text=idle.store_name,
                       hovertemplate="%{text}<extra>no recent orders</extra>"),
         go.Scattermap(lat=active.lat, lon=active.lon, mode="markers", name=f"{unit}, last 12 months (dot size)",
-                      marker=dict(size=size(active.last_12_months), color=BLUE, opacity=0.75), text=active.store_name,
+                      marker=dict(size=size(active.last_12_months), color=BLUE, opacity=0.9), text=active.store_name,
                       customdata=active.last_12_months,
                       hovertemplate="%{text}<br>" + money + "%{customdata:,.0f} " + unit + ", last 12 months<extra></extra>"),
     ])
@@ -175,8 +175,9 @@ def fig_store_map(stores, unit):
     lon_span = max(lon.iloc[1] - lon.iloc[0], 0.01)
     lat_span = max(lat.iloc[1] - lat.iloc[0], 0.01) * 1.33
     zoom = float(np.clip(min(np.log2(700 * 360 / (512 * lon_span)), np.log2(300 * 360 / (512 * lat_span))), 3, 13))
-    # CARTO's light basemap: no key, works from any page (OpenStreetMap's own servers block pages opened as files)
-    fig.update_layout(map=dict(style="carto-positron", zoom=zoom,
+    # CARTO's Voyager basemap (colored roads, water, parks): no key, works from any page (OpenStreetMap's own
+    # servers block pages opened as files)
+    fig.update_layout(map=dict(style="carto-voyager", zoom=zoom,
                                center=dict(lat=float(s.lat.median()), lon=float(s.lon.median()))),
                       margin=dict(l=0, r=0, t=40, b=0), height=380, showlegend=True,
                       legend=dict(orientation="h", y=1.0, x=1, xanchor="right", yanchor="bottom"),
@@ -294,7 +295,7 @@ def fig_accuracy(per_step):
                  height=300, legend=True).update_layout(hovermode="x unified")
 
 
-def build(spec, panel, res, usage=None, agent=None):
+def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
     plot = Plots(numbered=True, toolbar=False)
     wide, fc, bt, ps = panel.series, res["forecast"], res["backtest"], res["per_step"]
     labels = panel.labels
@@ -327,6 +328,14 @@ def build(spec, panel, res, usage=None, agent=None):
         (f"{round(abs(1 - rel) * 100)}%", ("more" if rel < 1 else "less") + " accurate than repeating the same month "
          "last year" if round(abs(1 - rel) * 100) else "as accurate as repeating the same month last year"),
     ]
+    # what this page took to make from the plain-English request: agent time, harness time, Claude API cost
+    if harness_seconds is not None:
+        u = usage or {}
+        agent_s = u.get("agent_seconds", 0)
+        parts = ([f"agent {agent_s:.0f} s"] if agent_s else []) + [f"models {harness_seconds:.0f} s"]
+        cost = f" \u00b7 ${u['est_cost_usd']:.2f}" if u.get("est_cost_usd") else ""
+        tiles.append((f"{agent_s + harness_seconds:.0f} s{cost}",
+                      f"to build from scratch ({', '.join(parts)}" + ("; Claude API cost" if cost else "") + ")"))
     tiles_html = "".join(f'<div class="tile"><div class="v">{esc(v)}</div><div class="k">{esc(k)}</div></div>'
                          for v, k in tiles)
 

@@ -20,33 +20,13 @@
   "harness_seconds": 18.4
  },
  {
-  "request": "American vodka sales dollars for each of the five largest counties, next 6 months",
-  "slug": "american_vodka_dollars_top_5_counties_next_6_months",
-  "title": "American Vodka dollars, top 5 counties, next 6 months",
-  "rel_mae": 1.040802073497476,
-  "summary": "American Vodka sales across the top 5 counties are forecast at $15.3 million over the next 6 months, up about 1% from the same period last year. This forecast is 4% less accurate than simply repeating last year's outcome.",
-  "cost": 0.0177,
-  "agent_seconds": 19.4,
-  "harness_seconds": 20.5
- },
- {
-  "request": "Forecast ready-to-drink cocktail bottles statewide for the next 6 months",
-  "slug": "ready_to_drink_cocktails_statewide_next_6_months",
-  "title": "Ready-to-drink cocktails, statewide, next 6 months",
-  "rel_mae": 0.9119053523146939,
-  "summary": "Statewide ready-to-drink cocktails are forecast at 338,000 bottles over the next 6 months, down 8% from the same months last year. This forecast is 9% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0129,
-  "agent_seconds": 16.4,
-  "harness_seconds": 17.1
- },
- {
-  "request": "Total liters of liquor sold statewide over the next 12 months",
-  "slug": "statewide_total_liters_next_12_months",
-  "title": "Statewide total liters, next 12 months",
-  "rel_mae": 1.1144782601190484,
-  "summary": "Statewide forecast totals 22.3 million liters over the next 12 months, up 1% from the same months last year. This forecast is 11% less accurate than simply repeating last year's outcome.",
-  "cost": 0.0118,
-  "agent_seconds": 30.3,
-  "harness_seconds": 32.0
+  "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
+  "slug": "cream_liqueur_holidays",
+  "title": "Cream liqueurs, Iowa, through the holidays",
+  "rel_mae": 0.7067718894462439,
+  "summary": "Iowa cream liqueurs are forecast at about 256,000 bottles through the holidays, down 3% from the same months last year. This forecast is 29% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0183,
+  "agent_seconds": 20.7,
+  "harness_seconds": 20.3
  }
 ]

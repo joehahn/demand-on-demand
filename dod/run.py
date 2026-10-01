@@ -61,7 +61,7 @@ def run(spec, out_root=OUT, usage=None, agent=None, narrate=None, log=print):
         agent["summary"] = narrate(facts) + " " + trust_sentence(res["test_rel_mae"])
     out = out_root / spec.slug
     out.mkdir(parents=True, exist_ok=True)
-    (out / "dashboard.html").write_text(dashboard.build(spec, p, res, usage, agent))
+    (out / "dashboard.html").write_text(dashboard.build(spec, p, res, usage, agent, harness_seconds=time.time() - t0))
     res["forecast"].assign(label=res["forecast"].series.map(p.labels)).to_csv(out / "forecast.csv", index=False)
     res["backtest"].to_csv(out / "backtest.csv", index=False)
     if p.stores is not None:

@@ -10,7 +10,7 @@ publishes a dashboard that says how far to trust the answer.
 
 | | |
 |---|---|
-| Plain English to dashboard | about 40 seconds (median of the five examples: 24 s agent, 18 s harness) |
+| Plain English to dashboard | about 40 seconds (median of the three examples: 20 s agent, 18 s harness) |
 | Claude API cost per request | about $0.02 |
 | Forecast accuracy | beats "same month last year" on 23 of 30 sampled forecasts; median error 12% lower |
 | Agent accuracy | 38 of 38 eval runs resolved the request exactly or correctly declined it |
@@ -55,26 +55,29 @@ the clean tables, with a query time limit. Credentials live in `.env`, are read 
 
 ## See it live
 
-- **[Landing page](https://joehahn.github.io/demand-on-demand/)**: the idea in one screen, with the five example forecasts.
+- **[Landing page](https://joehahn.github.io/demand-on-demand/)**: the idea in one screen, with the three example forecasts.
 - **[Data exploration](https://joehahn.github.io/demand-on-demand/data_exploration.html)**: what 26 million orders look like: volume by day, month and
   year, seasonality (flat statewide, 3x to 8x swings in slices like cream liqueurs and gift packs), and every data
   problem found while loading.
 - **[Data fixes](https://joehahn.github.io/demand-on-demand/data_fixes.html)**: each problem, the fix applied once in the warehouse, and before and after.
 
 **Example forecasts.** Each was made by the agent from the plain-English request shown. Each dashboard is one page
-with the forecast chart and table (with an 80% range), the backtest against "same month last year" by months ahead,
-the 96 model configurations compared, every tool call the agent made, and the exact spec and SQL that ran.
+with how the request was read, the forecast chart and table (with an 80% range), the backtest against "same month last
+year" by months ahead, the table the model learns from, a map of the stores included, the 96 model configurations
+compared, every tool call the agent made, and the exact spec and SQL that ran.
 
 | request | backtest vs same month last year |
 |---|---|
 | [Monthly forecast of Tito's minis in Des Moines for the next 5 months](https://joehahn.github.io/demand-on-demand/examples/tito_s_minis_des_moines_next_5_months.html) | 8% more accurate |
 | [What revenue should we expect from Fireball in Linn County next quarter?](https://joehahn.github.io/demand-on-demand/examples/fireball_linn_county_next_quarter.html) | 9% more accurate |
-| [Forecast ready-to-drink cocktail bottles statewide for the next 6 months](https://joehahn.github.io/demand-on-demand/examples/ready_to_drink_cocktails_statewide_next_6_months.html) | 9% more accurate |
-| [American vodka sales dollars for each of the five largest counties, next 6 months](https://joehahn.github.io/demand-on-demand/examples/american_vodka_dollars_top_5_counties_next_6_months.html) | 4% less accurate |
-| [Total liters of liquor sold statewide over the next 12 months](https://joehahn.github.io/demand-on-demand/examples/statewide_total_liters_next_12_months.html) | 11% less accurate |
+| [How many bottles of cream liqueur will Iowa stores order for the holidays?](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_holidays.html) | 29% more accurate |
 
-The misses are shown on purpose: when the model does not beat last year, the dashboard says so and says which months
-to trust less.
+Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
+misses included, and when a model does not beat last year its dashboard says so.
+
+**Live demo.** `python demo.py` lists canned requests to run in front of an audience (`python demo.py 3` runs one
+live and opens its dashboard; `--rehearse` saves copies for `--replay` if the network fails). They are checked with
+the agent evals: `python demo.py --check`.
 
 ## Results
 
