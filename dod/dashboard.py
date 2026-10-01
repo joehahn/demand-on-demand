@@ -304,6 +304,86 @@ def agent_knowledge():
             + table(t, bold=("table",), nowrap=("table",)))
 
 
+GITHUB = "https://github.com/joehahn/demand-on-demand/blob/main"
+
+
+def prep_section(spec, panel, res, unit, wide):
+    """How this forecast's data was prepared: what was done once in the warehouse (SQL run by load_data.py) and what
+    the harness did for this request (SQL + Python), with the details that touched this forecast's own numbers."""
+    from . import db
+    from .panel import member_items
+    fixes = dict(db.query("SELECT fix_id, rows_affected FROM meta.data_fixes").itertuples(index=False, name=None))
+    n = lambda k: f"{int(fixes.get(k, 0)):,}"
+    fixed = lambda anchor: f'<a href="{SITE}/data_fixes.html#{anchor}">details</a>'
+    code = lambda f, what: f'<a href="{GITHUB}/{f}">{what}</a>'
+    items = member_items(spec) if spec.product.kind in ("item", "category") else []
+    rows = []
+
+    # once, in the warehouse
+    w = code("load_data.py", "load_data.py")
+    rows.append(("Warehouse, once", "Loaded every order line the state published since 2016 into Postgres, typed and keyed.",
+                 f"SQL run by {w} (raw, curate)"))
+    rows.append(("Warehouse, once", f"Removed {n('export_duplicates')} rows the state's export repeats verbatim, and "
+                 f"{n('zero_value_lines')} zero lines (likely cancelled). {fixed('duplicates')}", f"SQL in {w} (clean)"))
+    if spec.product.kind == "item":
+        older = [c for c in items if c not in spec.product.codes]
+        if older:
+            which = ", ".join(older[:4]) + (f" and {len(older) - 4} more" if len(older) > 4 else "")
+            verb = "is an older number" if len(older) == 1 else "are older numbers"
+            rows.append(("Warehouse, once", f"Joined renumbered items: {which} {verb} of this product, so its history is "
+                         f"continuous. {fixed('renumbering')}",
+                         f"Python + SQL in {w} (clean)"))
+    if spec.product.kind == "category" or spec.series_by == "category":
+        rows.append(("Warehouse, once", "Restated every order in today's category taxonomy (codes were reassigned in 2016 "
+                     f"and Cocktails/RTD recoded in 2022). {fixed('categories')}", f"SQL in {w} (clean)"))
+    if unit in ("bottles", "liters") and items:
+        u = db.query("SELECT u.item_no, i.item_desc, u.units_per_sale FROM sales.item_units u JOIN sales.item i "
+                     "USING (item_no) WHERE u.item_no = ANY(%s)", (items,))
+        known, unknown = u[u.units_per_sale.notna()], u[u.units_per_sale.isna()]
+        known = known.drop_duplicates("item_desc")   # a renumbered item and its successor share a description
+        if len(known):
+            eg = "; ".join(f"{r.item_desc.title()}: {int(r.units_per_sale)} per unit" for r in known.head(3).itertuples())
+            rows.append(("Warehouse, once", f"Counted real bottles where the state counts a sleeve or pack of minis as one: "
+                         f"{eg}" + (f" and {len(known) - 3} more" if len(known) > 3 else "") + f". {fixed('units')}",
+                         f"SQL in {w} (clean)"))
+        if len(unknown):
+            rows.append(("Warehouse, once", f"Left {len(unknown)} item(s) priced like packs of unknown size in selling "
+                         f"units, flagged rather than guessed. {fixed('units')}", f"SQL in {w} (clean)"))
+    if unit == "liters":
+        rows.append(("Warehouse, once", f"Recomputed liters as bottles x volume ({n('liters_truncated')} lines from Nov "
+                     f"2025 to Jan 2026 had been rounded down to whole liters). {fixed('liters')}", f"SQL in {w} (clean)"))
+    variants = db.query("SELECT city_recorded, city FROM sales.city_crosswalk WHERE city = ANY(%s)",
+                        (spec.region.codes or [],)) if spec.region.kind == "city" else pd.DataFrame()
+    if len(variants) or spec.series_by == "city":   # only when this forecast's city was spelled more than one way
+        eg = (f"{variants.city_recorded.iloc[0]} counted as {variants.city.iloc[0]}" if len(variants)
+              else "e.g. MT PLEASANT and MOUNT PLEASANT")
+        rows.append(("Warehouse, once", f"Gave each city one spelling ({eg}). {fixed('cities')}",
+                     f"Python + SQL in {w} (clean)"))
+    if "population" in res.get("feature_groups", []):
+        rows.append(("Warehouse, once", "Carried the latest Census population forward to months Census has not published "
+                     f"yet, flagged. {fixed('census')}", f"SQL in {w} (clean)"))
+
+    # for this forecast, in the harness
+    rows.append(("This forecast", f"Summed {unit} per month and store for this product and place (see The SQL as run). "
+                 f"A month with no orders counts as 0; months before the first sale are left blank.",
+                 code("dod/panel.py", "dod/panel.py") + " (SQL + Python)"))
+    targets = {c["target"] for c in res.get("ensemble") or []}
+    scaled = "each series and input scaled to mean 0, spread 1 before fitting, and predictions scaled back"
+    if targets == {"yoy"}:
+        scaled = "the change from last year used as is (it has no units); inputs scaled to mean 0, spread 1"
+    elif "yoy" in targets:
+        scaled += " (a model predicting the change from last year uses that change as is: it has no units)"
+    rows.append(("This forecast", f"Standardized for the models: {scaled}.", code("dod/model.py", "dod/model.py") + " (Python)"))
+    t = pd.DataFrame(rows, columns=["where", "what was done", "done by"])
+    head = "".join(f"<th>{c}</th>" for c in t.columns)
+    body = "".join(f"<tr><td style=\"white-space:nowrap\"><strong>{esc(a)}</strong></td><td>{b}</td><td>{c}</td></tr>"
+                   for a, b, c in t.itertuples(index=False))
+    return (f"<p>Monthly {unit} from {pd.Timestamp(panel.start):%b %Y} through {wide.index[-1]:%b %Y}. How the data was "
+            f"prepared: fixed once in the warehouse, before any forecast, then shaped for this request by the harness. "
+            f"Nothing here is done by the AI.</p><div class=\"tbl\"><table><thead><tr>{head}</tr></thead>"
+            f"<tbody>{body}</tbody></table></div>")
+
+
 def big_buyer_note(stores, unit, n_series):
     """One store with a large share of recent volume, ordering on and off, makes the monthly total hard to predict:
     say so next to the forecast range. Single-series forecasts only (a breakout would need a share per series)."""
@@ -576,10 +656,7 @@ actually happened and with the simplest serious baseline: the same month last ye
 {plot(fig_accuracy(ps))}
 
 <h2>The data</h2>
-<p>Monthly {unit} from {pd.Timestamp(panel.start):%b %Y} through {wide.index[-1]:%b %Y}, read from the clean warehouse: duplicate
-export rows and zero lines removed, renumbered products joined, categories in today's taxonomy, one spelling per city.
-See <a href="https://joehahn.github.io/demand-on-demand/data_fixes.html">what was fixed</a>. A series starts at its
-first sale.</p>
+{prep_section(spec, panel, res, unit, wide)}
 {features_section(spec, panel, res, unit, fc)}
 {stores_section(panel.stores, spec, unit, wide.index[-1], plot)}
 
