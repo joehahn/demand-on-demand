@@ -62,58 +62,43 @@ def grid_words(grid):
                                        "selection error vs baseline"])
 
 
-def describe_config(cfg, unit, own, pooled):
-    """One model configuration in plain words, e.g. 'ridge regression predicting monthly bottles directly ...'."""
-    model = ("Ridge regression" if cfg["model"] == "ridge"
-             else f"LightGBM (gradient-boosted trees, {cfg['num_leaves']} leaves)")
-    target = {"level": f"predicting monthly {unit} directly",
-              "diff": "predicting the change from the previous month",
-              "yoy": "predicting the change from the same month last year"}[cfg["target"]]
-    lags = cfg["lags"]
-    lags = (f"from the last {lags} months" if isinstance(lags, int)
-            else "from the values 1, 2, 3 and 12 months back" if list(lags) == [1, 2, 3, 12]
-            else "from the values " + ", ".join(map(str, lags)) + " months back")
-    history = "all history" if not cfg.get("train_years") else f"the last {cfg['train_years']} years"
-    where = f"{own} plus {pooled}" if cfg.get("pool") else f"{own} only"
-    alpha = f", regularization strength {cfg['alpha']:g}" if cfg["model"] == "ridge" else ""
-    return f"{model} {target} {lags}{alpha}, trained on {where} ({history})"
+def forecast_parts(res):
+    """The forecast as a weighted mix: last year's same month (the baseline) plus each averaged model.
+    Returns (name, weight, settings, selection error) rows, from the harness's own results."""
+    if res["best"]["model"] == "seasonal_naive":
+        return [("same month last year", 1.0, "", 1.0)]
+    ens, w = res["ensemble"], res.get("model_share", 1)
+    errs = res["grid"][res["grid"].model != "seasonal_naive"].rel_mae.tolist()  # same order as the ranking
+    rows = [("same month last year", 1 - w, "", 1.0)] if w < 1 else []
+    for i, c in enumerate(ens):
+        size = f"regularization {c['alpha']:g}" if c["model"] == "ridge" else f"{c['num_leaves']} leaves"
+        settings = "; ".join([PREDICTS[c["target"]], lags_words(c["lags"]), size,
+                              "all years" if not c.get("train_years") else f"last {c['train_years']} years",
+                              "also other counties" if c.get("pool") else "this series only"])
+        rows.append(({"ridge": "ridge regression", "lightgbm": "LightGBM"}[c["model"]], w / len(ens), settings, errs[i]))
+    return rows
 
 
 def model_explanation(res, unit, spec, panel):
-    """Plain-English account of how the final forecast was assembled, all from the harness's own results."""
-    n_grid = len(res["grid"]) - 1
-    uw = res["tune_window"]
-    if res["best"]["model"] == "seasonal_naive":
-        return (f"<p><strong>How this forecast is made.</strong> {n_grid} model configurations were scored on "
-                f"{uw[0]:%b %Y} to {uw[1]:%b %Y}, before the test window. None beat simply repeating the same month "
-                f"last year, so that is the forecast.</p>")
-    ens, w = res["ensemble"], res["model_share"]
-    own = "this series" if panel.series.shape[1] == 1 else f"these {panel.series.shape[1]} series"
-    # companions are the product in its busiest counties, minus any county that is itself a requested series
-    n_comp = 0 if panel.pool is None else panel.pool[0].shape[1]
-    other = spec.series_by == "county" or spec.region.kind == "county"
-    pooled = f"the same product in the {n_comp} busiest {'other ' if other else ''}counties"
-    tuning = res["grid"][res["grid"].model != "seasonal_naive"].rel_mae.tolist()  # same order as the ranking
-    items = "".join(f"<li>{esc(describe_config(c, unit, own, pooled))}. Selection error {tuning[i]:.3f} vs the "
-                    f"baseline.</li>" for i, c in enumerate(ens))
+    """How the forecast is made, in a few sentences and one small table."""
+    uw, tw = res["tune_window"], res["test_window"]
+    parts = forecast_parts(res)
+    t = pd.DataFrame(parts, columns=["part", "weight", "settings", "selection error"])
+    tbl = table(t, {"weight": lambda v: f"{v:.0%}", "selection error": lambda v: f"{v:.2f}"})
+    rel = res["test_rel_mae"]
+    pct = round(abs(1 - rel) * 100)
+    test = (f"{pct}% {'more' if rel < 1 else 'less'} accurate than last year alone" if pct
+            else "about as accurate as last year alone")
+    if len(parts) == 1:
+        return (f"<p><strong>How this forecast is made.</strong> No model beat simply repeating the same month last "
+                f"year in model selection ({uw[0]:%b %Y} to {uw[1]:%b %Y}), so that is the forecast.</p>")
     b = res["blend"]
-    alone = lambda k: b[(b.models_averaged == k) & (b.model_share == 1.0)].tuning_rel_mae.iloc[0]
-    chosen = b[(b.models_averaged == len(ens)) & (b.model_share == w)].tuning_rel_mae.iloc[0]
-    what = ("the average of the top " + str(len(ens)) if len(ens) > 1 else "the single best")
-    if w == 1.0:
-        blend = (f"<p>The models alone scored better than any mix with last year's numbers, so the forecast is "
-                 f"{what} with no blending (selection error {chosen:.3f}).</p>")
-    else:
-        sizes = " or ".join(str(k) for k in sorted(b.models_averaged.unique()))
-        compare = f"{alone(1):.3f} for the best model alone" + (
-            f" and {alone(len(ens)):.3f} for the {len(ens)}-model average alone" if len(ens) > 1 else "")
-        blend = (f"<p>Each month's forecast is then {w:.0%} this model {'average' if len(ens) > 1 else 'forecast'} "
-                 f"plus {1 - w:.0%} of what sold in the same month last year. That mix scored {chosen:.3f} on the "
-                 f"model-selection window, the best of every combination tried ({sizes} models, 0% to 100% model), vs "
-                 f"{compare}. The pieces make different mistakes, so the mix partly cancels them.</p>")
-    return (f"<p><strong>How this forecast is made.</strong> {n_grid} model configurations were scored on "
-            f"{uw[0]:%b %Y} to {uw[1]:%b %Y}, before the test window; a selection error below 1 beats repeating the same "
-            f"month last year. The forecast uses {what}:</p><ol>{items}</ol>{blend}")
+    best_alone = b[(b.models_averaged == 1) & (b.model_share == 1.0)].tuning_rel_mae.iloc[0]
+    chosen = b[(b.models_averaged == len(res["ensemble"])) & (b.model_share == res["model_share"])].tuning_rel_mae.iloc[0]
+    return (f"<p><strong>How this forecast is made.</strong> Each month's forecast is this weighted mix. The weights won "
+            f"model selection ({uw[0]:%b %Y} to {uw[1]:%b %Y}): error {chosen:.2f}, against 1.00 for last year alone and "
+            f"{best_alone:.2f} for the best single model (below 1 beats last year). In the Test period ({tw[0]:%b %Y} "
+            f"to {tw[1]:%b %Y}) the mix was {test}.</p>{tbl}")
 
 
 FEATURE_NAMES = {"calendar": "calendar (month of year, business days, holidays)", "population": "county population"}
@@ -251,16 +236,12 @@ def stores_section(stores, spec, unit, last_month, plot):
 
 
 def short_model(res):
-    """The chosen model in a few words, e.g. 'the average of 2 ridge regressions and 1 LightGBM, blended 50/50
-    with the same month last year'."""
-    if res["best"]["model"] == "seasonal_naive":
+    """The chosen mix in a few words, e.g. '50% same month last year, 33% ridge regression, 17% LightGBM'."""
+    parts = pd.DataFrame(forecast_parts(res), columns=["part", "weight", "settings", "err"])
+    mix = parts.groupby("part", sort=False).weight.sum()
+    if len(mix) == 1:
         return "the same month last year (no model beat it)"
-    names = {"ridge": ("ridge regression", "ridge regressions"), "lightgbm": ("LightGBM", "LightGBMs")}
-    counts = pd.Series([c["model"] for c in res["ensemble"]]).value_counts()
-    parts = [f"{n} {names[m][n > 1]}" for m, n in counts.items()]
-    what = ("the average of " + " and ".join(parts)) if len(res["ensemble"]) > 1 else f"a {names[counts.index[0]][0]}"
-    w = res.get("model_share", 1)
-    return what + (f", blended {w:.0%} with {1 - w:.0%} same month last year" if w < 1 else "")
+    return ", ".join(f"{v:.0%} {k}" for k, v in mix.items() if v > 0)
 
 
 def read_as_html(spec, unit, months, wide, assumptions_html):
@@ -351,19 +332,6 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
                     if (m - pd.DateOffset(years=1)) in wide.index)
     yoy = total / last_year - 1 if last_year else float("nan")
     rel = res["test_rel_mae"]
-    verdict = (f"{(1 - rel):.0%} more accurate than repeating last year" if rel < 0.95 else
-               "about as accurate as repeating last year" if rel <= 1.05 else
-               f"{(rel - 1):.0%} less accurate than repeating last year")
-    best = res["best"]
-    ens = res.get("ensemble") or []
-    if best["model"] == "seasonal_naive":
-        model_name = "seasonal naive (same month last year), since no model beat it in model selection"
-    else:
-        top = f"the average of the top {len(ens)}" if len(ens) > 1 else "the best"
-        share = res.get("model_share", 1)
-        model_name = (f"{top} of {len(res['grid']) - 1} configurations"
-                      + (f", blended {share:.0%} with {1 - share:.0%} same month last year" if share < 1 else "")
-                      + " (explained below)")
     money = "$" if unit == "dollars" else ""
     tiles = [
         (f"{money}{total:,.0f}", f"forecast {unit}, {months}"),
@@ -464,8 +432,6 @@ first sale.</p>
 {stores_section(panel.stores, spec, unit, wide.index[-1], plot)}
 
 <h2>How the model was chosen</h2>
-<p>Model: {esc(model_name)}; {verdict} over a {len(bt.origin.unique())}-origin backtest on {tw[0]:%b %Y} to
-{tw[1]:%b %Y}, months the model never trained on.</p>
 {model_explanation(res, unit, spec, panel)}
 <p>What was compared: every combination of these settings ({space_count} configurations):</p>
 {space_html}
