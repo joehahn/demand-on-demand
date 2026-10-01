@@ -185,6 +185,70 @@ def features_section(spec, panel, res, unit, fc):
 BIG_BUYER_SHARE = 0.25  # name a store on the dashboard when it has more than this share of the last 12 months
 
 
+KIND_WORDS = {"item": "products", "category": "categories", "vendor": "vendors", "city": "cities", "county": "counties",
+              "store": "stores"}
+NAME_COLUMN = {"item": "item_desc", "category": "category_name", "vendor": "vendor_name", "city": "city",
+               "county": "county_name", "store": "store_name"}
+
+
+def text_table(text):
+    """Rows of a tool's fixed-width table (pandas to_string: right-aligned columns), split at the header's column ends,
+    so values with spaces in them stay whole."""
+    lines = [l for l in text.splitlines() if l.strip()]
+    if len(lines) < 2:
+        return []
+    head = lines[0]
+    ends = [i + 1 for i in range(len(head)) if head[i] != " " and (i + 1 == len(head) or head[i + 1] == " ")]
+    names = head.split()
+    if len(ends) != len(names):
+        return []
+    rows = []
+    for l in lines[1:]:
+        if l.lstrip().startswith("("):   # e.g. "(12 more)"
+            continue
+        starts = [0] + ends[:-1]
+        rows.append({n: l[a:b].strip() for n, a, b in zip(names, starts, ends[:-1] + [len(l)])})
+    return rows
+
+
+def agent_step(t):
+    """One tool call as a plain sentence."""
+    try:
+        args = json.loads(t["input"])
+    except (ValueError, TypeError):
+        args = {}
+    out = str(t.get("result", ""))
+    if t.get("error"):
+        return f"Tried {t['tool'].replace('_', ' ')}, which was rejected: {out[:160]}"
+    if t["tool"] == "find_values":
+        kind = args.get("kind", "")
+        rows = text_table(out)
+        def name(r):
+            n = r.get(NAME_COLUMN.get(kind, ""), "").title()
+            if kind == "item" and r.get("ml"):
+                n += f" ({r['ml']} ml)"
+            if kind == "county":
+                n += " County"
+            if kind == "city" and r.get("county_name"):
+                n += f" ({r['county_name'].title()} County, {r.get('stores', '?')} stores)"
+            return n
+        found = [name(r) for r in rows if name(r)]
+        shown = ", ".join(found[:3]) + (f" and {len(found) - 3} more" if len(found) > 3 else "")
+        return f"Searched {KIND_WORDS.get(kind, kind)} for \u201c{args.get('text', '')}\u201d: found {shown or 'nothing'}."
+    if t["tool"] == "preview_spec":
+        detail = next((l.split("): ", 1)[-1] for l in out.splitlines() if l.startswith("- ")), "")
+        first = out.splitlines()[0] if out else ""
+        n = first.split(";", 1)[1].strip().rstrip(".") if ";" in first else ""
+        return f"Previewed the request, without models: {n}{'; ' + detail if detail else ''}."
+    if t["tool"] == "run_select":
+        return f"Ran a read-only query: {args.get('sql', '')[:120]}"
+    if t["tool"] == "ask_user":
+        return f"Asked: \u201c{args.get('question', '')}\u201d Answer: \u201c{out}\u201d"
+    if t["tool"] == "submit_spec":
+        return "Submitted the request; the harness checked and accepted it."
+    return f"{t['tool']}: {out[:120]}"
+
+
 def big_buyer_note(stores, unit, n_series):
     """One store with a large share of recent volume, ordering on and off, makes the monthly total hard to predict:
     say so next to the forecast range. Single-series forecasts only (a breakout would need a share per series)."""
@@ -425,9 +489,11 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
                     + (f'<p class="headline">{esc(agent["summary"])}</p>' if agent.get("summary") else ""))
         tr = pd.DataFrame(agent.get("trace", []))
         if not tr.empty:
-            trace_html = ("<h2>What the agent did</h2><p>Every tool call, in order. All tools are read-only; the only "
-                          "way the agent affects the result is the spec it submits, which the harness validates.</p>"
-                          + table(tr[["turn", "tool", "input", "result"]]))
+            steps = "".join(f"<li>{esc(agent_step(t))}</li>" for t in agent.get("trace", []))
+            trace_html = ("<h2>What the agent did</h2><p>How Claude turned the request into the spec above. Its tools only "
+                          "look things up; it never writes the SQL or the models, and the harness checks the spec it "
+                          f"submits.</p><ol>{steps}</ol><details><summary>The raw tool calls</summary>"
+                          + table(tr[["turn", "tool", "input", "result"]]) + "</details>")
 
     body = f"""
 <h1>{esc(spec.title)}</h1>
