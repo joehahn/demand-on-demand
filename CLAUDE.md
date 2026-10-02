@@ -108,7 +108,7 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    seasonal naive as a candidate, rolling-origin test) -> dashboard. `python -m dod.run specs/<name>.json`
 4. Agent `python -m dod.agent "<request>" [--spec-only]`: find_values, run_select, preview_spec, ask_user, submit_spec
 5. Evals (done): `python evals/run_evals.py` 42/42 correct (21 cases, 2026-09-30), $0.016 and ~20 s per request, 4 tool calls;
-   `python evals/grounding.py` 8/8 summaries grounded.
+   `python evals/grounding.py` 60/60 summaries grounded (2026-10-01; summary = one AI sentence + one code sentence).
 6. Accuracy and speed (done): parallel fits (LightGBM n_jobs=1), products resolved to item lists (indexed),
    pooling with 15 companion counties as a grid option, single-best or top-3 average blended with seasonal
    naive (chosen on the tuning window). ~15-20 s per forecast; end to end from plain English ~40 s (median of the examples, 2026-09-30).
