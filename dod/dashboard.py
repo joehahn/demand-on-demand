@@ -460,7 +460,8 @@ def toolbox_html(usage):
     return (f"<p><strong>The agent's toolbox.</strong> One AI agent ({esc(model_label(usage))}) with {len(TOOLS)} tools: {tools}. "
             f"Guardrails: its database login can only read the clean tables (60-second limit, read-only), and any SQL it "
             f"writes is checked to be a single SELECT before it runs; that SQL only answers its questions, never feeds "
-            f"the forecast. Read its <a href=\"{REPO}/blob/main/dod/agent.py\">instructions</a> and "
+            f"the forecast. Unlike text-to-SQL (NL2SQL), the agent never writes the query that feeds the forecast: it "
+            f"fills in a structured request, and fixed code turns that into SQL. Read its <a href=\"{REPO}/blob/main/dod/agent.py\">instructions</a> and "
             f"<a href=\"{REPO}/blob/main/dod/tools.py\">tool definitions</a>.</p>")
 
 
