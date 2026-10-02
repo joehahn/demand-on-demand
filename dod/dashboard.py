@@ -451,18 +451,13 @@ def summary_note(usage):
 
 
 def toolbox_html(usage):
-    """What the agent can and cannot do, and where its instructions live."""
+    """What the agent does, in two sentences, with links to its instructions and tools."""
     from .tools import TOOLS
-    words = {"find_values": "search product, place and vendor names", "run_select": "run one SELECT query",
-             "preview_spec": "preview a request without training", "ask_user": "ask one clarifying question",
-             "submit_spec": "submit the request"}
-    tools = "; ".join(f"<code>{t['name']}</code> ({words.get(t['name'], '')})" for t in TOOLS)
-    return (f"<p><strong>The agent's toolbox.</strong> One AI agent ({esc(model_label(usage))}) with {len(TOOLS)} tools: {tools}. "
-            f"Guardrails: its database login can only read the clean tables (60-second limit, read-only), and any SQL it "
-            f"writes is checked to be a single SELECT before it runs; that SQL only answers its questions, never feeds "
-            f"the forecast. Unlike text-to-SQL (NL2SQL), the agent never writes the query that feeds the forecast: it "
-            f"fills in a structured request (slot filling), and fixed code turns that into SQL. Read its <a href=\"{REPO}/blob/main/dod/agent.py\">instructions</a> and "
-            f"<a href=\"{REPO}/blob/main/dod/tools.py\">tool definitions</a>.</p>")
+    return (f"<p><strong>The agent's toolbox.</strong> The AI agent ({esc(model_label(usage))}) does slot filling: it fills "
+            f"in a short request form (product, place, measure, months) using {len(TOOLS)} read-only lookup tools, and "
+            f"fixed code turns that form into SQL. Unlike text-to-SQL, it never writes the query that feeds the forecast "
+            f"(<a href=\"{REPO}/blob/main/dod/agent.py\">instructions</a>, "
+            f"<a href=\"{REPO}/blob/main/dod/tools.py\">tools</a>).</p>")
 
 
 def reliability_html():
