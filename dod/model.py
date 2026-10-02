@@ -8,6 +8,7 @@ helps is decided by the grid search, like every other choice.
     |<------------- tuning window ------------->|<------ test window (last 24 months) ------>|
       grid search validates on its last 24 months   rolling-origin backtest, refit at each origin
 """
+import contextlib
 import itertools
 import os
 import time
@@ -38,6 +39,38 @@ FAMILY = {
     "lightgbm": {"num_leaves": [7, 15]},
     "ridge": {"alpha": [1.0, 10.0]},
 }
+
+
+# Time grain. Everything above is for months, the default; use_grain switches the harness to weeks or quarters for
+# the on-the-fly path (dod/onthefly.py). SEASON is the number of periods in a year: the baseline is the same period
+# SEASON periods back, lags reach back one season, and the selection and test windows are two seasons long.
+GRAIN, SEASON, FREQ, ORIGIN_STRIDE = "month", 12, "MS", 1
+GRAINS = {"month": dict(season=12, freq="MS", stride=1),
+          "quarter": dict(season=4, freq="QS", stride=1),
+          "week": dict(season=52, freq="W-MON", stride=4)}   # weekly: refit every 4 weeks, or backtests take minutes
+
+
+@contextlib.contextmanager
+def use_grain(name):
+    """Run the harness at another grain inside a with-block; the monthly defaults come back afterward."""
+    global GRAIN, SEASON, FREQ, ORIGIN_STRIDE, TEST_MONTHS, TUNE_MONTHS, MIN_TRAIN, MIN_SERIES, COMMON
+    saved = (GRAIN, SEASON, FREQ, ORIGIN_STRIDE, TEST_MONTHS, TUNE_MONTHS, MIN_TRAIN, MIN_SERIES, COMMON)
+    g = GRAINS[name]
+    GRAIN, SEASON, FREQ, ORIGIN_STRIDE = name, g["season"], g["freq"], g["stride"]
+    TEST_MONTHS = TUNE_MONTHS = MIN_SERIES = 2 * SEASON
+    MIN_TRAIN = 3 * SEASON
+    COMMON = {**COMMON, "lags": [SEASON, [1, 2, 3, SEASON]]}
+    try:
+        yield
+    finally:
+        GRAIN, SEASON, FREQ, ORIGIN_STRIDE, TEST_MONTHS, TUNE_MONTHS, MIN_TRAIN, MIN_SERIES, COMMON = saved
+
+
+def in_grain(grain, fn, *args):
+    """Run fn at a grain. Parallel jobs run in fresh worker processes, which start at the monthly defaults, so each
+    job is told the grain explicitly."""
+    with use_grain(grain):
+        return fn(*args)
 
 
 class TooLittleData(ValueError):
@@ -74,7 +107,7 @@ def _train_dict(wide, end, years=None):
     for c in wide:
         s = wide.loc[(wide.index < end) & (wide.index >= first), c].dropna()
         if len(s) >= MIN_SERIES:
-            out[c] = s.asfreq("MS")
+            out[c] = s.asfreq(FREQ)
     return out
 
 
@@ -82,9 +115,9 @@ def fit_predict(cfg, wide, exog, end, steps, features, pool=None):
     """Fit on everything before `end` (plus companion series if the config pools), forecast the requested
     series `steps` months from `end`. `pool` is (companion DataFrame, companion exog dict)."""
     if cfg["model"] == "seasonal_naive":
-        # horizon <= 12, so "same month last year" is always a month before `end`
+        # horizon <= SEASON, so "same period last year" is always a period before `end`
         rows = [{"month": m, "series": c, "pred": seasonal_naive(wide, m, c)}
-                for c in wide for m in pd.date_range(end, periods=steps, freq="MS")]
+                for c in wide for m in pd.date_range(end, periods=steps, freq=FREQ)]
         pred = pd.DataFrame(rows)
         pred["step"] = pred.groupby("series").cumcount() + 1
         return pred
@@ -97,7 +130,7 @@ def fit_predict(cfg, wide, exog, end, steps, features, pool=None):
     targets = [c for c in wide if c in train]
     if not targets:
         return pd.DataFrame()
-    future = pd.date_range(end, periods=steps, freq="MS")
+    future = pd.date_range(end, periods=steps, freq=FREQ)
     if cfg["target"] == "yoy" and features:  # a change target gets change features: vs the same month last year
         features = [f for f in features if f != "month_of_year"]  # seasonality is already differenced out
         exog = {c: yoy_exog(exog[c][features]) for c in train}
@@ -118,20 +151,20 @@ def fit_predict(cfg, wide, exog, end, steps, features, pool=None):
 
 def yoy_exog(ex):
     """Features as changes from the same month last year (month_of_year stays as is)."""
-    out = ex - ex.shift(12)
+    out = ex - ex.shift(SEASON)
     if "population" in ex:
-        out["population"] = np.log(ex.population) - np.log(ex.population.shift(12))
+        out["population"] = np.log(ex.population) - np.log(ex.population.shift(SEASON))
     return out
 
 
 def yoy(wide):
     """Log change from the same month last year."""
-    return np.log1p(wide.clip(lower=0)) - np.log1p(wide.clip(lower=0)).shift(12)
+    return np.log1p(wide.clip(lower=0)) - np.log1p(wide.clip(lower=0)).shift(SEASON)
 
 
 def seasonal_naive(wide, month, series):
-    """Same month last year: the baseline every model must beat."""
-    prev = month - pd.DateOffset(years=1)
+    """Same period last year (same month, week or quarter): the baseline every model must beat."""
+    prev = month - SEASON * pd.tseries.frequencies.to_offset(FREQ)
     return wide.at[prev, series] if prev in wide.index else np.nan
 
 
@@ -144,7 +177,8 @@ def score(bt):
 
 def backtest(cfg, wide, exog, origins, steps, features, pool=None, n_jobs=1):
     """Forecast from each origin and record it next to what actually happened and the seasonal-naive baseline."""
-    preds = Parallel(n_jobs=n_jobs)(delayed(fit_predict)(cfg, wide, exog, o, steps, features, pool) for o in origins) \
+    preds = Parallel(n_jobs=n_jobs)(delayed(in_grain)(GRAIN, fit_predict, cfg, wide, exog, o, steps, features, pool)
+                                    for o in origins) \
         if n_jobs != 1 else [fit_predict(cfg, wide, exog, o, steps, features, pool) for o in origins]
     rows = []
     for origin, pred in zip(origins, preds):
@@ -158,13 +192,13 @@ def backtest(cfg, wide, exog, origins, steps, features, pool=None, n_jobs=1):
 
 def windows(wide, steps):
     n = len(wide)
-    test = TEST_MONTHS if n >= MIN_TRAIN + TUNE_MONTHS + TEST_MONTHS else 12
+    test = TEST_MONTHS if n >= MIN_TRAIN + TUNE_MONTHS + TEST_MONTHS else SEASON
     if n < MIN_TRAIN + TUNE_MONTHS + test:
         raise TooLittleData(f"Only {n} months of history; need at least {MIN_TRAIN + TUNE_MONTHS + test} "
                             "to tune and backtest honestly.")
     idx = wide.index
-    test_origins = list(idx[n - test: n - steps + 1])          # every month whose full horizon is observed
-    tune_origins = list(idx[n - test - TUNE_MONTHS: n - test - steps + 1])  # every month before the test window
+    test_origins = list(idx[n - test: n - steps + 1])[::ORIGIN_STRIDE]   # every period whose full horizon is observed
+    tune_origins = list(idx[n - test - TUNE_MONTHS: n - test - steps + 1])[::ORIGIN_STRIDE]  # before the test window
     return tune_origins, test_origins
 
 
@@ -213,7 +247,8 @@ def run(wide, exog, future_index, steps, feature_groups, log=print, pool=None):
 
     # 1. grid search on the tuning window only, configurations in parallel
     cands = configs((False, True) if pool is not None and len(pool[0].columns) else (False,))
-    scores = Parallel(n_jobs=N_JOBS)(delayed(_grid_score)(cfg, wide, exog, tune_origins, steps, features, pool)
+    scores = Parallel(n_jobs=N_JOBS)(delayed(in_grain)(GRAIN, _grid_score, cfg, wide, exog, tune_origins, steps,
+                                                       features, pool)
                                      for cfg in cands)
     grid = [{**{k: str(v) for k, v in cfg.items()}, "rel_mae": sc, "_cfg": cfg} for cfg, sc in zip(cands, scores)]
     grid.append({"model": "seasonal_naive", "rel_mae": 1.0, "_cfg": {"model": "seasonal_naive"}})

@@ -95,6 +95,9 @@ the agent evals: `python demo.py --check`.
   path month by month (`evals/differential.py`): 11 of 18 matched with the data dictionary alone, 17 of 18 with three
   explicit rules (`--rules`). The wrong queries ran fine but were off in older history; the test also found (and we
   fixed) a bug in the slot-filling path.
+- [Forecasts by week, quarter or year](https://joehahn.github.io/demand-on-demand/onthefly.html) (prototype,
+  `dod/onthefly.py`): the AI writes SQL for daily totals and names the grain; fixed code buckets, models (grain-aware
+  harness, `model.use_grain`) and cross-checks the AI's data against the slot-filling path summed by month.
 
 ## Run it yourself
 

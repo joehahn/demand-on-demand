@@ -149,6 +149,9 @@ to forecast). Every number in the dashboard summaries is checked against the har
 itself (NL2SQL), and the two monthly histories compared month by month: 11 of 18 matched with the data dictionary
 alone, 17 of 18 once three short rules were added to the AI's instructions. The wrong queries ran fine and matched the
 last 12 months; the errors hid in older history. <a href="differential.html">The test and what it found</a>.</p>
+<p><strong>Beyond monthly.</strong> A prototype lets the AI write the SQL so it can forecast by week, quarter or year, or
+for groups of stores the form cannot describe, while fixed code still does the bucketing, model selection, backtest and
+a cross-check of the AI's data against the tested path. <a href="onthefly.html">Weekly, quarterly and yearly examples</a>.</p>
 
 <h2>Built with</h2>
 <p>Claude Code (building), the Claude API with Claude Sonnet 5 (the agent at runtime), Postgres, skforecast,

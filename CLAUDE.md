@@ -130,3 +130,9 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    a "N products match" note in find_values. After the fix: 11/18 identical, 7 AI-written queries wrong (renumbered
    items, recorded category codes, brand-prefix matches), all on the AI side; evals 42/42. With three explicit rules
    (dod/nl2sql.RULES, `differential.py --rules`): 17/18 (the miss: a brand matched as one phrase).
+10. On-the-fly forecasts by week / month / quarter / year (2026-10-02, prototype): `dod/onthefly.py` (AI writes SQL for
+   DAILY totals + grain + horizon + an optional request-form fill; fixed code buckets, runs model.run under
+   `model.use_grain(...)` (season 52/12/4, windows 2 seasons, weekly refit every 4 weeks; parallel jobs get the grain via
+   `model.in_grain`), and cross-checks daily-summed-by-month vs the slot-filling series). Monthly path verified identical.
+   `python evals/onthefly_report.py` -> docs/onthefly.html: 4 of 5 cross-checks passed; the Hy-Vee group one failed
+   because the store search showed 40 of 207 stores (store search now says "N stores match").

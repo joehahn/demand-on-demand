@@ -83,6 +83,10 @@ def find_values(kind, text):
         return "Error: kind must be one of item, category, vendor, city, county, store, and text must contain a word."
     match, params = name_match(FIND_COLUMN[kind], text)
     out = as_text(db.query(FIND_SQL[kind].format(match=match), params))
+    if kind == "store":   # the list is capped at 40: say so, so a partial list is never mistaken for all of them
+        n = db.query(f"SELECT count(*) AS n FROM sales.store WHERE {match}", params).n[0]
+        if n > 40:
+            out += f"\n({n} stores match; the 40 most recent are shown.)"
     if kind == "item":   # the list is capped at 60: say so, and how to include every match
         n = db.query(f"SELECT count(DISTINCT i.family_item_no) AS n FROM sales.item i JOIN sales.item h "
                      f"ON h.item_no = i.family_item_no WHERE {match}", params).n[0]
