@@ -371,12 +371,10 @@ def prep_section(spec, panel, res, unit, wide):
 
     # for this forecast, in the harness
     panel_py = code("dod/panel.py", "dod/panel.py")
-    rows.append(("This forecast", f"Checked that the warehouse has orders in every month from {pd.Timestamp(panel.start):%b %Y} "
-                 f"to {wide.index[-1]:%b %Y}, so a month with none here is a real zero, not missing data; used complete "
-                 f"months only (a partly loaded latest month is left out).", panel_py + " (SQL)"))
-    rows.append(("This forecast", f"Summed {unit} per month and store for this product and place (see The SQL as run). "
-                 f"A month with no orders counts as 0; months before the first sale are left blank.",
-                 panel_py + " (SQL + Python)"))
+    rows.append(("This forecast", f"Summed {unit} per month for this product and place, complete months only (see The "
+                 f"SQL as run). A month with no orders counts as 0, since the warehouse was checked to have orders in every "
+                 f"month from {pd.Timestamp(panel.start):%b %Y} to {wide.index[-1]:%b %Y}, so it is a real zero, not missing "
+                 f"data. Months before the first sale are left blank.", panel_py + " (SQL + Python)"))
     if any(c.get("pool") for c in res.get("ensemble") or []) and panel.pool is not None:
         rows.append(("This forecast", f"Also summed the same product per month in the {panel.pool[0].shape[1]} busiest "
                      "counties, for the pooled model to learn from (it still forecasts only this place).",
