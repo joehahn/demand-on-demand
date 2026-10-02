@@ -491,14 +491,18 @@ def prep_section(spec, panel, res, unit, wide, ai=None):
     elif "yoy" in targets:
         scaled += " (a model predicting the change from last year uses that change as is: it has no units)"
     rows.append(("This forecast", f"Standardized for the models: {scaled}.", code("dod/model.py", "dod/model.py") + " (Python)"))
-    t = pd.DataFrame(rows, columns=["where", "what was done", "done by"])
-    head = "".join(f"<th>{c}</th>" for c in t.columns)
-    body = "".join(f"<tr><td style=\"white-space:nowrap\"><strong>{esc(a)}</strong></td><td>{b}</td><td>{c}</td></tr>"
-                   for a, b, c in t.itertuples(index=False))
+    # two parts, before and after the request, each under its own heading row
+    head = "<th>what was done</th><th>done by</th>"
+    part = lambda text: (f'<tr><td colspan="2" style="padding-top:14px;font-size:12px;font-weight:600;'
+                         f'text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">{text}</td></tr>')
+    sections = [("Warehouse, once", "Before any request: building the warehouse (once, with load_data.py)"),
+                ("This forecast", "After the request: shaping the data for this forecast")]
+    body = "".join(part(title) + "".join(f"<tr><td>{b}</td><td>{c}</td></tr>" for a, b, c in rows if a == key)
+                   for key, title in sections)
     return (f"<p>{W['adj'].capitalize()} {unit} from {when(panel.start)} through {when(wide.index[-1])}. How the data was "
             f"prepared: fixed once in the warehouse, before any forecast, then shaped for this request by the harness. "
-            + (f"On this prototype path the AI wrote the query for the daily history (the first \u201cThis forecast\u201d "
-               f"step); every other step is fixed code that runs the same way for every request. " if ai else
+            + (f"On this prototype path the AI wrote the query for the daily history (the first step after the "
+               f"request); every other step is fixed code that runs the same way for every request. " if ai else
                f"The AI agent takes no part in these steps: they are fixed code that runs the same way for every request. ")
             + f"The code itself was written in advance with Claude Code, with a person reviewing and approving every data fix.</p><div class=\"tbl\"><table><thead><tr>{head}</tr></thead>"
             f"<tbody>{body}</tbody></table></div>")
