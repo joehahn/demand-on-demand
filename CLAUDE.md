@@ -141,3 +141,8 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    (AI wrote the SQL; cross-check; tables read by its query). onthefly.forecast writes out/<slug>/dashboard.html when the
    AI filled in the request form. Example: docs/examples/cream_liqueur_by_week_next_12_weeks.html. Monthly pages verified
    identical in numbers; fixed a stray "and 23 more" (variable clash) on the published cream liqueur page.
+12. Inputs (2026-10-02): weekly forecasts are offered season, holiday weeks and active stores (`dod/features.py`;
+   benchmark/features.md: weekly median 0.857 -> 0.826, 29/30). Each group is kept if it helps at all on the
+   model-selection window; a 2% or 5% keep margin was worse (benchmark/margin.md: median 0.849 / 0.854). Dashboards
+   show "Which inputs helped" (model.run "effects": error without each group vs with it, selection window and Test
+   period, the Test side scored like the final blend).

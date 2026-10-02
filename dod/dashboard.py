@@ -165,8 +165,9 @@ def model_explanation(res, unit, spec, panel):
             f"to {when(tw[1])}) the mix was {test}.</p>{tbl}")
 
 
-FEATURE_NAMES = {"calendar": "calendar (month of year, business days, holidays)", "population": "county population"}
-FEATURE_COLUMNS = {"calendar": ["month_of_year", "business_days", "holidays"], "population": ["population"]}
+FEATURE_NAMES = {"calendar": "calendar (month of year, business days, holidays)", "population": "county population",
+                 "season": "time of year (season)", "holiday_weeks": "holiday weeks", "stores": "active stores"}
+FEATURE_COLUMNS = model.FEATURE_GROUPS
 
 
 def features_section(spec, panel, res, unit, fc):
@@ -204,7 +205,7 @@ def features_section(spec, panel, res, unit, fc):
     t = t.rename_axis(label_col).reset_index()
     money = "$" if unit == "dollars" else ""
     num = lambda v: v if isinstance(v, str) else f"{money}{v:,.0f}"
-    plain = lambda v: f"{v:,.0f}"
+    plain = lambda v: f"{v:,.0f}" if abs(v) >= 10 or float(v).is_integer() else f"{v:.2f}"   # season is -1 to 1
     measured = [f"{unit} (target)"] + [c for c in t.columns if c.endswith(" back")]  # in the forecast's unit
     fmt = {c: num if c in measured else plain for c in t.columns if c not in (label_col, yoy_col)}
     fmt[yoy_col] = lambda v: f"{v:+.0%}"
@@ -481,6 +482,15 @@ def prep_section(spec, panel, res, unit, wide, ai=None):
         rows.append(("This forecast", f"Also summed the same product per month in the {panel.pool[0].shape[1]} busiest "
                      "counties, for the pooled model to learn from (it still forecasts only this place).",
                      panel_py + " (SQL + Python)"))
+    kept = res.get("feature_groups", [])
+    built = {"season": "time of year (the sine and cosine of the date, a smooth yearly cycle)",
+             "holiday_weeks": "holiday weeks (Thanksgiving, Christmas, New Year's, July 4th)",
+             "stores": "active stores (stores that ordered the product in the 12 months before each period, carried "
+                       "forward unchanged into the forecast)"}
+    if any(g in kept for g in built):
+        rows.append(("This forecast", "Built inputs for every " + W["unit"] + ", including the ones ahead: "
+                     + "; ".join(built[g] for g in built if g in kept) + ".",
+                     f'<a href="{GITHUB}/dod/features.py">dod/features.py</a> (Python)'))
     if "calendar" in res.get("feature_groups", []):
         rows.append(("This forecast", "Built calendar inputs for every month, including the months ahead: month of year, "
                      "business days and federal holidays, from the warehouse's calendar table.", panel_py + " (Python)"))
@@ -725,6 +735,40 @@ def fig_accuracy(per_step):
                  height=300, legend=True).update_layout(hovermode="x unified")
 
 
+def fig_inputs(effects):
+    """How much each input group helped: the forecast's error without it, relative to the error with it. One bar for
+    model selection (where the keep-or-drop choice was made) and one for the Test period (checked afterward)."""
+    names = [FEATURE_NAMES.get(g, g).split(" (")[0] + (" (kept)" if k else " (dropped)")
+             for g, k in zip(effects.group, effects.kept)]
+    bars = [go.Bar(y=names, x=effects[col] * 100, name=name, orientation="h", marker_color=color,
+                   hovertemplate="%{x:+.1f}%<extra>" + name + "</extra>")
+            for col, name, color in (("test", "Test period (checked afterward)", ORANGE),
+                                     ("selection", "model selection (decided)", BLUE))]
+    fig = go.Figure(bars).update_layout(barmode="group", hovermode="closest", legend_traceorder="reversed")
+    fig.update_xaxes(ticksuffix="%", zeroline=True, zerolinecolor="rgba(137,135,129,0.8)", zerolinewidth=2,
+                     title="how much worse the forecast is without it (right of 0 = it helps)")
+    if model.KEEP_MARGIN:
+        fig.add_vline(x=model.KEEP_MARGIN * 100, line_dash="dot", line_color="rgba(137,135,129,0.8)",
+                      annotation_text="keep line", annotation_position="top")
+    fig = style(fig, "Which inputs helped", height=140 + 60 * len(effects), legend=True)
+    return fig.update_layout(margin=dict(l=150, r=20, t=50, b=50))
+
+
+def inputs_section(res, plot):
+    """The input groups offered to this forecast, how model selection judged them, and the Test period's verdict."""
+    eff = res.get("effects")
+    if eff is None or not len(eff):
+        return ""
+    margin = (f"by at least {model.KEEP_MARGIN:.0%}" if model.KEEP_MARGIN else "at all")
+    disagree = [FEATURE_NAMES.get(g, g).split(" (")[0] for g, k, t in zip(eff.group, eff.kept, eff.test) if k != (t > 0)]
+    verdict = ("The Test period agreed with every choice." if not disagree else
+               f"The Test period disagreed on: {', '.join(disagree)}. Model selection judges on earlier {units()}, and "
+               f"small differences there can be noise.")
+    return (f"<p>Besides its own past sales, the model was offered these inputs. Each was kept only if the forecast "
+            f"was worse without it {margin} in model selection (blue). The orange bars show, after the fact, the same "
+            f"comparison in the Test period, which no choice ever saw. {verdict}</p>{plot(fig_inputs(eff))}")
+
+
 def build(spec, panel, res, usage=None, agent=None, harness_seconds=None, ai=None):
     """The dashboard. ai is set for the on-the-fly path (dod/onthefly.py): the AI's SQL, form fill and cross-check."""
     set_grain(spec.grain)
@@ -866,9 +910,8 @@ actually happened and with the simplest serious baseline: the {base()}.</p>
 on the same {units()}; the test window was not used for any choice.</p>
 {table(grid)}</details>
 {blend_details(res)}
-<details><summary>Feature choice, checked afterward</summary><p>Whether to add calendar or population inputs was
-decided in model selection. For the record, here is how each choice would have scored in the Test period, which no
-choice ever saw; the Test period can disagree with the selection.</p>
+{inputs_section(res, plot)}
+<details><summary>The input choices as numbers</summary><p>Error vs last year in the Test period with each input choice, scored like the final forecast (same models, same blend with last year).</p>
 {table(abl)}</details>
 
 {trace_html}

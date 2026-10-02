@@ -35,7 +35,8 @@ class Spec(BaseModel):
     region: Region
     series_by: Literal["none", "county", "city", "item", "category"] = "none"
     start: str = "2016-01-01"
-    features: list[Literal["calendar", "population"]] = Field(default_factory=lambda: ["calendar", "population"])
+    features: list[Literal["calendar", "population", "season", "holiday_weeks", "stores"]] = Field(
+        default_factory=lambda: ["calendar", "population"])
 
     @model_validator(mode="after")
     def horizon_fits_grain(self):

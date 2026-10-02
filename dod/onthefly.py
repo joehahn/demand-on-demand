@@ -20,7 +20,7 @@ import anthropic
 import numpy as np
 import pandas as pd
 
-from . import db, model, panel, tools
+from . import db, features, model, panel, tools
 from .agent import EFFORT, MAX_TURNS, MODEL, add_usage, call_tool, schema_text, short
 from .nl2sql import RULES
 from .spec import Spec
@@ -193,15 +193,30 @@ def forecast(request, log=print, out_root=None):
     wide = bucket(a["rows"], model_grain, end)
     step = pd.tseries.frequencies.to_offset(model.GRAINS[model_grain]["freq"])
     future = pd.date_range(wide.index[-1] + step, periods=steps, freq=step)
-    exog = {c: pd.DataFrame(index=wide.index.append(future)) for c in wide}
+    idx = wide.index.append(future)
+    spec = form_spec(a, model_grain, steps)
+    store_rows = None
+    if spec is not None:   # per-store monthly rows from the tested path: for the stores input, store list and map
+        items = panel.member_items(spec) if spec.product.kind in ("item", "category", "name") else []
+        store_rows = db.query(*panel.build_sql(spec, items))
+    # inputs offered to model selection (dod/features.py): weekly only, as tested (benchmark/feature_experiment.py)
+    groups, extra = [], pd.DataFrame(index=idx)
+    if model_grain == "week":
+        groups = ["season", "holiday_weeks"]
+        extra = features.season(pd.DatetimeIndex(idx, freq="W-MON")).join(features.holiday_weeks(idx))
+        if store_rows is not None and len(store_rows):
+            groups.append("stores")
+            extra = extra.assign(active_stores=features.stores(store_rows[store_rows.value > 0], idx, wide.index[-1]).values)
+    exog = {c: extra.copy() for c in wide}
     with model.use_grain(model_grain):
-        res = model.run(wide, exog, future, steps, [], log=lambda *x: None)
+        res = model.run(wide, exog, future, steps, groups, log=lambda *x: None)
     check = cross_check(a["rows"], a["reference_scope"], last_month)
     out = {**a, "status": "ok", "model_grain": model_grain, "wide": wide, "res": res, "check": check,
            "harness_seconds": round(time.time() - t0, 1)}
-    spec = form_spec(a, model_grain, steps)
     if spec is not None:
-        out["dashboard"] = write_dashboard(spec, a, wide, exog, future, res, check, end, last_month, out_root, t0)
+        spec = spec.model_copy(update={"features": groups})   # the dashboard reports which inputs were tried
+        out["dashboard"] = write_dashboard(spec, a, wide, exog, future, res, check, end, last_month, out_root, t0,
+                                           store_rows)
     return out
 
 
@@ -214,13 +229,14 @@ def form_spec(a, grain, steps):
         return None
 
 
-def write_dashboard(spec, a, wide, exog, future, res, check, end, last_month, out_root, t0):
+def write_dashboard(spec, a, wide, exog, future, res, check, end, last_month, out_root, t0, store_rows=None):
     """A full dashboard, like the monthly ones: same builder, with the AI's SQL, form fill and cross-check."""
     from pathlib import Path
     from . import agent as agent_mod, dashboard, run as run_mod
     items = panel.member_items(spec) if spec.product.kind in ("item", "category", "name") else []
-    sql, params = panel.build_sql(spec, items)
-    stores = panel.store_list(db.query(sql, params), last_month)   # store list and map, from the tested path's query
+    if store_rows is None:
+        store_rows = db.query(*panel.build_sql(spec, items))
+    stores = panel.store_list(store_rows, last_month)   # store list and map, from the tested path's query
     p = panel.Panel(series=wide, exog=exog, future_index=future, sql=a["sql"], data_end=end, start=spec.start,
                     labels={c: f"{spec.product.label}, {spec.region.label}" if c == "total" else c for c in wide},
                     stores=stores, unknown_packs=panel.unknown_packs(spec, items))

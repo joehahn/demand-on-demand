@@ -75,8 +75,8 @@ def in_grain(grain, fn, *args):
 
 
 # Input groups model selection can try, and their columns in the exog frames. A group is kept only if the model does
-# better with it on the model-selection window. "season", "holiday_weeks" and "stores" are candidates under test
-# (benchmark/feature_experiment.py); the harness offers "calendar" and "population".
+# better with it on the model-selection window. Monthly forecasts are offered "calendar" and "population"; weekly ones
+# "season", "holiday_weeks" and "stores" (dod/features.py; adopted after benchmark/feature_experiment.py).
 FEATURE_GROUPS = {"calendar": ["month_of_year", "business_days", "holidays"], "population": ["population"],
                   "season": ["season_sin", "season_cos"],
                   "holiday_weeks": ["thanksgiving_week", "christmas_week", "new_year_week", "july4_week"],
@@ -86,6 +86,11 @@ FEATURE_GROUPS = {"calendar": ["month_of_year", "business_days", "holidays"], "p
 class TooLittleData(ValueError):
     pass
 
+
+# Keep an input group only if the model's error without it is at least this much higher on the model-selection window
+# (benchmark/margin_experiment.py). Tested 2% and 5%: both worse on average (weekly median 0.826 -> 0.849 and 0.854),
+# so any win on that window keeps the group. Kept as a setting for the experiment.
+KEEP_MARGIN = 0.0
 
 ROLLING = False   # under test (benchmark/rolling_experiment.py): also give every model its recent averages
 
@@ -275,14 +280,16 @@ def run(wide, exog, future_index, steps, feature_groups, log=print, pool=None):
     log(f"  grid search: {len(grid) - 1} configs in {time.time() - t0:.0f}s, chose {best['model']}"
         f"{' pooled' if best.get('pool') else ''} (tuning rel MAE {grid.rel_mae.iloc[0]:.3f})")
 
-    # 2. feature selection, also on the tuning window: drop a feature group if the model does better without it
-    chosen_groups = list(feature_groups)
+    # 2. feature selection, also on the tuning window: drop a feature group unless the model is clearly better with it
+    #    (its error without the group must be at least KEEP_MARGIN higher); otherwise the simpler model wins
+    chosen_groups, selection = list(feature_groups), []
     if best["model"] != "seasonal_naive":
         base = score(backtest(best, wide, exog, tune_origins, steps, features, pool, N_JOBS))
         for g in feature_groups:
             trial = [c for c in features if c not in cols[g]]
             trial_score = score(backtest(best, wide, exog, tune_origins, steps, trial, pool, N_JOBS))
-            if trial_score < base:
+            selection.append({"group": g, "with": base, "without": trial_score})
+            if trial_score < base * (1 + KEEP_MARGIN):
                 chosen_groups.remove(g)
                 features, base = trial, trial_score
                 log(f"  dropped feature group '{g}': tuning rel MAE {trial_score:.3f} without it")
@@ -311,15 +318,27 @@ def run(wide, exog, future_index, steps, feature_groups, log=print, pool=None):
     steps_table = per_step(bt)
     log(f"  backtest: {len(test_origins)} origins, test rel MAE {score(bt):.3f}")
 
-    # 5. report only: the test-window score of each feature choice (selection above never saw these months)
+    # 5. report only: each input group's effect in the Test period (selection above never saw these months), scored
+    #    exactly like the final forecast (same models, same blend with last year), so the numbers compare directly
+    def test_score(feats):
+        if top:
+            return score(ensemble_backtest(top, wide, exog, test_origins, steps, feats, pool, weight))
+        return score(backtest(best, wide, exog, test_origins, steps, feats, pool, N_JOBS))
     ablation = [{"features": "chosen: " + (", ".join(chosen_groups) or "none"), "rel_mae": score(bt)}]
-    for g in feature_groups:
+    effects = []
+    for g in (feature_groups if best["model"] != "seasonal_naive" else []):
         if g in chosen_groups:
-            trial, label = [c for c in features if c not in cols[g]], f"without {g}"
+            other = test_score([c for c in features if c not in cols[g]])
+            ablation.append({"features": f"without {g}", "rel_mae": other})
+            with_g, without_g = score(bt), other
         else:
-            trial, label = features + cols[g], f"with {g} added back"
-        ablation.append({"features": label,
-                         "rel_mae": score(backtest(best, wide, exog, test_origins, steps, trial, pool, N_JOBS))})
+            other = test_score(features + cols[g])
+            ablation.append({"features": f"with {g} added back", "rel_mae": other})
+            with_g, without_g = other, score(bt)
+        sel = next(s for s in selection if s["group"] == g)
+        # how much the group helps: the error without it, relative to the error with it (positive = it helps)
+        effects.append({"group": g, "kept": g in chosen_groups,
+                        "selection": sel["without"] / sel["with"] - 1, "test": without_g / with_g - 1})
     ablation.append({"features": "seasonal naive baseline", "rel_mae": 1.0})
 
     # 6. final forecast on all history; intervals from the backtest's relative errors at each step
@@ -341,7 +360,7 @@ def run(wide, exog, future_index, steps, feature_groups, log=print, pool=None):
     fc["hi"] = fc.pred * (1 + fc.step.map(hi))
     log(f"  done in {time.time() - t0:.0f}s")
     return {"best": best, "grid": grid.drop(columns="_cfg"), "backtest": bt, "per_step": steps_table,
-            "test_rel_mae": score(bt), "ablation": pd.DataFrame(ablation), "forecast": fc,
+            "test_rel_mae": score(bt), "ablation": pd.DataFrame(ablation), "effects": pd.DataFrame(effects), "forecast": fc,
             "test_window": (test_origins[0], wide.index[-1]), "features": features, "feature_groups": chosen_groups,
             "skipped": skipped, "unvalidated": unvalidated, "pooled": bool(best.get("pool")),
             "ensemble": top, "model_share": weight, "blend": pd.DataFrame(blend),
