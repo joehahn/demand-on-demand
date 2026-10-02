@@ -724,19 +724,19 @@
   "seconds": 74.5
  },
  {
-  "request": "Cream liqueur bottles statewide by week for the next 12 weeks",
+  "request": "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
   "status": "ok",
-  "title": "Statewide Cream Liqueur Bottle Sales Forecast - Next 12 Weeks",
+  "title": "Weekly forecast of Cream Liqueur bottles sold, statewide Iowa",
   "grain": "week",
   "horizon": 12,
   "model_grain": "week",
-  "sql": "SELECT ordered_on AS day, 'total' AS series, SUM(sales_bottles) AS value\nFROM sales.invoice_line il\nWHERE il.item_no IN (SELECT item_no FROM sales.item WHERE category_current = '1081200')\nAND ordered_on >= '2016-01-01'\nGROUP BY ordered_on\nORDER BY ordered_on",
-  "scope": "{\"target\": \"sales_bottles\", \"product\": {\"kind\": \"category\", \"codes\": [\"1081200\"], \"label\": \"Cream Liqueurs\"}, \"region\": {\"kind\": \"statewide\", \"codes\": [], \"label\": \"Iowa statewide\"}, \"series_by\": \"none\"}",
+  "sql": "SELECT l.ordered_on AS day, 'total' AS series, SUM(l.sales_bottles) AS value\nFROM sales.invoice_line l\nWHERE l.item_no IN (SELECT item_no FROM sales.item WHERE category_current = '1081200')\nAND l.ordered_on >= '2016-01-01'\nGROUP BY l.ordered_on\nORDER BY l.ordered_on",
+  "scope": "{\"target\": \"sales_bottles\", \"product\": {\"kind\": \"category\", \"codes\": [\"1081200\"], \"label\": \"Cream Liqueurs\"}, \"region\": {\"kind\": \"statewide\", \"codes\": [], \"label\": \"Iowa\"}, \"series_by\": \"none\"}",
   "assumptions": [
-   "Cream liqueur category identified as category_current = 1081200 (CREAM LIQUEURS) using today's taxonomy per product",
-   "Statewide scope includes all stores, no regional filter",
-   "Measure is bottles sold (sales_bottles), summed daily then bucketed into weeks",
-   "History starts 2016-01-01 as required"
+   "Cream Liqueur category mapped to category_current code 1081200 (today's taxonomy), capturing all products ever classified as cream liqueurs regardless of historical category code changes.",
+   "All of Iowa means statewide, no regional breakout.",
+   "Measure is bottles sold (sales_bottles), not dollars or liters.",
+   "History starts 2016-01-01 as required."
   ],
   "check": {
    "status": "passed",
@@ -1383,8 +1383,8 @@
     "hi": 17004.83011110051
    }
   ],
-  "cost": 0.0119,
-  "seconds": 23.1
+  "cost": 0.0259,
+  "seconds": 25.6
  },
  {
   "request": "Total Iowa vodka sales dollars for the next year",

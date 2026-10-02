@@ -25,7 +25,7 @@ REPO = "https://github.com/joehahn/demand-on-demand/blob/main"
 REQUESTS = [
     "Weekly forecast of Tito's minis in Des Moines for the next 8 weeks",
     "Quarterly forecast of Fireball revenue in Linn County for the next 2 quarters",
-    "Cream liqueur bottles statewide by week for the next 12 weeks",
+    "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
     "Total Iowa vodka sales dollars for the next year",
     "Weekly bottles of liquor ordered by all Hy-Vee stores in Iowa for the next 8 weeks",
 ]
@@ -90,7 +90,7 @@ NOTES = {
 
 
 # Requests with a full dashboard (built by dod/onthefly.forecast, copied into docs/examples/).
-DASHBOARDS = {"Cream liqueur bottles statewide by week for the next 12 weeks":
+DASHBOARDS = {"show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out":
               "examples/cream_liqueur_by_week_next_12_weeks.html"}
 
 
