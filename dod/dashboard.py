@@ -622,16 +622,16 @@ def stores_section(stores, spec, unit, last_month, plot):
             f"{table(t, {f'{unit}, last 12 months': lambda v: f'{money}{v:,.0f}'})}</details>")
 
 
-def short_model(res):
-    """The chosen mix in a few words, e.g. '50% same month last year, 33% ridge regression, 17% LightGBM'."""
+def short_model(res, joiner=", "):
+    """The chosen mix in a few words, e.g. '50% same month last year + 33% ridge regression + 17% LightGBM'."""
     parts = pd.DataFrame(forecast_parts(res), columns=["part", "weight", "settings", "err"])
     mix = parts.groupby("part", sort=False).weight.sum()
-    if list(mix.index) == ["same month last year"]:
-        return "the same month last year (no model beat it)"
+    if list(mix.index) == [base()]:
+        return f"the {base()} (no model beat it)"
     if len(mix) == 1:  # one algorithm, no blend with last year: "a ridge regression", "the average of 3 ridge regressions"
         n, name = len(parts), mix.index[0]
         return f"a {name}" if n == 1 else f"the average of {n} {name}{'s' if name != 'LightGBM' else ' models'}"
-    return ", ".join(f"{v:.0%} {k}" for k, v in mix.items() if v > 0)
+    return joiner.join(f"{v:.0%} {k}" for k, v in mix.items() if v > 0)
 
 
 def read_as_html(spec, unit, months, wide, assumptions_html):
@@ -787,7 +787,7 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None, ai=Non
                       f"packs of unknown size, so each pack counts {counts}.")
     pooling_tried = "True" in set(res["grid"].get("pool", pd.Series(dtype=str)).astype(str))
     stride = model.GRAINS[W["grain"]]["stride"]
-    refit = f"each {W['unit']}" if stride == 1 else f"every {stride} {units()}"
+    refit = f"every {W['unit']}" if stride == 1 else f"every {stride} {units()}"
     ask_html, trace_html = "", ""
     if agent:
         assumptions = "".join(f"<li>{esc(a)}</li>" for a in agent.get("assumptions", []))
@@ -820,10 +820,12 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None, ai=Non
 {charts}{more}
 <ul class="note">
 <li><strong>Model selection</strong> ({when(uw[0])} to {when(uw[1])}): {len(res["grid"]) - 1} setups compared (ridge
-regression and LightGBM, each with different targets, inputs and history lengths{", with or without other counties" if pooling_tried else ""});
-chosen: {esc(short_model(res))}.</li>
-<li><strong>Test</strong> ({when(tw[0])} to {when(tw[1])}): that model retrained {refit} on earlier {units()} only; dotted
-orange is its forecast 1 to {max(ps.step)} {units()} ahead (pick above the chart).</li>
+regression and LightGBM, each with different targets, inputs and history lengths{", with or without other counties" if pooling_tried else ""}).</li>
+<li><strong>Selected model:</strong> {esc(short_model(res, " + "))}</li>
+<li><strong>Test</strong> ({when(tw[0])} to {when(tw[1])}): a replay of real use. {refit.capitalize()} the model was retrained on
+all {units()} before that point and forecast the next {max(ps.step)}, {bt.origin.nunique()} times in all, each scored
+against what actually sold. Dotted orange is those forecasts, 1 to {max(ps.step)} {units()} ahead (pick above the
+chart).</li>
 <li><strong>Forecast</strong> ({months}): retrained on {when(panel.start)} to {when(wide.index[-1])}, then applied.{units_note}</li>
 <li><strong>Green band (80% range):</strong> inferred by comparing the model's forecasts with actual sales in the Test
 period; it spans the middle 80% of those misses.</li>

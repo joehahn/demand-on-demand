@@ -235,6 +235,9 @@ def write_dashboard(spec, a, wide, exog, future, res, check, end, last_month, ou
     out = Path(out_root or Path(__file__).parent.parent / "out") / spec.slug
     out.mkdir(parents=True, exist_ok=True)
     (out / "dashboard.html").write_text(html)
+    # the numbers the summary sentence was written from, like the monthly path, so evals/grounding.py checks it too
+    (out / "summary.json").write_text(json.dumps({"title": spec.title, "grain": spec.grain, "facts": facts,
+                                                  "agent": {"summary": summary}}, indent=2, default=str))
     return str(out / "dashboard.html")
 
 
