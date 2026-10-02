@@ -1,0 +1,31 @@
+forecast,month_A,month_B,month_kept,week_A,week_B,week_kept
+"All liquor, statewide",0.9685821519412168,0.9612373293448966,"calendar,season,stores",0.9651512038769624,0.9501552316955916,"season,stores"
+"Imported Brandies, Woodbury County, dollars, 3 months",0.8127838529007329,0.8128081760385567,"calendar,population",1.0203876544952761,0.8758296195993662,"holiday_weeks,stores"
+"American Brandies, Marshall County, dollars, 6 months",0.8476975406719979,0.802215091853235,"calendar,population,season,stores",0.7763608278070434,0.7561084912270838,stores
+"Jim Beam Brands, Johnson County, bottles, 12 months",0.8822809027880607,1.0087580387154405,"calendar,stores",0.9584384376345048,0.79577128354533,"season,stores"
+"Southern Comfort Mini 50 ml, Iowa, bottles, 12 months",0.8613634499101233,0.8249282921660448,"calendar,season,stores",0.6985526877269365,0.6187158213704917,season
+"Heaven Hill Brands, Poweshiek County, liters, 12 months",1.1327572730920636,1.0372208080829373,"calendar,population,season,stores",0.8158002820267117,0.8459716439957164,"season,holiday_weeks,stores"
+"Imported Cordials & Liqueur, Iowa, bottles, 12 months",1.428469355777773,1.0674649353680152,"calendar,population,season,stores",0.8604266680138527,0.9079945923014404,"season,holiday_weeks,stores"
+"American Brandies, Iowa, dollars, 12 months",0.4555130277462988,0.3891718326144063,"calendar,population,season",0.8871449588680813,0.8030717286095426,"season,stores"
+"American Flavored Vodka, Fayette County, dollars, 12 months",0.83504395764015,0.8681308999790767,"calendar,stores",0.8542085487301543,0.8403663483920459,stores
+"Brown Forman Corp., Buena Vista County, dollars, 6 months",0.9578675286131446,1.0246680202148983,season,0.8990551081308082,0.8922986145967459,"season,stores"
+"American Vodkas, Iowa, bottles, 12 months",0.7072707926566928,0.716197062415263,"calendar,stores",0.8692854652494896,0.856523989981311,"season,holiday_weeks,stores"
+"Black Velvet 200 ml, Boone County, liters, 6 months",0.9383727259501154,0.9585509489030265,"calendar,season,stores",0.7506575094311592,0.7305889696520007,"season,holiday_weeks,stores"
+"Kinky Blue Mini 50 ml, O'Brien County, liters, 6 months",0.9977054922251208,0.9996755322209044,"calendar,population,season,stores",1.0159710826256958,1.122486060950899,"season,stores"
+"Irish Whiskies, Iowa, bottles, 12 months",1.5445783917954474,1.260471744394874,"population,season",0.9545986060278788,0.9385336506612584,"season,stores"
+"Captain Morgan Original Spiced 1000 ml, Story County, bottles, 12 months",0.9894426307466806,1.1111233696593887,"population,season",0.8933335026585735,0.8852138161885736,"season,stores"
+"Hawkeye Vodka Mini 50 ml, Iowa, liters, 6 months",0.8464519249202286,0.7301584384773673,"calendar,population,season,stores",0.6482931382927085,0.5766827248216236,"season,holiday_weeks,stores"
+"Imported Vodkas, Iowa, liters, 6 months",0.8592652185221916,0.8570860797221318,"calendar,population,season,stores",0.8571575695644102,0.9189435233619475,"holiday_weeks,stores"
+"Brown Forman Corp., Black Hawk County, dollars, 12 months",0.731071056048029,0.77275250996057,"calendar,season",0.8277455858457796,0.8316584439341188,holiday_weeks
+"Flavored Rum, Iowa, liters, 3 months",0.8045078315288781,0.7683098893850615,"calendar,season,stores",0.9618401622278138,0.894688073994686,stores
+"Diageo Americas, Warren County, liters, 6 months",1.0695230987295774,1.0480154217736117,"calendar,season",0.9741397455166463,0.9848244651187821,season
+"Luxco Inc, Lee County, dollars, 6 months",0.8382863946697284,0.7111187297372761,"calendar,population,season",0.7804556185876923,0.7399928329585597,"season,stores"
+"American Schnapps, Iowa, bottles, 3 months",0.5516846869523865,0.6505842216406061,"calendar,season",0.9167750242336358,0.7040794041417732,"season,holiday_weeks,stores"
+"99 Bananas 100 ml, Woodbury County, liters, 12 months",1.4409542859725317,0.8547564200317846,"calendar,population,season,stores",0.806309034086927,0.7525809703486649,"season,holiday_weeks,stores"
+"Smirnoff 80Prf Mini 50 ml, Marion County, bottles, 12 months",0.8123973657869352,0.8158358659404237,"season,stores",0.7856252858399165,0.7993459078205398,"season,stores"
+"Captain Morgan Original Spiced 375 ml, Iowa, bottles, 3 months",0.9454372551537021,0.9749797708009019,"calendar,population,season,stores",0.7333774452964519,0.7553718579639288,stores
+"Proximo, O'Brien County, liters, 6 months",0.8771284338089899,0.9554714323232847,"calendar,population,season,stores",0.7066449665759463,0.7066449665759463,none
+"Luxco Inc, Dickinson County, dollars, 12 months",1.0373759951558073,1.0100968335295184,"calendar,population",0.9970667026178659,0.9403254708035506,"season,holiday_weeks"
+"Jim Beam Apple Mini 50 ml, Iowa, liters, 12 months",1.1434676423733938,0.9897339775443139,calendar,0.7669408977819115,0.8034652569035888,"season,holiday_weeks"
+"Bacardi Usa Inc, Marshall County, dollars, 6 months",0.9487881504324716,0.9159218048393323,"calendar,population,stores",0.8027429370664946,0.8065470876376281,"season,holiday_weeks,stores"
+"Straight Bourbon Whiskies, Iowa, bottles, 6 months",0.8245574452238996,0.8665761155603858,"calendar,population,season,stores",0.8569222589388181,0.8198153734945973,season

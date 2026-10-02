@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from lightgbm import LGBMRegressor
+from skforecast.preprocessing import RollingFeatures
 from skforecast.recursive import ForecasterRecursiveMultiSeries
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
@@ -73,8 +74,20 @@ def in_grain(grain, fn, *args):
         return fn(*args)
 
 
+# Input groups model selection can try, and their columns in the exog frames. A group is kept only if the model does
+# better with it on the model-selection window. "season", "holiday_weeks" and "stores" are candidates under test
+# (benchmark/feature_experiment.py); the harness offers "calendar" and "population".
+FEATURE_GROUPS = {"calendar": ["month_of_year", "business_days", "holidays"], "population": ["population"],
+                  "season": ["season_sin", "season_cos"],
+                  "holiday_weeks": ["thanksgiving_week", "christmas_week", "new_year_week", "july4_week"],
+                  "stores": ["active_stores"]}
+
+
 class TooLittleData(ValueError):
     pass
+
+
+ROLLING = False   # under test (benchmark/rolling_experiment.py): also give every model its recent averages
 
 
 def configs(pool_options=(False,)):
@@ -82,6 +95,8 @@ def configs(pool_options=(False,)):
     for family, grid in FAMILY.items():
         g = {**COMMON, "pool": list(pool_options), **grid}
         out += [{"model": family, **dict(zip(g, vals))} for vals in itertools.product(*g.values())]
+    if ROLLING:   # carried inside each configuration, so parallel workers see it too
+        out = [{**c, "rolling": True} for c in out]
     return out
 
 
@@ -94,7 +109,10 @@ def make_forecaster(cfg):
     else:
         est = LGBMRegressor(n_estimators=300, learning_rate=0.05, num_leaves=cfg["num_leaves"],
                             min_child_samples=5, random_state=0, verbose=-1, n_jobs=1)
-    return ForecasterRecursiveMultiSeries(estimator=est, lags=cfg["lags"], encoding="ordinal",
+    # recent averages (last 4 and 13 periods), computed by the forecaster itself step by step, so a forecast
+    # never sees future values
+    window = RollingFeatures(stats=["mean", "mean"], window_sizes=[4, 13]) if cfg.get("rolling") else None
+    return ForecasterRecursiveMultiSeries(estimator=est, lags=cfg["lags"], encoding="ordinal", window_features=window,
                                           transformer_series=None if yoy_target else StandardScaler(),
                                           transformer_exog=StandardScaler(),
                                           differentiation=1 if cfg["target"] == "diff" else None)
@@ -242,7 +260,7 @@ def _grid_score(cfg, wide, exog, origins, steps, features, pool):
 def run(wide, exog, future_index, steps, feature_groups, log=print, pool=None):
     t0 = time.time()
     tune_origins, test_origins = windows(wide, steps)
-    cols = {"calendar": ["month_of_year", "business_days", "holidays"], "population": ["population"]}
+    cols = FEATURE_GROUPS
     features = [c for g in feature_groups for c in cols[g]]
 
     # 1. grid search on the tuning window only, configurations in parallel
