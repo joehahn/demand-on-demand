@@ -553,19 +553,6 @@ def toolbox_html(usage):
             f"<a href=\"{REPO}/blob/main/dod/tools.py\">tools</a>).</p>")
 
 
-def reliability_html():
-    t = track_record()
-    parts = []
-    if t["n"]:
-        parts.append(f"across {t['n']} sampled forecasts, the harness beat repeating last year on {t['beat']} "
-                     f"(<a href=\"{REPO}/blob/main/benchmark/report.md\">benchmark report</a>)")
-    if t["runs"]:
-        parts.append(f"the agent turned {t['ok']} of {t['runs']} test requests ({t['cases']} requests, run twice each) "
-                     f"into exactly the right request or correctly declined them "
-                     f"(<a href=\"{REPO}/blob/main/evals/report.md\">eval report</a>)")
-    return f"<p><strong>Track record beyond this forecast:</strong> {'; '.join(parts)}.</p>" if parts else ""
-
-
 def exact_html(spec, res, panel, ai=None):
     """Exactly what ran: the request form and the harness's SQL, or for the on-the-fly path the AI's SQL and the form
     it filled in for the cross-check."""
@@ -872,7 +859,6 @@ period; it spans the middle 80% of those misses.</li>
 <p>Every {W['unit']} in the Test period was forecast by a model trained only on earlier {units()}, then compared with what
 actually happened and with the simplest serious baseline: the {base()}.</p>
 {plot(fig_accuracy(ps))}
-{reliability_html()}
 
 <h2>How the data was prepared</h2>
 {prep_section(spec, panel, res, unit, wide, ai)}
