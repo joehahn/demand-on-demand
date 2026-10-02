@@ -86,7 +86,7 @@ th { color:var(--muted); font-weight:600; } td { color:var(--ink2); }
 th.num, td.num { text-align:right; font-variant-numeric:tabular-nums; }
 .note { font-size:13px; color:var(--muted); }
 .asked { font-size:17px; color:var(--ink); font-style:italic; margin:4px 0 6px; }
-.readas { font-size:15px; color:var(--ink); margin:0 0 2px; }
+.readas { font-size:15px; color:var(--ink); margin:0 0 2px; max-width:none; }
 .readas span { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-right:6px; }
 .headline { font-size:16px; color:var(--ink); margin:10px 0 12px; max-width:760px; }
 td { vertical-align:top; word-break:break-word; }
