@@ -322,7 +322,8 @@ def prep_section(spec, panel, res, unit, wide):
     # once, in the warehouse
     w = code("load_data.py", "load_data.py")
     rows.append(("Warehouse, once", "Loaded every order line the state published since 2016 into Postgres: text turned into real dates "
-                 "and numbers, each line given its own id, and stores, products and vendors split into their own linked tables.",
+                 "and numbers, each line given its own id, and each store, product and vendor kept once in its own table (order "
+                 "lines refer to them by number), so a correction made there applies to every line.",
                  f"SQL run by {w} (raw, curate)"))
     rows.append(("Warehouse, once", f"Removed {n('export_duplicates')} rows the state's export repeats verbatim, and "
                  f"{n('zero_value_lines')} zero lines (likely cancelled). {fixed('duplicates')}", f"SQL in {w} (clean)"))
