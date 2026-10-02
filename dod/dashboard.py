@@ -819,8 +819,8 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None, ai=Non
 {skipped_html}
 {charts}{more}
 <ul class="note">
-<li><strong>Model selection</strong> ({when(uw[0])} to {when(uw[1])}): {len(res["grid"]) - 1} setups compared (ridge
-regression and LightGBM, each with different targets, inputs and history lengths{", with or without other counties" if pooling_tried else ""}).</li>
+<li><strong>Model selection</strong> ({when(uw[0])} to {when(uw[1])}): {len(res["grid"]) - 1} distinct configurations of ridge
+regression and LightGBM compared, differing in targets, inputs and history lengths{", with or without other counties" if pooling_tried else ""}.</li>
 <li><strong>Selected model:</strong> {esc(short_model(res, " + "))}</li>
 <li><strong>Test</strong> ({when(tw[0])} to {when(tw[1])}): a replay of real use. {refit.capitalize()} the model was retrained on
 all {units()} before that point and forecast the next {max(ps.step)}, {bt.origin.nunique()} times in all, each scored
