@@ -89,7 +89,9 @@ the agent evals: `python demo.py --check`.
   and on the other 7 it was not beaten. The report lists every forecast, the misses included.
 - [evals/report.md](evals/report.md): 21 test requests, 2 runs each, scored on product, place, measure, horizon and
   breakout, plus requests that should be declined.
-- [evals/grounding.md](evals/grounding.md): every number in the dashboard summaries traced to the harness's results.
+- [evals/grounding.md](evals/grounding.md): each dashboard's summary opens with one sentence written by Claude from the
+  forecast's computed numbers (the accuracy sentence and every other number come from fixed code). This check traces
+  every number in such sentences back to the computed results: 60 of 60 matched.
 - [Slot filling vs AI-written SQL](https://joehahn.github.io/demand-on-demand/differential.html): the same requests given
   to an agent that writes the SQL itself (NL2SQL, `dod/nl2sql.py`), its monthly history compared with the slot-filling
   path month by month (`evals/differential.py`): 11 of 18 matched with the data dictionary alone, 17 of 18 with three

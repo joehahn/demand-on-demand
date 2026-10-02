@@ -4,7 +4,6 @@ import ast
 import html
 import json
 
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -496,29 +495,6 @@ def prep_section(spec, panel, res, unit, wide, ai=None):
 
 
 REPO = "https://github.com/joehahn/demand-on-demand"
-ROOT = Path(__file__).parent.parent
-
-
-def track_record():
-    """The project's measured results, read from the latest reports: (benchmark beat, benchmark n, eval ok, eval runs,
-    eval cases, grounded, summaries). Anything missing is None, and the page leaves that part out."""
-    import glob
-    import re
-    out = dict(beat=None, n=None, ok=None, runs=None, cases=None, grounded=None, summaries=None)
-    try:
-        b = pd.read_csv(ROOT / "benchmark" / "results.csv").dropna(subset=["rel_mae"])
-        out.update(beat=int((b.rel_mae < 1).sum()), n=len(b))
-    except (OSError, ValueError, KeyError):
-        pass
-    full = sorted(glob.glob(str(ROOT / "evals" / "results" / "2*.json")))  # full runs; partial_* are subsets
-    if full:
-        r = json.loads(Path(full[-1]).read_text())
-        out.update(ok=sum(x["passed"] for x in r), runs=len(r), cases=len({x["id"] for x in r}))
-    g = ROOT / "evals" / "grounding.md"
-    m = re.search(r"(\d+) summaries, (\d+) fully grounded", g.read_text()) if g.exists() else None
-    if m:
-        out.update(summaries=int(m.group(1)), grounded=int(m.group(2)))
-    return out
 
 
 def updated_html(panel):
@@ -540,16 +516,6 @@ def model_label(usage):
     """'claude-sonnet-5' -> 'Claude Sonnet 5' for readers; the exact id stays in Exactly what ran."""
     m = (usage or {}).get("model") or "Claude"
     return " ".join(w.capitalize() for w in m.replace("-", " ").split())
-
-
-def summary_note(usage):
-    """Which words on the page come from the AI, and how they are kept honest."""
-    t = track_record()
-    check = (f" In a separate check, every number matched in {t['grounded']} of {t['summaries']} such sentences "
-             f"(<a href=\"{REPO}/blob/main/evals/grounding.md\">grounding report</a>).") if t["summaries"] else ""
-    return (f'<p class="note">The first sentence above is written by AI ({esc(model_label(usage))}) from the forecast\'s '
-            f"computed numbers, and may quote only those; the second sentence, and every other number on this page, come "
-            f"from fixed code.{check}</p>")
 
 
 def toolbox_html(usage):
@@ -826,7 +792,7 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None, ai=Non
     if agent:
         assumptions = "".join(f"<li>{esc(a)}</li>" for a in agent.get("assumptions", []))
         ask_html = (f'<p class="asked">&ldquo;{esc(agent["request"])}&rdquo;</p>' + read_as_html(spec, unit, months, wide, assumptions)
-                    + (f'<p class="headline">{esc(agent["summary"])}</p>' + summary_note(usage) if agent.get("summary") else ""))
+                    + (f'<p class="headline">{esc(agent["summary"])}</p>' if agent.get("summary") else ""))
         tr = pd.DataFrame(agent.get("trace", []))
         if not tr.empty:
             steps = "".join(f"<li>{esc(agent_step(t))}</li>" for t in agent.get("trace", []))
