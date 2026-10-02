@@ -195,18 +195,28 @@ def features_section(spec, panel, res, unit, fc):
     ex = panel.exog[code]
     for col in [c for g in chosen for c in FEATURE_COLUMNS[g] if c in ex.columns]:
         t[col.replace("_", " ")] = [ex[col].get(m) for m in months]
+    # column roles: the row label, the target(s) the models predict, and the inputs they predict from
+    targets_cols = [f"{unit} (target)"] + ([yoy_col] if yoy_col in t.columns else [])
+    input_cols = [c for c in t.columns if c not in targets_cols]
+    t = t[targets_cols + input_cols]
     t.index = [stamp(m) for m in months]
-    t = t.rename_axis(W["unit"]).reset_index()
+    label_col = f"{W['unit']} of"
+    t = t.rename_axis(label_col).reset_index()
     money = "$" if unit == "dollars" else ""
     num = lambda v: v if isinstance(v, str) else f"{money}{v:,.0f}"
     plain = lambda v: f"{v:,.0f}"
     measured = [f"{unit} (target)"] + [c for c in t.columns if c.endswith(" back")]  # in the forecast's unit
-    fmt = {c: num if c in measured else plain for c in t.columns if c not in (W["unit"], yoy_col)}
+    fmt = {c: num if c in measured else plain for c in t.columns if c not in (label_col, yoy_col)}
     fmt[yoy_col] = lambda v: f"{v:+.0%}"
     rows = table(t, fmt)  # the "to forecast" cell makes the target a text column; align it with the numbers
     target = esc(f"{unit} (target)")
     rows = rows.replace(f'<th class="">{target}</th>', f'<th class="num">{target}</th>').replace(
         '<td class="">to forecast</td>', '<td class="num">to forecast</td>')
+    group = lambda text, n, edge: (f'<th colspan="{n}" style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;'
+                                   f'border-bottom:2px solid var(--line);{edge}">{text}</th>')
+    roles = ("<tr>" + group("row label", 1, "") + group("target: what the model predicts", len(targets_cols), "")
+             + group("inputs: what the model predicts from", len(input_cols), "") + "</tr>")
+    rows = rows.replace("<thead><tr>", "<thead>" + roles + "<tr>", 1)
     # name the models that see more lags than the table shows (whichever algorithm that is)
     wider = sorted({{"ridge": "ridge regression", "lightgbm": "LightGBM"}[c["model"]] for c, lags in zip(ens, lag_sets)
                     if len(lags) > len(shown)})
@@ -223,9 +233,9 @@ def features_section(spec, panel, res, unit, fc):
         who = "The model also learns" if len(ens) == 1 else f"{n} of the {len(ens)} averaged models also learn{'s' if n == 1 else ''}"
         notes.append(f"Pooled: {who} from the same table for this product in the {panel.pool[0].shape[1]} busiest counties.")
     label = panel.labels.get(code, code) if panel.series.shape[1] > 1 else ""
-    return (f"<h3>What the model sees</h3><p>One row per {W['unit']}: {unit} sold (what the model predicts) and the same "
-            f"series earlier (what it predicts from){', for ' + esc(label) if label else ''}. The last row is the first "
-            f"{W['unit']} to forecast.</p>{rows}" + (f"<p class=\"note\">{' '.join(esc(n) for n in notes)}</p>" if notes else ""))
+    return (f"<h3>What the model sees</h3><p>One row per {W['unit']}{', for ' + esc(label) if label else ''}. The first "
+            f"column only labels the row; the model learns to predict the target from the inputs. The last row is the "
+            f"first {W['unit']} to forecast.</p>{rows}" + (f"<p class=\"note\">{' '.join(esc(n) for n in notes)}</p>" if notes else ""))
 
 
 BIG_BUYER_SHARE = 0.25  # name a store on the dashboard when it has more than this share of the last 12 months
