@@ -383,7 +383,7 @@ def prep_section(spec, panel, res, unit, wide):
     return (f"<p>Monthly {unit} from {pd.Timestamp(panel.start):%b %Y} through {wide.index[-1]:%b %Y}. How the data was "
             f"prepared: fixed once in the warehouse, before any forecast, then shaped for this request by the harness. "
             f"The AI agent takes no part in these steps: they are fixed code that runs the same way for every request. "
-            f"The code itself was written with Claude Code, with a person reviewing and approving every data fix.</p><div class=\"tbl\"><table><thead><tr>{head}</tr></thead>"
+            f"The code itself was written in advance with Claude Code, with a person reviewing and approving every data fix.</p><div class=\"tbl\"><table><thead><tr>{head}</tr></thead>"
             f"<tbody>{body}</tbody></table></div>")
 
 
