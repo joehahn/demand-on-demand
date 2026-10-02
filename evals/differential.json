@@ -1,0 +1,1203 @@
+[
+ {
+  "id": "titos_polk",
+  "request": "Monthly forecast of Tito's vodka bottles in Polk County for the next 5 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0241,
+  "gen_cost": 0.0119,
+  "ref_seconds": 23.5,
+  "gen_seconds": 29.9,
+  "spec": {
+   "title": "Tito's Vodka, Polk County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38177",
+     "38176",
+     "38194",
+     "38178",
+     "38174",
+     "38179",
+     "38185",
+     "102747"
+    ],
+    "label": "Tito's Handmade Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153"
+    ],
+    "label": "Polk County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nJOIN sales.item i ON i.item_no = il.item_no\nWHERE s.county_fips = '19153'\n  AND i.item_desc LIKE 'TITOS HANDMADE VODKA%'\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Tito's Vodka identified by item description starting with 'TITOS HANDMADE VODKA' (all sizes: 1.75L, 1L, 750ml, 375ml, 200ml, 100ml, 50ml minis), vendor Fifth Generation Distilled Spirits.",
+   "Polk County identified via store county_fips = 19153.",
+   "Measure is total bottles sold (sales_bottles), which accounts for mini-packs correctly.",
+   "History includes all months from 2016-01-01 onward; incomplete latest month will be dropped by downstream processing.",
+   "Forecast horizon is 5 months as requested."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 4326478.0,
+  "gen_total": 4326478.0,
+  "ref_last12": 610906.0,
+  "gen_last12": 610906.0,
+  "match": true
+ },
+ {
+  "id": "titos_minis_by_item",
+  "request": "How many bottles of each Tito's mini item will sell statewide over the next 6 months?",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0118,
+  "gen_cost": 0.0141,
+  "ref_seconds": 11.9,
+  "gen_seconds": 12.1,
+  "spec": {
+   "title": "Tito's mini items, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Mini and Mini 4 Pack"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "select date_trunc('month', il.ordered_on)::date as month,\n       i.item_desc as series,\n       sum(il.sales_bottles) as value\nfrom sales.invoice_line il\njoin sales.item i on i.item_no = il.item_no\nwhere il.item_no in ('38194','38185')\n  and il.ordered_on >= '2016-01-01'\ngroup by 1,2\norder by 1",
+  "assumptions": [
+   "Interpreted 'Tito's mini' items as the two matching products: TITOS HANDMADE VODKA MINI (50ml, item 38194) and TITOS HANDMADE VODKA MINI 4 PACK (50ml, item 38185).",
+   "Each item is forecast as its own series (bottles sold, statewide, all stores/counties combined).",
+   "sales_bottles already accounts for multi-packs (counts each mini bottle), so 4-pack units are converted to individual bottle counts.",
+   "History starts 2016-01-01 as required; incomplete current month will be dropped by downstream processing.",
+   "No renumbering/family consolidation needed since both items have family_item_no equal to their own item_no."
+  ],
+  "message": null,
+  "ref_series": 2,
+  "gen_series": 2,
+  "matched_series": 2,
+  "months": 128,
+  "cells": 256,
+  "bad_cells": 56,
+  "first_bad": "2016-01-01",
+  "ref_total": 3618784.0,
+  "gen_total": 3148348.0,
+  "ref_last12": 843276.0,
+  "gen_last12": 843276.0,
+  "match": false
+ },
+ {
+  "id": "titos_minis_des_moines",
+  "request": "monthly forecast of Tito's minis in Des Moines for the next 5 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0224,
+  "gen_cost": 0.014,
+  "ref_seconds": 10.9,
+  "gen_seconds": 12.2,
+  "spec": {
+   "title": "Tito's minis, Des Moines, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "DES MOINES"
+    ],
+    "label": "Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "select date_trunc('month', il.ordered_on)::date as month,\n       'total' as series,\n       sum(il.sales_bottles) as value\nfrom sales.invoice_line il\njoin sales.store s on s.store_no = il.store_no\nwhere il.item_no in ('38194','38185')\n  and s.city = 'DES MOINES'\n  and il.ordered_on >= '2016-01-01'\ngroup by 1\norder by 1",
+  "assumptions": [
+   "Tito's minis refers to the 50ml mini bottle SKUs (item 38194, single mini) and (item 38185, 4-pack of minis), both from Fifth Generation Distilled Spirits (Tito's).",
+   "Des Moines is the city of Des Moines, Iowa (store city = 'DES MOINES'), excluding West Des Moines.",
+   "Measure is bottles sold (sales_bottles), which already accounts for multi-packs counting each individual mini bottle.",
+   "History includes all months from 2016-01-01 onward; the current partial month will be handled by downstream processing.",
+   "Forecast horizon is 5 months as requested."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 54,
+  "first_bad": "2016-02-01",
+  "ref_total": 486908.0,
+  "gen_total": 419048.0,
+  "ref_last12": 93256.0,
+  "gen_last12": 93256.0,
+  "match": false
+ },
+ {
+  "id": "crown_mount_pleasant",
+  "request": "Monthly liters of Crown Royal in Mount Pleasant for the next 4 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0416,
+  "gen_cost": 0.0277,
+  "ref_seconds": 19.2,
+  "gen_seconds": 117.1,
+  "spec": {
+   "title": "Crown Royal, Mount Pleasant, next 4 months (liters)",
+   "target": "sales_liters",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "10803",
+     "11290",
+     "10807",
+     "11296",
+     "11297",
+     "10805",
+     "10802",
+     "11294",
+     "10808",
+     "10804",
+     "11298",
+     "10785",
+     "11299",
+     "10791",
+     "10788",
+     "10809",
+     "10784",
+     "10777",
+     "10836",
+     "10790",
+     "10776",
+     "100639",
+     "10779",
+     "10789",
+     "10647",
+     "10778",
+     "10775",
+     "1400",
+     "10792",
+     "10834",
+     "56722",
+     "11366",
+     "102286",
+     "10646",
+     "13062",
+     "10793",
+     "10826",
+     "100700",
+     "10828",
+     "102188",
+     "11356",
+     "10818",
+     "10781",
+     "102340",
+     "102814",
+     "558",
+     "11301",
+     "10838",
+     "115",
+     "10797",
+     "101181",
+     "11285",
+     "11287",
+     "11300",
+     "11302",
+     "11363",
+     "11303",
+     "100944",
+     "100501",
+     "102040"
+    ],
+    "label": "Crown Royal (all variants and sizes)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "MOUNT PLEASANT"
+    ],
+    "label": "Mount Pleasant"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_liters) AS value\nFROM sales.invoice_line il\nJOIN sales.item i ON i.item_no = il.item_no\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE i.item_desc ILIKE 'CROWN ROYAL%'\n  AND s.city = 'MOUNT PLEASANT'\n  AND il.ordered_on >= DATE '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Crown Royal is interpreted as all products whose description starts with 'CROWN ROYAL' (all flavors, sizes, and specialty packagings from Diageo Americas).",
+   "Mount Pleasant refers to the single matching city in Iowa (Henry County), covering all 13 stores there.",
+   "Measure is total sales_liters (volume), summed monthly, since liters/volume was requested.",
+   "History starts 2016-01-01 and includes all months through the latest available; incomplete trailing months are handled by downstream processing.",
+   "Forecast horizon is 4 months as requested."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 36,
+  "first_bad": "2016-02-01",
+  "ref_total": 42782.0,
+  "gen_total": 42989.8,
+  "ref_last12": 4763.4,
+  "gen_last12": 4806.95,
+  "match": false
+ },
+ {
+  "id": "tennessee_whiskey",
+  "request": "Forecast Tennessee whiskey bottles across Iowa for the next 3 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0156,
+  "gen_cost": 0.0156,
+  "ref_seconds": 19.8,
+  "gen_seconds": 21.0,
+  "spec": {
+   "title": "Tennessee Whiskies, Iowa statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011400"
+    ],
+    "label": "Tennessee Whiskies"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       sum(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.item i ON i.item_no = il.item_no\nWHERE i.category_current = '1011400'\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Tennessee Whiskey category identified by category code 1011400 (TENNESSEE WHISKIES)",
+   "Category membership determined using each item's current category (category_current) so renumbered items are consistently classified across history",
+   "'Bottles' measure used (sales_bottles), which counts each mini bottle in sleeves/packs where known",
+   "Scope is statewide Iowa (all stores), consistent with Iowa Class E wholesale order data",
+   "History starts 2016-01-01 as required; incomplete current month will be dropped by downstream processing",
+   "Forecast horizon is 3 months as requested"
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 12095720.0,
+  "gen_total": 12095720.0,
+  "ref_last12": 1244052.0,
+  "gen_last12": 1244052.0,
+  "match": true
+ },
+ {
+  "id": "vodka_top_counties",
+  "request": "American vodka sales dollars for each of the five largest counties, next 6 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0229,
+  "gen_cost": 0.0135,
+  "ref_seconds": 24.2,
+  "gen_seconds": 18.4,
+  "spec": {
+   "title": "American Vodka dollars, top 5 counties, next 6 months",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100"
+    ],
+    "label": "American Vodkas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153",
+     "19113",
+     "19163",
+     "19103",
+     "19013"
+    ],
+    "label": "Polk, Linn, Scott, Johnson, Black Hawk counties"
+   },
+   "series_by": "county",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       s.county_name AS series,\n       SUM(il.sales_dollars) AS value\nFROM sales.invoice_line il\nJOIN sales.item i ON il.item_no = i.item_no\nJOIN sales.store s ON il.store_no = s.store_no\nWHERE i.category_current = '1031100'\n  AND s.county_name IN ('POLK','LINN','SCOTT','JOHNSON','BLACK HAWK')\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1, 2\nORDER BY 1, 2",
+  "assumptions": [
+   "American vodka interpreted as the AMERICAN VODKAS category (code 1031100), excluding flavored vodka",
+   "Category assigned using each item's current category_current for consistency across renumbering",
+   "Top 5 counties determined by total historical sales dollars: Polk, Linn, Scott, Johnson, Black Hawk",
+   "Monthly history starts 2016-01-01; incomplete current month will be dropped downstream",
+   "Forecast horizon is 6 months as requested"
+  ],
+  "message": null,
+  "ref_series": 5,
+  "gen_series": 5,
+  "matched_series": 5,
+  "months": 128,
+  "cells": 640,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 314220564.57,
+  "gen_total": 314220564.57,
+  "ref_last12": 31537306.849999998,
+  "gen_last12": 31537306.849999998,
+  "match": true
+ },
+ {
+  "id": "jack_iowa_city",
+  "request": "Forecast Jack Daniel's bottle sales in Iowa City for the next 4 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.031,
+  "gen_cost": 0.0276,
+  "ref_seconds": 24.9,
+  "gen_seconds": 19.8,
+  "spec": {
+   "title": "Jack Daniel's bottle sales, Iowa City, next 4 months",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "26821",
+     "26826",
+     "26827",
+     "86668",
+     "86691",
+     "26828",
+     "26820",
+     "26823",
+     "86670",
+     "26824",
+     "26822",
+     "86692",
+     "86693",
+     "86669",
+     "86672",
+     "74801",
+     "86698",
+     "74782",
+     "26906",
+     "76010",
+     "86673",
+     "86694",
+     "25962",
+     "74805",
+     "74804",
+     "470",
+     "27181",
+     "16222",
+     "26729",
+     "74802",
+     "76009",
+     "926885",
+     "498",
+     "16620",
+     "159",
+     "76011",
+     "101299",
+     "100148",
+     "502",
+     "308",
+     "900407",
+     "100744",
+     "472",
+     "693",
+     "25915",
+     "74807",
+     "925915",
+     "804",
+     "25893",
+     "26900",
+     "25059",
+     "26892",
+     "26800",
+     "100137",
+     "100488",
+     "925470",
+     "926751",
+     "25984",
+     "26102",
+     "102781"
+    ],
+    "label": "Jack Daniel's (all products)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "IOWA CITY"
+    ],
+    "label": "Iowa City"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month, 'total' AS series, SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.item i ON i.item_no = il.item_no\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE i.item_desc ILIKE 'JACK DANIEL%'\nAND s.city = 'IOWA CITY'\nAND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Includes all Jack Daniel's branded products (all sizes, flavors, and special packages) sold by vendor Brown Forman Corp, matched by item description starting with 'JACK DANIEL'.",
+   "Iowa City refers to the city of Iowa City (store.city = 'IOWA CITY'), covering all 64 stores recorded there, not just Johnson County as a whole.",
+   "Measure is bottles sold (sales_bottles), summed monthly, consistent with 'bottle sales' in the request.",
+   "History starts 2016-01-01 per the data's full availability; incomplete current month will be dropped by downstream processing."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 15,
+  "first_bad": "2017-05-01",
+  "ref_total": 261782.0,
+  "gen_total": 261886.0,
+  "ref_last12": 23507.0,
+  "gen_last12": 23567.0,
+  "match": false
+ },
+ {
+  "id": "fireball_linn_revenue",
+  "request": "What revenue should we expect from Fireball in Linn County next quarter?",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0276,
+  "gen_cost": 0.0253,
+  "ref_seconds": 20.3,
+  "gen_seconds": 97.3,
+  "spec": {
+   "title": "Fireball, Linn County, next quarter",
+   "target": "sales_dollars",
+   "horizon": 3,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "64858",
+     "64870",
+     "65013",
+     "64864",
+     "64863",
+     "64866",
+     "64865",
+     "64867",
+     "64868",
+     "100423",
+     "64904",
+     "76302",
+     "100413",
+     "75971",
+     "76304",
+     "101046",
+     "76303",
+     "102556",
+     "902446",
+     "103039",
+     "101047",
+     "101988",
+     "103155",
+     "101151",
+     "101513",
+     "102057",
+     "100642",
+     "100847",
+     "100015",
+     "101710",
+     "78890",
+     "103153",
+     "76685",
+     "75972",
+     "101200",
+     "76684",
+     "78889",
+     "102096",
+     "102445",
+     "100535",
+     "910225",
+     "100938",
+     "102031",
+     "101515",
+     "103156",
+     "101512",
+     "75969",
+     "78887",
+     "102214",
+     "103152",
+     "102780",
+     "102945"
+    ],
+    "label": "Fireball (all variants)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19113"
+    ],
+    "label": "Linn County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "select date_trunc('month', il.ordered_on)::date as month,\n       'total' as series,\n       sum(il.sales_dollars) as value\nfrom sales.invoice_line il\njoin sales.store s on s.store_no = il.store_no\njoin sales.item it on it.item_no = il.item_no\nwhere s.county_fips = '19113'\n  and it.item_desc ilike 'FIREBALL%'\n  and il.ordered_on >= '2016-01-01'\ngroup by 1\norder by 1",
+  "assumptions": [
+   "'Fireball' includes all product variants sold under the Sazerac Fireball brand (cinnamon whiskey, blazin apple, minis, party packs, gift sets, etc.), matched by item description starting with 'FIREBALL'.",
+   "'Linn County' resolved to FIPS code 19113 via store county assignment.",
+   "Revenue is measured as sales_dollars (what retailers paid the state), summed by calendar month of order date.",
+   "'Next quarter' is interpreted as the next 3 calendar months after the latest complete month of history.",
+   "History starts 2016-01-01 per data availability; the current partial month is excluded by downstream processing."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 17365721.78,
+  "gen_total": 17365721.78,
+  "ref_last12": 2141886.58,
+  "gen_last12": 2141886.58,
+  "match": true
+ },
+ {
+  "id": "statewide_liters",
+  "request": "Total liters of liquor sold statewide over the next 6 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0074,
+  "gen_cost": 0.0069,
+  "ref_seconds": 24.8,
+  "gen_seconds": 17.7,
+  "spec": {
+   "title": "Statewide total liters, next 6 months",
+   "target": "sales_liters",
+   "horizon": 6,
+   "product": {
+    "kind": "all",
+    "codes": [],
+    "label": "All products"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', ordered_on)::date AS month, 'total' AS series, sum(sales_liters) AS value FROM sales.invoice_line GROUP BY 1 ORDER BY 1",
+  "assumptions": [
+   "Liters means sales_liters (computed volume) summed across all stores, products, and vendors statewide.",
+   "All history from 2016-01-01 onward is included; the current partial month is dropped by downstream processing.",
+   "No product or place filtering applied since the request was for total statewide volume."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 245187292.134,
+  "gen_total": 245187292.134,
+  "ref_last12": 22161744.775,
+  "gen_last12": 22161744.775,
+  "match": true
+ },
+ {
+  "id": "diageo_scott",
+  "request": "Monthly bottle sales for all Diageo products in Scott County, next 6 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0106,
+  "gen_cost": 0.0118,
+  "ref_seconds": 20.2,
+  "gen_seconds": 16.2,
+  "spec": {
+   "title": "Diageo products, Scott County, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "vendor",
+    "codes": [
+     "260"
+    ],
+    "label": "Diageo Americas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19163"
+    ],
+    "label": "Scott County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON il.store_no = s.store_no\nWHERE il.vendor_no = '260'\n  AND s.county_fips = '19163'\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Diageo refers to vendor 'DIAGEO AMERICAS' (vendor_no 260), the vendor match for 'Diageo' in the data",
+   "Scott County identified by county_fips 19163, matched via store location",
+   "Measure is total bottles sold (sales_bottles), summed monthly, since no dollar/liter measure was specified",
+   "History starts 2016-01-01 and includes all months through the most recent complete month",
+   "Forecast horizon is 6 months as requested"
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 3351267.0,
+  "gen_total": 3351267.0,
+  "ref_last12": 304472.0,
+  "gen_last12": 304472.0,
+  "match": true
+ },
+ {
+  "id": "titos_st_ansgar",
+  "request": "Tito's bottles in St. Ansgar for the next 4 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0146,
+  "gen_cost": 0.0167,
+  "ref_seconds": 16.7,
+  "gen_seconds": 11.6,
+  "spec": {
+   "title": "Tito's Vodka, Saint Ansgar, next 4 months",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38177",
+     "38176",
+     "38194",
+     "38178",
+     "38174",
+     "38179",
+     "38185",
+     "102747"
+    ],
+    "label": "Tito's Handmade Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "SAINT ANSGAR"
+    ],
+    "label": "Saint Ansgar"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE il.item_no IN ('38177','38176','38194','38178','38174','38179','38185','102747')\n  AND s.city = 'SAINT ANSGAR'\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Product is Tito's Handmade Vodka across all bottle sizes/packs sold by the sole vendor (Fifth Generation Distilled Spirits), identified by item_no family: 38177, 38176, 38194, 38178, 38174, 38179, 38185, 102747.",
+   "City 'St. Ansgar' matches the store city 'SAINT ANSGAR' in Mitchell County, Iowa (4 stores historically).",
+   "Measure is sales_bottles (physical bottle count), the standard unit for 'bottles' requests.",
+   "History starts from the earliest available data (2016-01-01) through the most recent complete month.",
+   "Monthly series aggregates all Tito's product orders across all stores in Saint Ansgar, treated as a single 'total' demand series (no further breakout by store or product size)."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 1,
+  "first_bad": "2020-07-01",
+  "ref_total": 8485.0,
+  "gen_total": 8473.0,
+  "ref_last12": 1227.0,
+  "gen_last12": 1227.0,
+  "match": false
+ },
+ {
+  "id": "bottled_in_bond",
+  "request": "Bottled in bond bourbon bottles statewide, next 3 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0104,
+  "gen_cost": 0.0127,
+  "ref_seconds": 11.2,
+  "gen_seconds": 13.9,
+  "spec": {
+   "title": "Bottled in Bond Bourbon, Statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011500"
+    ],
+    "label": "Bottled in Bond Bourbon"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', ordered_on)::date AS month, 'total' AS series, SUM(sales_bottles) AS value\nFROM sales.invoice_line\nWHERE category_code = '1011500' AND ordered_on >= '2016-01-01'\nGROUP BY 1 ORDER BY 1",
+  "assumptions": [
+   "Category interpreted as 'BOTTLED IN BOND BOURBON' (code 1011500) using category_current taxonomy via invoice_line.category_code, which reflects the category on order date.",
+   "Measure is bottles sold (sales_bottles), as no dollar/volume measure was requested.",
+   "Statewide scope: all stores and counties combined into a single 'total' series.",
+   "History included from 2016-01-01 through the most recent complete month; incomplete current month will be dropped by downstream processing.",
+   "Forecast horizon set to 3 months as requested."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 60,
+  "first_bad": "2016-01-01",
+  "ref_total": 286897.0,
+  "gen_total": 324073.0,
+  "ref_last12": 53064.0,
+  "gen_last12": 53301.0,
+  "match": false
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "request": "Forecast ready-to-drink cocktail bottles statewide for the next 6 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0102,
+  "gen_cost": 0.014,
+  "ref_seconds": 16.3,
+  "gen_seconds": 25.7,
+  "spec": {
+   "title": "RTD cocktails, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1071000"
+    ],
+    "label": "Cocktails/RTD"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.item i ON i.item_no = il.item_no\nWHERE i.category_current = '1071000'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Ready-to-drink cocktail = category code 1071000 (COCKTAILS/RTD) in today's category taxonomy, matched via item.category_current so renumbered items are included across all history.",
+   "Statewide means all stores in Iowa combined, no geographic breakout.",
+   "Measure is sales_bottles (bottle count), consistent with 'bottles' in the request.",
+   "History starts 2016-01-01 as required; the current partial month is included in the query but will be dropped by downstream processing."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 7739771.0,
+  "gen_total": 7739771.0,
+  "ref_last12": 825795.0,
+  "gen_last12": 825795.0,
+  "match": true
+ },
+ {
+  "id": "hawkeye_johnson",
+  "request": "Hawkeye Vodka bottles in Johnson County, next 5 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0166,
+  "gen_cost": 0.0202,
+  "ref_seconds": 23.6,
+  "gen_seconds": 79.7,
+  "spec": {
+   "title": "Hawkeye Vodka, Johnson County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "36301",
+     "36308",
+     "36304",
+     "36306",
+     "36305",
+     "36307",
+     "36302"
+    ],
+    "label": "Hawkeye Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19103"
+    ],
+    "label": "Johnson County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.item it ON it.item_no = il.item_no\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE s.county_fips = '19103'\n  AND it.item_desc LIKE 'HAWKEYE VODKA%'\n  AND il.ordered_on >= DATE '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Series is monthly total bottles sold (sales_bottles) for all Hawkeye Vodka variants (regular, mini, PET, 1750ml, 1000ml, 375ml, 200ml), excluding flavored variants like Hawkeye Blue Raspberry Vodka and Hawkeye Bacon Vodka.",
+   "Johnson County is identified by county FIPS code 19103, based on the store's county.",
+   "History starts 2016-01-01 and includes all months through the latest available data; incomplete current month will be dropped by downstream processing.",
+   "Measure is bottles (sales_bottles), as requested 'bottles' rather than dollars or liters."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 857355.0,
+  "gen_total": 857355.0,
+  "ref_last12": 79891.0,
+  "gen_last12": 79891.0,
+  "match": true
+ },
+ {
+  "id": "ames_whiskey",
+  "request": "How many bottles of whiskey will Ames stores order next month?",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0188,
+  "gen_cost": 0.02,
+  "ref_seconds": 24.5,
+  "gen_seconds": 27.8,
+  "spec": {
+   "title": "Whiskey bottles, Ames stores, next month",
+   "target": "sales_bottles",
+   "horizon": 1,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011000",
+     "1011100",
+     "1011200",
+     "1011250",
+     "1011300",
+     "1011400",
+     "1011600",
+     "1011700",
+     "1011800",
+     "1012000",
+     "1012100",
+     "1012200",
+     "1012400"
+    ],
+    "label": "Whiskey (all whiskey categories)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "AMES"
+    ],
+    "label": "Ames"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "select date_trunc('month', il.ordered_on)::date as month,\n       'total' as series,\n       sum(il.sales_bottles) as value\nfrom sales.invoice_line il\njoin sales.item it on it.item_no = il.item_no\njoin sales.store s on s.store_no = il.store_no\njoin sales.category c on c.category_code = it.category_current\nwhere s.city = 'AMES'\n  and c.category_name ilike '%whiskies%'\ngroup by 1\norder by 1",
+  "assumptions": [
+   "City 'Ames' maps to Iowa stores located in Ames, Story County, using sales.store.city = 'AMES'.",
+   "Whiskey is defined as all true whiskey categories (American, Blended, Straight Bourbon, Single Barrel Bourbon, Tennessee, Straight Rye, Corn, Iowa Distillery, Imported, Canadian, Scotch, Irish) using the item's current category (category_current) so renamed/renumbered products are classified consistently over time.",
+   "Excluded 'Whiskey Liqueur' since it is a liqueur product line rather than a true whiskey.",
+   "Measure is bottles ordered (sales_bottles), summed by calendar month across all Ames stores combined (one total series).",
+   "History starts 2016-01-01 as required; the current partial month will be dropped by downstream processing.",
+   "Forecast horizon is 1 month (next month) as requested."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 1987084.0,
+  "gen_total": 1987084.0,
+  "ref_last12": 173437.0,
+  "gen_last12": 173437.0,
+  "match": true
+ },
+ {
+  "id": "vague_vodka",
+  "request": "Forecast vodka",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0113,
+  "gen_cost": 0.0126,
+  "ref_seconds": 24.1,
+  "gen_seconds": 20.8,
+  "spec": {
+   "title": "Vodka, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100",
+     "1031200",
+     "1032100",
+     "1032200",
+     "1031080"
+    ],
+    "label": "Vodka (all categories)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "select date_trunc('month', il.ordered_on)::date as month, 'total' as series, sum(il.sales_bottles) as value\nfrom sales.invoice_line il\njoin sales.item i on i.item_no = il.item_no\nwhere i.category_current in ('1031100','1031200','1032100','1032200','1031080')\n  and il.ordered_on >= date '2016-01-01'\ngroup by 1\norder by 1",
+  "assumptions": [
+   "Vodka is defined as all five vodka categories found in sales.category: American Vodkas, American Flavored Vodka, Imported Vodkas, Imported Flavored Vodka, and the legacy Vodka 80 Proof code.",
+   "Each product's current category (category_current) is used so items are classified consistently over time even if renumbered or recategorized.",
+   "Measure is bottles sold (sales_bottles), matching the default unit since no dollar or liter measure was requested.",
+   "History starts 2016-01-01 and includes all months; the forecasting code will drop any incomplete latest month.",
+   "Forecast is a single total series (not broken out by vendor, county, or product) since the request was for vodka overall.",
+   "Forecast horizon set to 6 months as a reasonable default within the 12-month limit."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 107179756.0,
+  "gen_total": 107179756.0,
+  "ref_last12": 11109683.0,
+  "gen_last12": 11109683.0,
+  "match": true
+ },
+ {
+  "id": "cream_liqueur_holidays",
+  "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0169,
+  "gen_cost": 0.0091,
+  "ref_seconds": 32.5,
+  "gen_seconds": 12.6,
+  "spec": {
+   "title": "Cream liqueurs, Iowa, next 4 months (through the holidays)",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1081200"
+    ],
+    "label": "Cream Liqueurs"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.item i ON i.item_no = il.item_no\nWHERE i.category_current = '1081200'\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Cream liqueur category is defined by sales.item.category_current = '1081200' (CREAM LIQUEURS), matching products to their current category over all history.",
+   "Bottles ordered (sales_bottles) is used as the demand measure, counting each mini bottle in packs.",
+   "History includes all months from 2016-01-01 onward; the most recent incomplete month will be dropped by downstream processing.",
+   "Holiday season is interpreted as the upcoming Nov-Dec period, so a 3-month forecast horizon is used to cover it."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 6650320.0,
+  "gen_total": 6650320.0,
+  "ref_last12": 545088.0,
+  "gen_last12": 545088.0,
+  "match": true
+ },
+ {
+  "id": "bdi_store",
+  "request": "Forecast Tito's minis ordered by Hy-Vee #3 BDI in Des Moines for the next 6 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0147,
+  "gen_cost": 0.0148,
+  "ref_seconds": 15.1,
+  "gen_seconds": 13.0,
+  "spec": {
+   "title": "Tito's minis, Hy-Vee #3 BDI (Des Moines), next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml, incl. 4-pack)"
+   },
+   "region": {
+    "kind": "store",
+    "codes": [
+     "2633"
+    ],
+    "label": "Hy-Vee #3 / BDI / Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', ordered_on)::date AS month, 'total' AS series, sum(sales_bottles) AS value\nFROM sales.invoice_line\nWHERE store_no = '2633'\n  AND item_no IN ('38194','38185')\n  AND ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Includes both Tito's mini item codes: 38194 (mini, 50ml, 5-pack) and 38185 (mini 4-pack, 50ml, 15-pack), since both are Tito's handmade vodka mini products.",
+   "Store identified as store_no 2633, HY-VEE #3 / BDI / DES MOINES.",
+   "Measure is bottles sold (sales_bottles), which counts individual mini bottles even when sold in sleeves or multi-packs.",
+   "History starts 2016-01-01; months with no orders will be filled with 0 by the forecasting pipeline.",
+   "Forecast horizon is 6 months as requested."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 26,
+  "first_bad": "2016-08-01",
+  "ref_total": 138552.0,
+  "gen_total": 118140.0,
+  "ref_last12": 28140.0,
+  "gen_last12": 28140.0,
+  "match": false
+ }
+]

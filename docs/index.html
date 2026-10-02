@@ -137,6 +137,10 @@ very regular year to year, so last year is a hard baseline to beat, and on the r
 product, place, measure and horizon, or correctly declined (a city outside Iowa, a 24-month horizon, a product too new
 to forecast). Every number in the dashboard summaries is checked against the harness's results.
 <a href="https://github.com/joehahn/demand-on-demand/blob/main/evals/report.md">Eval report</a>.</p>
+<p><strong>Slot filling vs AI-written SQL.</strong> The same requests were also given to an agent that writes the SQL
+itself (NL2SQL), and the two monthly histories compared month by month. Most matched exactly; the AI-written queries
+that did not ran fine and even matched the last 12 months, with the errors hidden in older history.
+<a href="differential.html">The test and what it found</a>.</p>
 
 <h2>Built with</h2>
 <p>Claude Code (building), the Claude API with Claude Sonnet 5 (the agent at runtime), Postgres, skforecast,

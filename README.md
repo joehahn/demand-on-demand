@@ -90,6 +90,10 @@ the agent evals: `python demo.py --check`.
 - [evals/report.md](evals/report.md): 21 test requests, 2 runs each, scored on product, place, measure, horizon and
   breakout, plus requests that should be declined.
 - [evals/grounding.md](evals/grounding.md): every number in the dashboard summaries traced to the harness's results.
+- [Slot filling vs AI-written SQL](https://joehahn.github.io/demand-on-demand/differential.html): the same requests given
+  to an agent that writes the SQL itself (NL2SQL, `dod/nl2sql.py`), its monthly history compared with the slot-filling
+  path month by month (`evals/differential.py`). The test found AI-written queries that ran fine but were wrong in older
+  history, and a bug in the slot-filling path too.
 
 ## Run it yourself
 

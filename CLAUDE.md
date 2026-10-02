@@ -123,3 +123,7 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    (benchmark/big_buyers.md); dashboards name a store with > 25% of the last 12 months instead.
    Finer hyperparameter grids not adopted: 288 configs (benchmark/grid_experiment.md: 20 vs 23 of 30, median 0.931 vs
    0.880, 2x slower) and 192 configs (grid_experiment_middle.md: 20 vs 23, median 0.920, 1.4x slower).
+9. NL2SQL prototype (2026-10-01): `dod/nl2sql.py` (same agent and tools, writes the series SQL itself);
+   `python evals/differential.py` compares it with slot filling month by month; `evals/differential_report.py` ->
+   docs/differential.html. First run: 11/18 identical, 5 AI queries wrong (missed family_item_no or category_current;
+   last 12 months still matched), 2 reference bugs (find_values shows at most 60 products: Crown Royal 91, Jack Daniel's 80).
