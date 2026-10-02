@@ -175,8 +175,26 @@ GROUP BY 1, 2"""
     return wide if len(wide.columns) else None
 
 
+def check_months(start, last_month):
+    """A month with no orders becomes a 0 in every series (see to_wide), which is right only if the warehouse really
+    has that month. Stop if any month from the request's start (or the warehouse's first month, if later) through the
+    last complete month has no orders at all, statewide: that would be missing data, not zero sales."""
+    first = db.query("SELECT date_trunc('month', min(first_order_on))::date AS m FROM sales.store").m[0]
+    first = max(pd.Timestamp(first), pd.Timestamp(start).to_period("M").to_timestamp())
+    gaps = db.query("""
+        SELECT m::date AS month FROM generate_series(%(first)s::date, %(last)s::date, interval '1 month') m
+        WHERE NOT EXISTS (SELECT 1 FROM sales.invoice_line l
+                          WHERE l.ordered_on >= m AND l.ordered_on < m + interval '1 month')""",
+                    {"first": first.date(), "last": last_month.date()})
+    if len(gaps):
+        months = ", ".join(f"{m:%Y-%m}" for m in pd.to_datetime(gaps.month))
+        raise ValueError(f"The warehouse has no orders at all in {months}: that looks like missing data, not zero "
+                         "sales, so no forecast was made. Reload the data (python load_data.py) and try again.")
+
+
 def build(spec):
     end, last_month = data_end()
+    check_months(spec.start, last_month)
     items = member_items(spec)
     sql, params = build_sql(spec, items)
     raw = db.query(sql, params)

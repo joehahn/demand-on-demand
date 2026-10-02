@@ -1,0 +1,1170 @@
+[
+ {
+  "id": "titos_minis_des_moines",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "dev",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.forbid",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.022,
+  "seconds": 12.5,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Tito's minis, Des Moines, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml, incl. 4-pack)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "DES MOINES"
+    ],
+    "label": "Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Tito's minis\" means Tito's Handmade Vodka 50ml bottles, including both the single mini (item 38194) and the 4-pack of minis (item 38185).",
+   "\"Des Moines\" refers to the city of Des Moines specifically, not West Des Moines or all of Polk County.",
+   "Forecast target is bottles sold (not dollars or liters), consistent with no revenue/volume wording in the request.",
+   "One combined total series for the city (not broken out by item)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_minis_des_moines",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "dev",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.forbid",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0221,
+  "seconds": 12.5,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Tito's minis, Des Moines, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml, incl. 4-pack)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "DES MOINES"
+    ],
+    "label": "Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Tito's minis\" means the 50ml Tito's Handmade Vodka Mini products, including the 4-pack SKU which bundles four 50ml minis.",
+   "\"Des Moines\" refers to the city of Des Moines (store city field), not West Des Moines or all of Polk County.",
+   "Target metric is bottles sold (sales_bottles) since no revenue or volume was specified.",
+   "Forecast is a single combined total series for both Tito's mini SKUs, not broken out separately."
+  ],
+  "message": ""
+ },
+ {
+  "id": "vodka_top_counties",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "breakout",
+   "fresh",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0259,
+  "seconds": 21.2,
+  "tool_calls": 4,
+  "spec": {
+   "title": "American vodka sales dollars, top 5 counties, next 6 months",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100",
+     "1031200"
+    ],
+    "label": "American Vodkas (regular and flavored)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153",
+     "19113",
+     "19163",
+     "19103",
+     "19013"
+    ],
+    "label": "Polk, Linn, Scott, Johnson, Black Hawk counties"
+   },
+   "series_by": "county",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"American vodka\" interpreted as both category 1031100 (American Vodkas) and 1031200 (American Flavored Vodka), excluding imported vodka categories.",
+   "\"Five largest counties\" interpreted by latest Census population estimate: Polk, Linn, Scott, Johnson, and Black Hawk.",
+   "Forecast target is sales dollars, one series per county, 6 months ahead."
+  ],
+  "message": ""
+ },
+ {
+  "id": "vodka_top_counties",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "breakout",
+   "fresh",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0252,
+  "seconds": 25.9,
+  "tool_calls": 4,
+  "spec": {
+   "title": "American Vodka, Top 5 Counties by Sales, Next 6 Months",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100"
+    ],
+    "label": "American Vodkas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153",
+     "19113",
+     "19163",
+     "19103",
+     "19013"
+    ],
+    "label": "Polk, Linn, Scott, Johnson, Black Hawk counties"
+   },
+   "series_by": "county",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"American vodka\" maps to the warehouse category AMERICAN VODKAS (code 1031100), not the separate AMERICAN FLAVORED VODKA category, since the user said vodka not flavored vodka.",
+   "\"Largest\" counties are interpreted as the five counties with the highest total historical liquor sales dollars (statewide, all products): Polk, Linn, Scott, Johnson, and Black Hawk.",
+   "\"Sales dollars\" is used as the forecast target per the user's explicit wording.",
+   "\"For each\" county triggers a separate forecast series per county (series_by = county) rather than a single combined total.",
+   "Horizon is 6 months as requested, using the most recent complete month (2026-08) as the forecast origin."
+  ],
+  "message": ""
+ },
+ {
+  "id": "chicago",
+  "run": 1,
+  "tags": [
+   "refusal",
+   "dev",
+   "demo"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0033,
+  "seconds": 3.2,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "I can't build this forecast as requested. This warehouse only covers Iowa liquor wholesale orders (Iowa retail stores and Iowa counties/cities). Chicago is not part of this dataset, so there's no sales history there to forecast.\n\nIf helpful, I could instead forecast Tito's vodka sales for:\n- An Iowa city or county you have in mind, or\n- Statewide Iowa sales\n\nLet me know which you'd like, or if you meant an Iowa city with a similar name."
+ },
+ {
+  "id": "chicago",
+  "run": 2,
+  "tags": [
+   "refusal",
+   "dev",
+   "demo"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0029,
+  "seconds": 2.6,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "I can't build this forecast as asked. This warehouse only covers Iowa Class E liquor sales (stores, cities, and counties in Iowa) - there is no Chicago data in it, since Chicago is in Illinois. \n\nIf you'd like, I could instead forecast Tito's vodka sales for an Iowa city (maybe one you're actually interested in), or statewide for all of Iowa. Let me know which you'd prefer."
+ },
+ {
+  "id": "fireball_linn_revenue",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "target",
+   "fresh",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0284,
+  "seconds": 19.5,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Fireball, Linn County, next quarter revenue",
+   "target": "sales_dollars",
+   "horizon": 3,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "64858",
+     "64870",
+     "65013",
+     "64864",
+     "64863",
+     "64866",
+     "64865",
+     "64867",
+     "64868",
+     "100423",
+     "64904",
+     "76302",
+     "100413",
+     "75971",
+     "76304",
+     "101046",
+     "76303",
+     "102556",
+     "902446",
+     "103039",
+     "101047",
+     "101988",
+     "103155",
+     "101151",
+     "101513",
+     "102057",
+     "100642",
+     "100847",
+     "100015",
+     "101710",
+     "78890",
+     "103153",
+     "76685",
+     "75972",
+     "101200",
+     "76684",
+     "78889",
+     "102096",
+     "102445",
+     "100535",
+     "910225",
+     "100938",
+     "102031",
+     "101515",
+     "103156",
+     "101512",
+     "75969",
+     "78887",
+     "102214",
+     "103152",
+     "102780",
+     "102945"
+    ],
+    "label": "Fireball (all SKUs)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19113"
+    ],
+    "label": "Linn County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Fireball\" is interpreted as the full Fireball brand (Sazerac Company), including all bottle sizes, variants (cinnamon, blazin apple, torch'd vanilla) and seasonal/specialty packaging, since no specific size or variant was named.",
+   "\"Next quarter\" is interpreted as a 3 month ahead forecast horizon.",
+   "\"Revenue\" maps to the sales_dollars target.",
+   "Linn County is the Iowa county (FIPS 19113), matched directly from the request.",
+   "Single aggregated series for the whole brand in Linn County, not broken out by product or sub-area."
+  ],
+  "message": ""
+ },
+ {
+  "id": "fireball_linn_revenue",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "target",
+   "fresh",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0286,
+  "seconds": 19.1,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Fireball, Linn County, next quarter",
+   "target": "sales_dollars",
+   "horizon": 3,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "64858",
+     "64870",
+     "65013",
+     "64864",
+     "64863",
+     "64866",
+     "64865",
+     "64867",
+     "64868",
+     "100423",
+     "64904",
+     "76302",
+     "100413",
+     "75971",
+     "76304",
+     "101046",
+     "76303",
+     "102556",
+     "902446",
+     "103039",
+     "101047",
+     "101988",
+     "103155",
+     "101151",
+     "101513",
+     "102057",
+     "100642",
+     "100847",
+     "100015",
+     "101710",
+     "78890",
+     "103153",
+     "76685",
+     "75972",
+     "101200",
+     "76684",
+     "78889",
+     "102096",
+     "102445",
+     "100535",
+     "910225",
+     "100938",
+     "102031",
+     "101515",
+     "103156",
+     "101512",
+     "75969",
+     "78887",
+     "102214",
+     "103152",
+     "102780",
+     "102945"
+    ],
+    "label": "Fireball (all sizes/variants)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19113"
+    ],
+    "label": "Linn County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Fireball\" was interpreted as the full Fireball brand family (all sizes and special-edition variants from Sazerac, e.g. cinnamon whiskey, blazin apple, mini sleeves, party packs), since no specific size was named.",
+   "\"Revenue\" means sales_dollars.",
+   "\"Next quarter\" was interpreted as a 3-month forecast horizon.",
+   "\"Linn County\" refers to the county (FIPS 19113), not a specific city within it.",
+   "Single combined forecast for all Fireball products in Linn County (not broken out by item)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "run": 1,
+  "tags": [
+   "fresh",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0099,
+  "seconds": 14.1,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Ready-to-drink cocktails, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1071000"
+    ],
+    "label": "Cocktails/RTD"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Interpreted 'ready-to-drink cocktails' as the warehouse category COCKTAILS/RTD (category_code 1071000), which covers all vendors and sizes.",
+   "Statewide means all of Iowa combined into a single series.",
+   "Forecast target is bottles sold (sales_bottles), matching 'bottles' in the request.",
+   "Horizon is 6 months as requested, forecasting from the last complete month (2026-08)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "run": 2,
+  "tags": [
+   "fresh",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.01,
+  "seconds": 14.6,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Ready-to-drink cocktails, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1071000"
+    ],
+    "label": "Cocktails/RTD"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Interpreted \"ready-to-drink cocktails\" as the warehouse category COCKTAILS/RTD (code 1071000), which covers all vendors and sizes in that category.",
+   "Statewide means all Iowa stores combined into one total series.",
+   "Target metric is bottles sold since no mention of dollars or liters.",
+   "Horizon set to 6 months as requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "cream_liqueur_holidays",
+  "run": 1,
+  "tags": [
+   "demo",
+   "vague",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0175,
+  "seconds": 21.3,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Cream liqueur bottles, Iowa statewide, next 6 months (holiday season)",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1081200"
+    ],
+    "label": "Cream Liqueurs"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Cream liqueur\" maps to the warehouse category CREAM LIQUEURS (code 1081200), all sizes and vendors included.",
+   "\"Iowa\" means statewide, all stores combined into one series.",
+   "Forecasting in bottles (sales_bottles), since no dollar or liter figure was requested.",
+   "\"The holidays\" is interpreted as the upcoming Nov-Dec holiday season; a 6-month horizon from the last complete month (Aug 2026) runs Sep 2026 through Feb 2027, which covers Nov and Dec 2026.",
+   "One single statewide total series (no breakout by county/city/item)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "cream_liqueur_holidays",
+  "run": 2,
+  "tags": [
+   "demo",
+   "vague",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0142,
+  "seconds": 18.5,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Cream liqueurs, statewide, next 4 months (through holidays)",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1081200"
+    ],
+    "label": "Cream Liqueurs"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Cream liqueur\" maps to the warehouse category CREAM LIQUEURS (code 1081200), covering all vendors, sizes, and items in that category.",
+   "\"The holidays\" is interpreted as the upcoming Thanksgiving/December holiday season; since the data runs through August 2026, a 4-month-ahead forecast (Sep-Dec 2026) is used to capture that window.",
+   "\"Iowa stores\" means statewide demand (all counties/cities combined), reported as a single total series in bottle counts.",
+   "No breakout by county, city, or item was requested, so series_by is set to none."
+  ],
+  "message": ""
+ },
+ {
+  "id": "bdi_store",
+  "run": 1,
+  "tags": [
+   "demo",
+   "resolution",
+   "store",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0139,
+  "seconds": 10.5,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Tito's minis, Hy-Vee #3 BDI Des Moines, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml)"
+   },
+   "region": {
+    "kind": "store",
+    "codes": [
+     "2633"
+    ],
+    "label": "Hy-Vee #3 / BDI / Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Tito's minis = 50ml bottles of Tito's Handmade Vodka, including both the standard mini (item 38194) and the 4-pack mini sleeve (item 38185), since both are 50ml Tito's products.",
+   "Hy-Vee #3 BDI in Des Moines resolved to store_no 2633 (HY-VEE #3 / BDI / DES MOINES).",
+   "Target is bottles ordered (sales_bottles), since no dollar or volume figure was requested.",
+   "Forecast is a single total series for this store (not broken out by anything), for the next 6 months as requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "bdi_store",
+  "run": 2,
+  "tags": [
+   "demo",
+   "resolution",
+   "store",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0137,
+  "seconds": 12.3,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Tito's minis, Hy-Vee #3 BDI Des Moines, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml, all pack sizes)"
+   },
+   "region": {
+    "kind": "store",
+    "codes": [
+     "2633"
+    ],
+    "label": "Hy-Vee #3 / BDI / Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Tito's minis means Tito's Handmade Vodka in 50ml bottles, including both the single-bottle and 4-pack item numbers, combined into one series.",
+   "Target is bottles ordered (sales_bottles), the default unit since no dollar or liter figure was requested.",
+   "Region is the specific store Hy-Vee #3 / BDI in Des Moines, not the whole city or county.",
+   "Horizon is 6 months ahead as requested, one combined total series (not broken out)."
+  ],
+  "message": ""
+ }
+]
