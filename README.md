@@ -68,11 +68,15 @@ with how the request was read, the forecast chart and table (with an 80% range),
 year" by months ahead, the table the model learns from, a map of the stores included, the 96 model configurations
 compared, every tool call the agent made, and the exact spec and SQL that ran.
 
-| request | backtest vs same month last year |
+| request | backtest vs same period last year |
 |---|---|
 | [Monthly forecast of Tito's minis in Des Moines for the next 5 months](https://joehahn.github.io/demand-on-demand/examples/tito_s_minis_des_moines_next_5_months.html) | 8% more accurate |
 | [What revenue should we expect from Fireball in Linn County next quarter?](https://joehahn.github.io/demand-on-demand/examples/fireball_linn_county_next_quarter.html) | 9% more accurate |
 | [How many bottles of cream liqueur will Iowa stores order for the holidays?](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_holidays.html) | 29% more accurate |
+| [show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_by_week_next_12_weeks.html) | 9% more accurate (vs the same week last year)* |
+
+\*A weekly forecast from the [on-the-fly prototype](https://joehahn.github.io/demand-on-demand/onthefly.html): the AI writes the SQL for the daily history,
+and fixed code buckets it into weeks, models it, and cross-checks the AI's data against the tested monthly path.
 
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
