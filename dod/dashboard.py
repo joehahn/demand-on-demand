@@ -14,7 +14,45 @@ from . import model
 from .viz import AQUA, BLUE, ORANGE, Plots, line, page, style, table
 
 MAX_PANELS = 8   # small multiples beyond this fold into the table only
-HISTORY_MONTHS = 48
+
+# Time grain: the page reads in the forecast's own periods. Months by default; weeks or quarters for the on-the-fly
+# path (dod/onthefly.py). build() sets it from the request.
+GRAIN_WORDS = {"month": dict(unit="month", adj="monthly", season=12, history=48),
+               "week": dict(unit="week", adj="weekly", season=52, history=156),
+               "quarter": dict(unit="quarter", adj="quarterly", season=4, history=20)}
+W = {"grain": "month", **GRAIN_WORDS["month"]}
+
+
+def set_grain(grain):
+    W.clear()
+    W.update(grain=grain, **GRAIN_WORDS[grain])
+
+
+def units(n=2):
+    """'month' or 'months' (or week, quarter)."""
+    return W["unit"] + ("" if n == 1 else "s")
+
+
+def when(d):
+    """A period for reading: 'Sep 2026', 'Sep 7, 2026' (a week, by its Monday) or 'Q3 2026'."""
+    d = pd.Timestamp(d)
+    return {"week": f"{d:%b} {d.day}, {d.year}", "quarter": f"Q{d.quarter} {d.year}"}.get(W["grain"], f"{d:%b %Y}")
+
+
+def stamp(d):
+    """A period for tables: '2026-09', '2026-09-07' or '2026-Q3'."""
+    d = pd.Timestamp(d)
+    return {"week": f"{d:%Y-%m-%d}", "quarter": f"{d.year}-Q{d.quarter}"}.get(W["grain"], f"{d:%Y-%m}")
+
+
+def back(d, k):
+    """The period k periods before d (k < 0: after)."""
+    return pd.Timestamp(d) - k * pd.tseries.frequencies.to_offset(model.GRAINS[W["grain"]]["freq"])
+
+
+def base():
+    """The baseline's name: 'same month last year' (or week, quarter)."""
+    return f"same {W['unit']} last year"
 
 
 def esc(s):
@@ -22,12 +60,14 @@ def esc(s):
 
 
 ERR_LABEL = "error vs last year\n(smaller is better)"   # the newline breaks the column header in two
-PREDICTS = {"level": "the monthly value", "diff": "change from last month", "yoy": "change from the same month last year"}
+def predicts(target):
+    return {"level": f"the {W['adj']} value", "diff": f"change from last {W['unit']}",
+            "yoy": f"change from the {base()}"}[target]
 
 
 def lags_words(v):
     v = ast.literal_eval(v) if isinstance(v, str) else v   # grid values are stored as text, e.g. "[1, 2, 3, 12]"
-    return f"the last {v} months" if isinstance(v, int) else ", ".join(map(str, v[:-1])) + f" and {v[-1]} months back"
+    return f"the last {v} {units()}" if isinstance(v, int) else ", ".join(map(str, v[:-1])) + f" and {v[-1]} {units()} back"
 
 
 def search_space(res, n_counties=15):
@@ -36,7 +76,7 @@ def search_space(res, n_counties=15):
     rows = [("Algorithm", "ridge regression; LightGBM (gradient-boosted trees)", len(model.FAMILY)),
             ("Model size", "ridge: regularization " + " or ".join(f"{a:g}" for a in model.FAMILY["ridge"]["alpha"])
              + "; LightGBM: " + " or ".join(map(str, model.FAMILY["lightgbm"]["num_leaves"])) + " leaves per tree", 2),
-            ("Predicts", "; ".join(PREDICTS[t] for t in model.COMMON["target"]), len(model.COMMON["target"])),
+            ("Predicts", "; ".join(predicts(t) for t in model.COMMON["target"]), len(model.COMMON["target"])),
             ("Inputs", "; ".join(lags_words(l) for l in model.COMMON["lags"]), len(model.COMMON["lags"])),
             ("History used", "; ".join("all years" if y is None else f"the last {y} years" for y in model.COMMON["train_years"]),
              len(model.COMMON["train_years"])),
@@ -57,9 +97,9 @@ def grid_words(grid):
     rows = []
     for r in grid.itertuples():
         if r.model == "seasonal_naive":
-            rows.append(("same month last year (baseline)", "", "", "", "", "", f"{r.rel_mae:.3f}"))
+            rows.append((f"{base()} (baseline)", "", "", "", "", "", f"{r.rel_mae:.3f}"))
             continue
-        rows.append(({"ridge": "ridge regression", "lightgbm": "LightGBM"}[r.model], size(r), PREDICTS[r.target],
+        rows.append(({"ridge": "ridge regression", "lightgbm": "LightGBM"}[r.model], size(r), predicts(r.target),
                       lags_words(r.lags), "all years" if r.train_years in (None, "None") else f"last {r.train_years} years",
                       "yes" if str(r.pool) == "True" else "no", f"{r.rel_mae:.3f}"))
     return pd.DataFrame(rows, columns=["algorithm", "size", "predicts", "inputs", "history", "other counties",
@@ -81,7 +121,7 @@ def blend_details(res):
                       ERR_LABEL: b.tuning_rel_mae.map(lambda v: f"{v:.3f}"),
                       "": ["\u2190 chosen" if i == chosen else "" for i in b.index]})
     return ("<details><summary>How the weights were chosen</summary><p>Every way of combining the best configuration, "
-            "or the average of the best few, with same month last year, scored in model selection. The lowest error "
+            f"or the average of the best few, with {base()}, scored in model selection. The lowest error "
             "wins; it sets the weights in the table above.</p>" + table(t) + "</details>")
 
 
@@ -89,13 +129,13 @@ def forecast_parts(res):
     """The forecast as a weighted mix: last year's same month (the baseline) plus each averaged model.
     Returns (name, weight, settings, selection error) rows, from the harness's own results."""
     if res["best"]["model"] == "seasonal_naive":
-        return [("same month last year", 1.0, "", 1.0)]
+        return [(base(), 1.0, "", 1.0)]
     ens, w = res["ensemble"], res.get("model_share", 1)
     errs = res["grid"][res["grid"].model != "seasonal_naive"].rel_mae.tolist()  # same order as the ranking
-    rows = [("same month last year", 1 - w, "", 1.0)] if w < 1 else []
+    rows = [(base(), 1 - w, "", 1.0)] if w < 1 else []
     for i, c in enumerate(ens):
         size = f"regularization {c['alpha']:g}" if c["model"] == "ridge" else f"{c['num_leaves']} leaves"
-        settings = "; ".join([PREDICTS[c["target"]], lags_words(c["lags"]), size,
+        settings = "; ".join([predicts(c["target"]), lags_words(c["lags"]), size,
                               "all years" if not c.get("train_years") else f"last {c['train_years']} years",
                               "also other counties" if c.get("pool") else "this series only"])
         rows.append(({"ridge": "ridge regression", "lightgbm": "LightGBM"}[c["model"]], w / len(ens), settings, errs[i]))
@@ -112,17 +152,18 @@ def model_explanation(res, unit, spec, panel):
     pct = round(abs(1 - rel) * 100)
     test = (f"{pct}% {'more' if rel < 1 else 'less'} accurate than last year alone" if pct
             else "about as accurate as last year alone")
-    if [p[0] for p in parts] == ["same month last year"]:
-        return (f"<p><strong>How this forecast is made.</strong> No model beat simply repeating the same month last "
-                f"year in model selection ({uw[0]:%b %Y} to {uw[1]:%b %Y}), so that is the forecast.</p>")
+    if [p[0] for p in parts] == [base()]:
+        return (f"<p><strong>How this forecast is made.</strong> No model beat simply repeating the {base()} "
+                f"in model selection ({when(uw[0])} to {when(uw[1])}), so that is the forecast.</p>")
     b = res["blend"]
     best_alone = b[(b.models_averaged == 1) & (b.model_share == 1.0)].tuning_rel_mae.iloc[0]
     chosen = b[(b.models_averaged == len(res["ensemble"])) & (b.model_share == res["model_share"])].tuning_rel_mae.iloc[0]
-    lead = "Each month's forecast is this weighted mix." if len(parts) > 1 else "Each month's forecast comes from this model."
+    lead = (f"Each {W['unit']}'s forecast is this weighted mix." if len(parts) > 1
+            else f"Each {W['unit']}'s forecast comes from this model.")
     return (f"<p><strong>How this forecast is made.</strong> {lead} The weights won "
-            f"model selection ({uw[0]:%b %Y} to {uw[1]:%b %Y}): their total misses were {chosen:.2f} times those of last "
-            f"year alone, against {best_alone:.2f} for the best single model (smaller is better; 1.00 = as good as last year). In the Test period ({tw[0]:%b %Y} "
-            f"to {tw[1]:%b %Y}) the mix was {test}.</p>{tbl}")
+            f"model selection ({when(uw[0])} to {when(uw[1])}): their total misses were {chosen:.2f} times those of last "
+            f"year alone, against {best_alone:.2f} for the best single model (smaller is better; 1.00 = as good as last year). In the Test period ({when(tw[0])} "
+            f"to {when(tw[1])}) the mix was {test}.</p>{tbl}")
 
 
 FEATURE_NAMES = {"calendar": "calendar (month of year, business days, holidays)", "population": "county population"}
@@ -131,45 +172,49 @@ FEATURE_COLUMNS = {"calendar": ["month_of_year", "business_days", "holidays"], "
 
 def features_section(spec, panel, res, unit, fc):
     """The table the model learns from, for the first series: the target and the inputs it sees in each row,
-    ending with the first month to forecast (inputs known, target not)."""
+    ending with the first period to forecast (inputs known, target not)."""
     ens = res.get("ensemble") or []
     if not ens:
         return ""
-    code = panel.series.iloc[-12:].sum().idxmax()  # a breakout shows its largest series
+    code = panel.series.iloc[-W["season"]:].sum().idxmax()  # a breakout shows its largest series
     y = panel.series[code].dropna()
     lag_sets = [c["lags"] if isinstance(c["lags"], list) else list(range(1, c["lags"] + 1)) for c in ens]
     all_lags = sorted(set().union(*lag_sets))
-    shown = [k for k in all_lags if k in (1, 2, 3, 12)] or all_lags[:4]
+    season = W["season"]
+    shown = [k for k in all_lags if k in (1, 2, 3, season)] or all_lags[:4]
     first_fc = fc.month.min()
     months = list(y.index[-5:]) + [first_fc]
     t = pd.DataFrame(index=months)
     t[f"{unit} (target)"] = [y.get(m, "to forecast") for m in months]
     for k in shown:
-        t[f"{k} month{'s' if k > 1 else ''} back"] = [y.get(m - pd.DateOffset(months=k)) for m in months]
+        t[f"{k} {units(k)} back"] = [y.get(back(m, k)) for m in months]
     targets = {c["target"] for c in ens}
-    if "yoy" in targets and 12 in shown:  # a model predicting the change from last year sees this as its target
-        t["change vs 12 months back"] = [y[m] / y[m - pd.DateOffset(months=12)] - 1 if m in y.index else None
-                                         for m in months]
+    yoy_col = f"change vs {season} {units()} back"
+    if "yoy" in targets and season in shown:  # a model predicting the change from last year sees this as its target
+        t[yoy_col] = [y[m] / y[back(m, season)] - 1 if m in y.index else None for m in months]
     chosen = res.get("feature_groups", [])
     ex = panel.exog[code]
     for col in [c for g in chosen for c in FEATURE_COLUMNS[g] if c in ex.columns]:
         t[col.replace("_", " ")] = [ex[col].get(m) for m in months]
-    t.index = [f"{m:%Y-%m}" for m in months]
-    t = t.rename_axis("month").reset_index()
+    t.index = [stamp(m) for m in months]
+    t = t.rename_axis(W["unit"]).reset_index()
     money = "$" if unit == "dollars" else ""
     num = lambda v: v if isinstance(v, str) else f"{money}{v:,.0f}"
     plain = lambda v: f"{v:,.0f}"
     measured = [f"{unit} (target)"] + [c for c in t.columns if c.endswith(" back")]  # in the forecast's unit
-    fmt = {c: num if c in measured else plain for c in t.columns if c not in ("month", "change vs 12 months back")}
-    fmt["change vs 12 months back"] = lambda v: f"{v:+.0%}"
+    fmt = {c: num if c in measured else plain for c in t.columns if c not in (W["unit"], yoy_col)}
+    fmt[yoy_col] = lambda v: f"{v:+.0%}"
     rows = table(t, fmt)  # the "to forecast" cell makes the target a text column; align it with the numbers
     target = esc(f"{unit} (target)")
     rows = rows.replace(f'<th class="">{target}</th>', f'<th class="num">{target}</th>').replace(
         '<td class="">to forecast</td>', '<td class="num">to forecast</td>')
-    wider = [c for c in lag_sets if len(c) > len(shown)]
+    # name the models that see more lags than the table shows (whichever algorithm that is)
+    wider = sorted({{"ridge": "ridge regression", "lightgbm": "LightGBM"}[c["model"]] for c, lags in zip(ens, lag_sets)
+                    if len(lags) > len(shown)})
     notes = []
     if wider:
-        notes.append(f"The LightGBM model uses all {max(all_lags)} months back, not only the ones shown.")
+        notes.append(f"The {' and '.join(wider)} model{'s' if len(wider) > 1 else ''} use{'' if len(wider) > 1 else 's'} "
+                     f"all {max(all_lags)} {units()} back, not only the ones shown.")
     dropped = [g for g in spec.features if g not in chosen]
     if dropped:
         notes.append("Tried in model selection and left out, because the model did better without them: "
@@ -179,9 +224,9 @@ def features_section(spec, panel, res, unit, fc):
         who = "The model also learns" if len(ens) == 1 else f"{n} of the {len(ens)} averaged models also learn{'s' if n == 1 else ''}"
         notes.append(f"Pooled: {who} from the same table for this product in the {panel.pool[0].shape[1]} busiest counties.")
     label = panel.labels.get(code, code) if panel.series.shape[1] > 1 else ""
-    return (f"<h3>What the model sees</h3><p>One row per month: {unit} sold (what the model predicts) and the same "
+    return (f"<h3>What the model sees</h3><p>One row per {W['unit']}: {unit} sold (what the model predicts) and the same "
             f"series earlier (what it predicts from){', for ' + esc(label) if label else ''}. The last row is the first "
-            f"month to forecast.</p>{rows}" + (f"<p class=\"note\">{' '.join(esc(n) for n in notes)}</p>" if notes else ""))
+            f"{W['unit']} to forecast.</p>{rows}" + (f"<p class=\"note\">{' '.join(esc(n) for n in notes)}</p>" if notes else ""))
 
 
 BIG_BUYER_SHARE = 0.25  # name a store on the dashboard when it has more than this share of the last 12 months
@@ -248,6 +293,15 @@ def agent_step(t):
         return f"Asked: \u201c{args.get('question', '')}\u201d Answer: \u201c{out}\u201d"
     if t["tool"] == "submit_spec":
         return "Submitted the request; the harness checked and accepted it."
+    if t["tool"] == "submit_daily":   # on-the-fly path: its own SQL, the grain and the horizon
+        import re   # the stored input is shortened (the SQL is long), so read grain and horizon from the text
+        days = out.split("Accepted: ")[-1].split(" daily")[0] if "Accepted" in out else ""
+        grain = re.search(r'"grain": "(\w+)"', t["input"])
+        horizon = re.search(r'"horizon": (\d+)', t["input"])
+        ahead = (f", {horizon.group(1)} {grain.group(1)}{'s' if horizon.group(1) != '1' else ''} ahead"
+                 if grain and horizon else "")
+        return (f"Submitted its SQL for the daily history ({int(days):,} days){ahead}; it was checked to be one "
+                f"read-only SELECT and run." if days.isdigit() else f"Submitted its SQL{ahead}.")
     return f"{t['tool']}: {out[:120]}"
 
 
@@ -260,7 +314,7 @@ def spec_table(spec, res):
     tried = ", ".join(f"{FEATURE_NAMES.get(f, f)} ({'kept' if f in kept else 'dropped'})" for f in spec.features)
     codes = lambda x: ", ".join(x.codes) if x.codes else "all"
     rows = [("measure", MEASURE_WORDS.get(spec.target, spec.target), "what is forecast"),
-            ("months ahead", str(spec.horizon), "how far ahead"),
+            (f"{units()} ahead", str(spec.horizon), "how far ahead"),
             ("product", f"{spec.product.label} ({spec.product.kind} {codes(spec.product)})", "which products, by code"),
             ("place", f"{spec.region.label} ({spec.region.kind} {codes(spec.region)})", "where"),
             ("breakout", "combined into one forecast" if spec.series_by == "none" else f"one forecast per {spec.series_by}",
@@ -292,24 +346,57 @@ TABLES_USED = [("sales.invoice_line", "summed by month: the series being forecas
                ("sales.store", "which stores are in the place")]
 
 
-def agent_knowledge():
-    """How the agent knows the tables and columns: the dictionary it reads, and the tables this forecast used."""
+def agent_knowledge(ai_sql=None):
+    """How the agent knows the tables and columns: the dictionary it reads, and the tables this forecast used (the
+    harness's three, or for AI-written SQL, the tables that query reads)."""
     from .agent import schema_rows   # imported here: the agent module imports the harness, which imports this one
     rows = schema_rows()
     notes = rows.groupby("tbl").table_note.first()
-    t = pd.DataFrame([(tbl, role, notes.get(tbl, "")) for tbl, role in TABLES_USED],
+    if ai_sql:
+        import sqlglot
+        from sqlglot import exp
+        read = sorted({f"{t.db}.{t.name}" for t in sqlglot.parse_one(ai_sql, read="postgres").find_all(exp.Table) if t.db})
+        used = [(tbl, "read by the AI's query") for tbl in read]
+    else:
+        used = [(tbl, role.replace("summed by month", f"summed by {W['unit']}")) for tbl, role in TABLES_USED]
+    t = pd.DataFrame([(tbl, role, notes.get(tbl, "")) for tbl, role in used],
                      columns=["table", "used for", "what the agent is told about it"])
     return (f"<p><strong>How it knows the tables and columns.</strong> At the start of every request the agent reads the "
             f"warehouse's <a href=\"{SITE}/data_dictionary.html\">data dictionary</a> from the database: "
             f"{rows.tbl.nunique()} tables and {len(rows)} columns, each described in a sentence. Its search tools then "
-            f"find the actual names below. This forecast's data came from three of the tables:</p>"
+            f"find the actual names below. This forecast's data came from "
+            f"{({1: 'one', 2: 'two', 3: 'three', 4: 'four'}).get(len(used), len(used))} of the tables:</p>"
             + table(t, bold=("table",), nowrap=("table",)))
 
 
 GITHUB = "https://github.com/joehahn/demand-on-demand/blob/main"
 
 
-def prep_section(spec, panel, res, unit, wide):
+def check_words(c):
+    """The cross-check of the AI's data against the slot-filling reference, in one sentence."""
+    if c["status"] == "passed":
+        return (f"Cross-check passed: the AI's daily totals, summed by month, equal the series the tested slot-filling "
+                f"path builds independently from the request form, in all {c['months']} months.")
+    if c["status"] == "failed":
+        return (f"Cross-check FAILED in {c['bad_months']} of {c['months']} months: the AI's data and the request form it "
+                f"filled in describe different things, so check before trusting this forecast.")
+    return f"Cross-check not available: {c['why']}."
+
+
+def ai_prep_rows(ai, unit, panel, wide):
+    """The on-the-fly path's own steps for this forecast."""
+    shape = {"week": "weeks (Monday to Sunday)", "quarter": "calendar quarters"}.get(W["grain"], "calendar months")
+    otf = f'<a href="{GITHUB}/dod/onthefly.py">dod/onthefly.py</a>'
+    return [("This forecast", f"The AI wrote one SQL query returning daily {unit} totals for this request (see The SQL as "
+             f"run); it was checked to be a single read-only SELECT before it ran.",
+             f'the AI (Claude), checked by <a href="{GITHUB}/dod/sqlcheck.py">dod/sqlcheck.py</a>'),
+            ("This forecast", f"Bucketed the days into {shape}, complete {units()} only. A {W['unit']} with no orders "
+             f"counts as 0, since the warehouse was checked to have orders in every month from {when(panel.start)} to "
+             f"{when(wide.index[-1])}; {units()} before the first sale are left blank.", otf + " (Python)"),
+            ("This forecast", esc(check_words(ai["check"])), otf + " (SQL + Python)")]
+
+
+def prep_section(spec, panel, res, unit, wide, ai=None):
     """How this forecast's data was prepared: what was done once in the warehouse (SQL run by load_data.py) and what
     the harness did for this request (SQL + Python), with the details that touched this forecast's own numbers."""
     from . import db
@@ -374,10 +461,13 @@ def prep_section(spec, panel, res, unit, wide):
 
     # for this forecast, in the harness
     panel_py = code("dod/panel.py", "dod/panel.py")
-    rows.append(("This forecast", f"Summed {unit} per month for this product and place, complete months only (see The "
-                 f"SQL as run). A month with no orders counts as 0, since the warehouse was checked to have orders in every "
-                 f"month from {pd.Timestamp(panel.start):%b %Y} to {wide.index[-1]:%b %Y}, so it is a real zero, not missing "
-                 f"data. Months before the first sale are left blank.", panel_py + " (SQL + Python)"))
+    if ai:   # on-the-fly: the AI wrote the SQL; fixed code bucketed its daily totals and checked them
+        rows += ai_prep_rows(ai, unit, panel, wide)
+    else:
+        rows.append(("This forecast", f"Summed {unit} per month for this product and place, complete months only (see The "
+                     f"SQL as run). A month with no orders counts as 0, since the warehouse was checked to have orders in every "
+                     f"month from {pd.Timestamp(panel.start):%b %Y} to {wide.index[-1]:%b %Y}, so it is a real zero, not missing "
+                     f"data. Months before the first sale are left blank.", panel_py + " (SQL + Python)"))
     if any(c.get("pool") for c in res.get("ensemble") or []) and panel.pool is not None:
         rows.append(("This forecast", f"Also summed the same product per month in the {panel.pool[0].shape[1]} busiest "
                      "counties, for the pooled model to learn from (it still forecasts only this place).",
@@ -396,10 +486,12 @@ def prep_section(spec, panel, res, unit, wide):
     head = "".join(f"<th>{c}</th>" for c in t.columns)
     body = "".join(f"<tr><td style=\"white-space:nowrap\"><strong>{esc(a)}</strong></td><td>{b}</td><td>{c}</td></tr>"
                    for a, b, c in t.itertuples(index=False))
-    return (f"<p>Monthly {unit} from {pd.Timestamp(panel.start):%b %Y} through {wide.index[-1]:%b %Y}. How the data was "
+    return (f"<p>{W['adj'].capitalize()} {unit} from {when(panel.start)} through {when(wide.index[-1])}. How the data was "
             f"prepared: fixed once in the warehouse, before any forecast, then shaped for this request by the harness. "
-            f"The AI agent takes no part in these steps: they are fixed code that runs the same way for every request. "
-            f"The code itself was written in advance with Claude Code, with a person reviewing and approving every data fix.</p><div class=\"tbl\"><table><thead><tr>{head}</tr></thead>"
+            + (f"On this prototype path the AI wrote the query for the daily history (the first \u201cThis forecast\u201d "
+               f"step); every other step is fixed code that runs the same way for every request. " if ai else
+               f"The AI agent takes no part in these steps: they are fixed code that runs the same way for every request. ")
+            + f"The code itself was written in advance with Claude Code, with a person reviewing and approving every data fix.</p><div class=\"tbl\"><table><thead><tr>{head}</tr></thead>"
             f"<tbody>{body}</tbody></table></div>")
 
 
@@ -472,6 +564,28 @@ def reliability_html():
                      f"into exactly the right request or correctly declined them "
                      f"(<a href=\"{REPO}/blob/main/evals/report.md\">eval report</a>)")
     return f"<p><strong>Track record beyond this forecast:</strong> {'; '.join(parts)}.</p>" if parts else ""
+
+
+def exact_html(spec, res, panel, ai=None):
+    """Exactly what ran: the request form and the harness's SQL, or for the on-the-fly path the AI's SQL and the form
+    it filled in for the cross-check."""
+    if not ai:
+        return (f"<p>The exact request the harness ran. It is the agent's only input to the result: everything after it "
+                f"(the SQL, the models, the scoring and this page) is fixed code.</p>{spec_table(spec, res)}"
+                f"<details><summary>The request as run</summary><p>Save it as spec.json and run "
+                f"<code>python -m dod.run spec.json</code> to reproduce this forecast.</p>"
+                f"<pre>{esc(spec.model_dump_json(indent=2))}</pre></details>"
+                f"<details><summary>The SQL as run</summary><p>{esc(sql_words(spec, panel))} Generated by the harness from "
+                f"the request, never written by the AI, and run under a read-only database login.</p>"
+                f"<pre>{esc(panel.sql)}</pre></details>")
+    return (f"<p>What ran: the AI's SQL for the daily history, then fixed code for everything after it. The table is the "
+            f"request form the AI also filled in; fixed code used it to rebuild the history independently for the "
+            f"cross-check. {esc(check_words(ai['check']))}</p>{spec_table(spec, res)}"
+            f"<details><summary>The SQL as run</summary><p>Written by the AI, checked to be one read-only SELECT, and run "
+            f"under a read-only database login. It returns daily totals; fixed code bucketed them into {units()}.</p>"
+            f"<pre>{esc(ai['sql'])}</pre></details>"
+            f"<details><summary>The request form as filled in</summary><pre>{esc(spec.model_dump_json(indent=2))}</pre>"
+            f"</details>")
 
 
 def big_buyer_note(stores, unit, n_series):
@@ -562,7 +676,7 @@ def read_as_html(spec, unit, months, wide, assumptions_html):
     """How the request was read, as one line of short phrases, with the agent's assumptions one click away."""
     n = wide.shape[1]
     series = "combined into one forecast" if spec.series_by == "none" else f"one forecast per {spec.series_by} ({n})"
-    parts = [spec.product.label, spec.region.label, f"{unit} per month", months.replace(" ", "\u00a0"), series]
+    parts = [spec.product.label, spec.region.label, f"{unit} per {W['unit']}", months.replace(" ", "\u00a0"), series]
     why = (f'<details class="note"><summary>Why it was read this way</summary><ul>{assumptions_html}</ul></details>'
            if assumptions_html else "")
     return f'<p class="readas"><span>Read as</span> {" &middot; ".join(esc(x) for x in parts)}</p>{why}'
@@ -571,7 +685,7 @@ def read_as_html(spec, unit, months, wide, assumptions_html):
 def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
     """Actuals, what the model would have said 1 to N months ahead during the test (one at a time, picked with
     buttons), and the forecast."""
-    hist = wide[code].dropna().iloc[-HISTORY_MONTHS:]
+    hist = wide[code].dropna().iloc[-W["history"]:]
     mine = bt[bt.series == code]
     steps = sorted(mine.step.unique())
     one = mine[mine.step == 1]
@@ -583,7 +697,7 @@ def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
     fig.add_trace(line(hist.index, hist.values, "Actual", BLUE))
     for k in steps:  # one dotted line per horizon; only 1 month ahead shows until another is picked
         b = mine[mine.step == k].sort_values("month")
-        fig.add_trace(line(b.month, b.pred, f"Backtest, {k} month{'s' if k > 1 else ''} ahead", ORANGE, dash="dot"))
+        fig.add_trace(line(b.month, b.pred, f"Backtest, {k} {units(k)} ahead", ORANGE, dash="dot"))
         fig.data[-1].visible = bool(k == 1)
     fig.add_trace(line(f.month, f.pred, "Forecast", AQUA))
     if len(steps) > 1:
@@ -592,7 +706,7 @@ def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
             type="buttons", direction="right", showactive=True, active=0, x=1, xanchor="right", y=1.02, yanchor="bottom",
             pad=dict(r=0, t=0), font=dict(size=11), bgcolor="rgba(0,0,0,0)",
             buttons=[dict(label=f"{k}", method="restyle", args=[{"visible": shown(k)}]) for k in steps])])
-        fig.add_annotation(text="backtest, months ahead:", x=1, xref="paper", xanchor="right", xshift=-34 * len(steps),
+        fig.add_annotation(text=f"backtest, {units()} ahead:", x=1, xref="paper", xanchor="right", xshift=-34 * len(steps),
                            y=1.02, yref="paper", yanchor="bottom", yshift=4, showarrow=False,
                            font=dict(size=11, color="rgba(137,135,129,1)"))
     fig.update_traces(selector=dict(name="Forecast"), mode="lines+markers", marker=dict(size=8))
@@ -600,7 +714,7 @@ def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
         fig.update_layout(title_text=f"{label} (not backtested)")
     # the three periods: model chosen (selection), model tested (rolling backtest), model applied (forecast)
     (tune_start, _), (test_start, _) = windows
-    first_fc, end = f.month.min(), f.month.max() + pd.offsets.MonthBegin(1)
+    first_fc, end = f.month.min(), back(f.month.max(), -1)
     for x0, x1, name, shade in [(max(tune_start, hist.index[0]), test_start, "Model selection", 0.05),
                                 (test_start, first_fc, "Test", 0.10), (first_fc, end, "Forecast", 0.05)]:
         fig.add_vrect(x0=x0, x1=x1, fillcolor=f"rgba(137,135,129,{shade})", line_width=0, layer="below",
@@ -614,9 +728,9 @@ def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
                        text="", showarrow=True, arrowhead=2, arrowsize=1.2, arrowwidth=1.5, arrowcolor=grey)
     fig.add_annotation(x=hist.index[0] + (first_fc - hist.index[0]) / 2, y=top * 1.12, xref="x", yref="y",
                        yanchor="bottom", yshift=2, showarrow=False, font=dict(size=11, color=grey),
-                       text=f"final model trained on {pd.Timestamp(train_start):%b %Y} to {wide.index[-1]:%b %Y}")
+                       text=f"final model trained on {when(train_start)} to {when(wide.index[-1])}")
     fig.update_traces(hovertemplate="%{y:,.0f}", selector=dict(type="scatter"))
-    fig = style(fig, label, f"{unit} per month", height=390, legend=True)
+    fig = style(fig, label, f"{unit} per {W['unit']}", height=390, legend=True)
     return fig.update_layout(legend=dict(orientation="h", y=-0.12, yanchor="top", x=0, xanchor="left"))  # clear of long titles
 
 
@@ -624,36 +738,38 @@ def fig_accuracy(per_step):
     """Typical miss by months ahead, model vs same month last year. Dots and lines, not bars, so the axis can zoom
     to the data's range without exaggerating the gap."""
     fig = go.Figure([line(per_step.step, per_step.wape * 100, "Model", BLUE),
-                     line(per_step.step, per_step.wape_naive * 100, "Same month last year", ORANGE)])
+                     line(per_step.step, per_step.wape_naive * 100, base().capitalize(), ORANGE)])
     fig.update_traces(mode="lines+markers", marker=dict(size=9), hovertemplate="%{y:.1f}%<extra>%{fullData.name}</extra>")
     lo = min(per_step.wape.min(), per_step.wape_naive.min()) * 100
     hi = max(per_step.wape.max(), per_step.wape_naive.max()) * 100
     pad = max((hi - lo) * 0.4, 2)
     fig.update_yaxes(range=[max(0, lo - pad), hi + pad], ticksuffix="%")
-    fig.update_xaxes(title="months ahead", dtick=1)
-    return style(fig, "Typical miss in the Test period, by months ahead (lower is better)", "typical miss (% of actual)",
+    fig.update_xaxes(title=f"{units()} ahead", dtick=1)
+    return style(fig, f"Typical miss in the Test period, by {units()} ahead (lower is better)", "typical miss (% of actual)",
                  height=300, legend=True).update_layout(hovermode="x unified")
 
 
-def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
+def build(spec, panel, res, usage=None, agent=None, harness_seconds=None, ai=None):
+    """The dashboard. ai is set for the on-the-fly path (dod/onthefly.py): the AI's SQL, form fill and cross-check."""
+    set_grain(spec.grain)
     plot = Plots(numbered=True, toolbar=False)
     wide, fc, bt, ps = panel.series, res["forecast"], res["backtest"], res["per_step"]
     labels = panel.labels
-    months = f"{fc.month.min():%b %Y} to {fc.month.max():%b %Y}"
+    months = f"{when(fc.month.min())} to {when(fc.month.max())}"
     unit = {"sales_bottles": "bottles", "sales_dollars": "dollars", "sales_liters": "liters"}[spec.target]
     total = fc.pred.sum()
-    last_year = sum(wide.at[m - pd.DateOffset(years=1), c] for m, c in zip(fc.month, fc.series)
-                    if (m - pd.DateOffset(years=1)) in wide.index)
+    last_year = sum(wide.at[back(m, W["season"]), c] for m, c in zip(fc.month, fc.series)
+                    if back(m, W["season"]) in wide.index)
     yoy = total / last_year - 1 if last_year else float("nan")
     rel = res["test_rel_mae"]
     money = "$" if unit == "dollars" else ""
     tiles = [
         (f"{money}{total:,.0f}", f"forecast {unit}, {months}"),
-        (f"{yoy:+.1%}", "vs the same months last year"),
+        (f"{yoy:+.1%}", f"vs the same {units()} last year"),
         (f"{bt.dropna(subset=['actual']).pipe(lambda d: (d.actual - d.pred).abs().sum() / d.actual.sum()):.0%}",
-         f"typical monthly miss in the Test period ({res['test_window'][0]:%b %Y} to {res['test_window'][1]:%b %Y})"),
-        (f"{round(abs(1 - rel) * 100)}%", ("more" if rel < 1 else "less") + " accurate than repeating the same month "
-         "last year" if round(abs(1 - rel) * 100) else "as accurate as repeating the same month last year"),
+         f"typical {W['adj']} miss in the Test period ({when(res['test_window'][0])} to {when(res['test_window'][1])})"),
+        (f"{round(abs(1 - rel) * 100)}%", (("more" if rel < 1 else "less") + f" accurate than repeating the {base()}")
+         if round(abs(1 - rel) * 100) else f"as accurate as repeating the {base()}"),
     ]
     # what this page took to make from the plain-English request: agent time, harness time, Claude API cost
     if harness_seconds is not None:
@@ -666,9 +782,10 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
     tiles_html = "".join(f'<div class="tile"><div class="v">{esc(v)}</div><div class="k">{esc(k)}</div></div>'
                          for v, k in tiles)
 
-    # forecast table: one row per series and month
-    ft = fc.assign(series=fc.series.map(lambda c: labels.get(c, c)), month=fc.month.dt.strftime("%Y-%m"))
-    ft = ft[["series", "month", "pred", "lo", "hi"]].rename(columns={"pred": "forecast", "lo": "low (10%)", "hi": "high (90%)"})
+    # forecast table: one row per series and period
+    ft = fc.assign(series=fc.series.map(lambda c: labels.get(c, c)), month=fc.month.map(stamp))
+    ft = ft[["series", "month", "pred", "lo", "hi"]].rename(columns={"month": W["unit"], "pred": "forecast",
+                                                                      "lo": "low (10%)", "hi": "high (90%)"})
     num = lambda v: f"{v:,.0f}"
 
     charts = "".join(plot(fig_series(c, labels.get(c, c), wide, bt, fc, (res["tune_window"], res["test_window"]), unit,
@@ -686,7 +803,7 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
     grid = grid_words(res["grid"].head(10))
     space_html, space_count = search_space(res, 0 if panel.pool is None else panel.pool[0].shape[1])
     # an after-the-fact check: how each feature choice would have scored in the Test period (never used to choose)
-    names = {"seasonal naive baseline": "same month last year (baseline)"}
+    names = {"seasonal naive baseline": f"{base()} (baseline)"}
     abl = pd.DataFrame({"inputs besides past sales": [names.get(f, f.replace("chosen: none", "chosen: none (past sales only)"))
                                                       for f in res["ablation"].features],
                         "error vs last year, Test period\n(smaller is better)": res["ablation"].rel_mae.map("{:.3f}".format)})
@@ -702,11 +819,13 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
     units_note = ""
     if unit in ("bottles", "liters") and panel.unknown_packs:
         names = ", ".join(n.title() for n in panel.unknown_packs[:3])
-        more = f" and {len(panel.unknown_packs) - 3} more" if len(panel.unknown_packs) > 3 else ""
+        others = f" and {len(panel.unknown_packs) - 3} more" if len(panel.unknown_packs) > 3 else ""
         counts = "only one bottle's volume" if unit == "liters" else "as one bottle"
-        units_note = (f" {len(panel.unknown_packs)} item(s) in this product ({esc(names)}{more}) are sold in sleeves or "
+        units_note = (f" {len(panel.unknown_packs)} item(s) in this product ({esc(names)}{others}) are sold in sleeves or "
                       f"packs of unknown size, so each pack counts {counts}.")
     pooling_tried = "True" in set(res["grid"].get("pool", pd.Series(dtype=str)).astype(str))
+    stride = model.GRAINS[W["grain"]]["stride"]
+    refit = f"each {W['unit']}" if stride == 1 else f"every {stride} {units()}"
     ask_html, trace_html = "", ""
     if agent:
         assumptions = "".join(f"<li>{esc(a)}</li>" for a in agent.get("assumptions", []))
@@ -715,10 +834,17 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
         tr = pd.DataFrame(agent.get("trace", []))
         if not tr.empty:
             steps = "".join(f"<li>{esc(agent_step(t))}</li>" for t in agent.get("trace", []))
-            trace_html = ("<h2>What the agent did</h2><p>How the AI agent (Claude) turned the request into what "
-                          "\u201cRead as\u201d shows at the top: the exact products, place, measure and months. Its tools "
-                          "only look things up; it never writes the SQL or the models, and the harness checks the request "
-                          f"before running it.</p>{toolbox_html(usage)}{agent_knowledge()}<p><strong>What it did, step by step:</strong></p>"
+            intro = ("How the AI agent (Claude) turned the request into what \u201cRead as\u201d shows at the top: the "
+                     "exact products, place, measure and months. Its tools only look things up; it never writes the SQL "
+                     f"or the models, and the harness checks the request before running it.</p>{toolbox_html(usage)}")
+            if ai:
+                intro = ("How the AI agent (Claude) turned the request into what \u201cRead as\u201d shows at the top. On "
+                         "this prototype path it writes the SQL for the daily history itself (text-to-SQL, with "
+                         f'<a href="{SITE}/differential.html">three rules for this warehouse</a>), and names the time '
+                         "grain. Fixed code checks the SQL is one read-only SELECT, buckets the days, picks and tests "
+                         "the model, and cross-checks the AI's data against the tested path.</p>")
+            trace_html = (f"<h2>What the agent did</h2><p>{intro}{agent_knowledge(ai['sql'] if ai else None)}"
+                          "<p><strong>What it did, step by step:</strong></p>"
                           f"<ol>{steps}</ol><details><summary>The raw tool calls</summary>"
                           + table(tr[["turn", "tool", "input", "result"]], nowrap=("turn", "tool"), mono=("result",), wide=("input",)) + "</details>")
 
@@ -730,12 +856,12 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
 {skipped_html}
 {charts}{more}
 <ul class="note">
-<li><strong>Model selection</strong> ({uw[0]:%b %Y} to {uw[1]:%b %Y}): {len(res["grid"]) - 1} setups compared (ridge
+<li><strong>Model selection</strong> ({when(uw[0])} to {when(uw[1])}): {len(res["grid"]) - 1} setups compared (ridge
 regression and LightGBM, each with different targets, inputs and history lengths{", with or without other counties" if pooling_tried else ""});
 chosen: {esc(short_model(res))}.</li>
-<li><strong>Test</strong> ({tw[0]:%b %Y} to {tw[1]:%b %Y}): that model retrained each month on earlier months only; dotted
-orange is its forecast 1 to {max(ps.step)} months ahead (pick above the chart).</li>
-<li><strong>Forecast</strong> ({months}): retrained on {pd.Timestamp(panel.start):%b %Y} to {wide.index[-1]:%b %Y}, then applied.{units_note}</li>
+<li><strong>Test</strong> ({when(tw[0])} to {when(tw[1])}): that model retrained {refit} on earlier {units()} only; dotted
+orange is its forecast 1 to {max(ps.step)} {units()} ahead (pick above the chart).</li>
+<li><strong>Forecast</strong> ({months}): retrained on {when(panel.start)} to {when(wide.index[-1])}, then applied.{units_note}</li>
 <li><strong>Green band (80% range):</strong> inferred by comparing the model's forecasts with actual sales in the Test
 period; it spans the middle 80% of those misses.</li>
 {big_buyer_note(panel.stores, unit, wide.shape[1])}
@@ -743,13 +869,13 @@ period; it spans the middle 80% of those misses.</li>
 {table(ft, {"forecast": num, "low (10%)": num, "high (90%)": num})}
 
 <h2>How far to trust it</h2>
-<p>Every month in the Test period was forecast by a model trained only on earlier months, then compared with what
-actually happened and with the simplest serious baseline: the same month last year.</p>
+<p>Every {W['unit']} in the Test period was forecast by a model trained only on earlier {units()}, then compared with what
+actually happened and with the simplest serious baseline: the {base()}.</p>
 {plot(fig_accuracy(ps))}
 {reliability_html()}
 
 <h2>How the data was prepared</h2>
-{prep_section(spec, panel, res, unit, wide)}
+{prep_section(spec, panel, res, unit, wide, ai)}
 {features_section(spec, panel, res, unit, fc)}
 {stores_section(panel.stores, spec, unit, wide.index[-1], plot)}
 
@@ -759,7 +885,7 @@ actually happened and with the simplest serious baseline: the same month last ye
 {space_html}
 <details><summary>The 10 best configurations</summary>
 <p>With the baseline (a model had to beat it in model selection to be used). Feature groups were then kept or dropped
-on the same months; the test window was not used for any choice.</p>
+on the same {units()}; the test window was not used for any choice.</p>
 {table(grid)}</details>
 {blend_details(res)}
 <details><summary>Feature choice, checked afterward</summary><p>Whether to add calendar or population inputs was
@@ -770,15 +896,7 @@ choice ever saw; the Test period can disagree with the selection.</p>
 {trace_html}
 <h2>Exactly what ran</h2>
 {cost}
-<p>The exact request the harness ran. It is the agent's only input to the result: everything after it (the SQL, the
-models, the scoring and this page) is fixed code.</p>
-{spec_table(spec, res)}
-<details><summary>The request as run</summary>
-<p>Save it as spec.json and run <code>python -m dod.run spec.json</code> to reproduce this forecast.</p>
-<pre>{esc(spec.model_dump_json(indent=2))}</pre></details>
-<details><summary>The SQL as run</summary>
-<p>{esc(sql_words(spec, panel))} Generated by the harness from the request, never written by the AI, and run under a
-read-only database login.</p><pre>{esc(panel.sql)}</pre></details>
+{exact_html(spec, res, panel, ai)}
 
 <footer>
 Data: <a href="https://catalog.data.gov/dataset?q=iowa+liquor+sales">Iowa Liquor Sales</a>, State of Iowa, via the Iowa

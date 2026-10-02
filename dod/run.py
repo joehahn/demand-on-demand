@@ -19,10 +19,11 @@ OUT = Path(__file__).parent.parent / "out"
 def facts_for(spec, p, res):
     """The numbers the narrator may use, and nothing else."""
     fc, wide = res["forecast"], p.series
-    last_year = {f"{m:%Y-%m}": float(sum(wide.at[m - pd.DateOffset(years=1), c] for c in fc.series.unique()
-                                         if (m - pd.DateOffset(years=1)) in wide.index))
+    fmt = "%Y-%m" if model.GRAIN == "month" else "%Y-%m-%d"   # weeks and quarters are labeled by their first day
+    ago = model.SEASON * pd.tseries.frequencies.to_offset(model.FREQ)   # the same period last year
+    last_year = {f"{m:{fmt}}": float(sum(wide.at[m - ago, c] for c in fc.series.unique() if (m - ago) in wide.index))
                  for m in sorted(fc.month.unique())}
-    by_month = {f"{m:%Y-%m}": float(v) for m, v in fc.groupby("month").pred.sum().items()}
+    by_month = {f"{m:{fmt}}": float(v) for m, v in fc.groupby("month").pred.sum().items()}
     pct = lambda a, b: f"{(a / b - 1) * 100:+.0f}%" if b else "n/a"
     return {"title": spec.title, "unit": spec.target.replace("sales_", ""),
             "forecast_total": round(sum(by_month.values())), "same_months_last_year_total": round(sum(last_year.values())),

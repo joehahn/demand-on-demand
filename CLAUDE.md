@@ -136,3 +136,8 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    `model.in_grain`), and cross-checks daily-summed-by-month vs the slot-filling series). Monthly path verified identical.
    `python evals/onthefly_report.py` -> docs/onthefly.html: 4 of 5 cross-checks passed; the Hy-Vee group one failed
    because the store search showed 40 of 207 stores (store search now says "N stores match").
+11. Full dashboards at any grain (2026-10-02): Spec.grain (month default; week/quarter, horizon <= 52/4); dashboard.py
+   reads grain words via set_grain/when/stamp/back/base; build(..., ai={sql, check}) gives the on-the-fly variants
+   (AI wrote the SQL; cross-check; tables read by its query). onthefly.forecast writes out/<slug>/dashboard.html when the
+   AI filled in the request form. Example: docs/examples/cream_liqueur_by_week_next_12_weeks.html. Monthly pages verified
+   identical in numbers; fixed a stray "and 23 more" (variable clash) on the published cream liqueur page.

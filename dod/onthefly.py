@@ -131,7 +131,7 @@ def ask(request, log=print):
                             "is_error": str(out).startswith("Error")})
         if done:
             usage["agent_seconds"] = round(time.time() - t0, 1)
-            return {"status": "ok", **done, "usage": usage, "trace": trace}
+            return {"status": "ok", **done, "request": request, "usage": usage, "trace": trace}
         messages.append({"role": "user", "content": results})
     return {"status": "error", "message": f"No query after {MAX_TURNS} turns.", "usage": usage, "trace": trace}
 
@@ -179,13 +179,15 @@ def cross_check(rows, scope_json, last_month):
             "first_bad": str(bad.idxmax().date()) if bad.any() else None}
 
 
-def forecast(request, log=print):
-    """End to end: the AI's part, then fixed bucketing, the grain-aware harness and the reference cross-check."""
+def forecast(request, log=print, out_root=None):
+    """End to end: the AI's part, then fixed bucketing, the grain-aware harness, the reference cross-check, and (when
+    the AI filled in the request form) a full dashboard, written to out/<title>/dashboard.html."""
     a = ask(request, log=log)
     if a["status"] != "ok":
         return a
     t0 = time.time()
     end, last_month = panel.data_end()
+    panel.check_months("2016-01-01", last_month)   # a period with no orders must be a real zero, not missing data
     grain = a["grain"]
     model_grain, steps = ("month", 12) if grain == "year" else (grain, a["horizon"])
     wide = bucket(a["rows"], model_grain, end)
@@ -195,8 +197,45 @@ def forecast(request, log=print):
     with model.use_grain(model_grain):
         res = model.run(wide, exog, future, steps, [], log=lambda *x: None)
     check = cross_check(a["rows"], a["reference_scope"], last_month)
-    return {**a, "status": "ok", "model_grain": model_grain, "wide": wide, "res": res, "check": check,
-            "harness_seconds": round(time.time() - t0, 1)}
+    out = {**a, "status": "ok", "model_grain": model_grain, "wide": wide, "res": res, "check": check,
+           "harness_seconds": round(time.time() - t0, 1)}
+    spec = form_spec(a, model_grain, steps)
+    if spec is not None:
+        out["dashboard"] = write_dashboard(spec, a, wide, exog, future, res, check, end, last_month, out_root, t0)
+    return out
+
+
+def form_spec(a, grain, steps):
+    """The request form the AI filled in, as a Spec at the forecast's grain (None if the form cannot express it)."""
+    try:
+        scope = json.loads(a["reference_scope"]) if a["reference_scope"].strip() else None
+        return Spec(title=a["title"], horizon=steps, grain=grain, features=[], **scope) if scope else None
+    except Exception:
+        return None
+
+
+def write_dashboard(spec, a, wide, exog, future, res, check, end, last_month, out_root, t0):
+    """A full dashboard, like the monthly ones: same builder, with the AI's SQL, form fill and cross-check."""
+    from pathlib import Path
+    from . import agent as agent_mod, dashboard, run as run_mod
+    items = panel.member_items(spec) if spec.product.kind in ("item", "category", "name") else []
+    sql, params = panel.build_sql(spec, items)
+    stores = panel.store_list(db.query(sql, params), last_month)   # store list and map, from the tested path's query
+    p = panel.Panel(series=wide, exog=exog, future_index=future, sql=a["sql"], data_end=end, start=spec.start,
+                    labels={c: f"{spec.product.label}, {spec.region.label}" if c == "total" else c for c in wide},
+                    stores=stores, unknown_packs=panel.unknown_packs(spec, items))
+    usage = a["usage"]
+    with model.use_grain(spec.grain):
+        facts = run_mod.facts_for(spec, p, res)
+    summary = agent_mod.narrate(anthropic.Anthropic(), facts, usage) + " " + run_mod.trust_sentence(res["test_rel_mae"])
+    agent = {"request": a["title"] if not a.get("request") else a["request"], "assumptions": a["assumptions"],
+             "trace": a["trace"], "usage": usage, "summary": summary}
+    html = dashboard.build(spec, p, res, usage, agent, harness_seconds=time.time() - t0,
+                           ai={"sql": a["sql"], "check": check})
+    out = Path(out_root or Path(__file__).parent.parent / "out") / spec.slug
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "dashboard.html").write_text(html)
+    return str(out / "dashboard.html")
 
 
 if __name__ == "__main__":

@@ -89,6 +89,11 @@ NOTES = {
 }
 
 
+# Requests with a full dashboard (built by dod/onthefly.forecast, copied into docs/examples/).
+DASHBOARDS = {"Cream liqueur bottles statewide by week for the next 12 weeks":
+              "examples/cream_liqueur_by_week_next_12_weeks.html"}
+
+
 def check_text(c):
     if c["status"] == "passed":
         return f"Passed: the AI's data, summed by month, equals the reference in all {c['months']} months."
@@ -122,7 +127,9 @@ def build():
         sections.append(
             f"<h2>&ldquo;{html.escape(r['request'])}&rdquo;</h2>"
             f"<p class=\"readas\"><span>Read as</span> {html.escape(r['title'])} &middot; {html.escape(what)}</p>"
-            f"<div class=\"tiles\"><div class=\"tile\"><div class=\"v\">{total:,.0f}</div><div class=\"k\">forecast total"
+            + (f"<p><strong><a href=\"{DASHBOARDS[r['request']]}\">Full dashboard for this forecast</a></strong> "
+               f"(the same layout as the monthly examples)</p>" if r["request"] in DASHBOARDS else "")
+            + f"<div class=\"tiles\"><div class=\"tile\"><div class=\"v\">{total:,.0f}</div><div class=\"k\">forecast total"
             f"</div></div><div class=\"tile\"><div class=\"v\">{round(abs(1 - r['rel_mae']) * 100)}%</div><div class=\"k\">"
             f"{html.escape(accuracy(r['rel_mae'], r['model_grain']).split('% ', 1)[1])} (Test period)</div></div>"
             f"<div class=\"tile\"><div class=\"v\">{badge}</div><div class=\"k\">{html.escape(check_text(r['check']))}"
