@@ -84,7 +84,7 @@ def esc(s):
 def build():
     ex = json.loads((ROOT / "docs" / "examples" / "index.json").read_text())
     bench = pd.read_csv(ROOT / "benchmark" / "results.csv").dropna(subset=["rel_mae"])
-    evals = json.loads(Path(sorted(glob.glob(str(ROOT / "evals" / "results" / "*.json")))[-1]).read_text())
+    evals = json.loads(Path(sorted(glob.glob(str(ROOT / "evals" / "results" / "2*.json")))[-1]).read_text())  # full runs only
     n_ok, n_runs = sum(r["passed"] for r in evals), len(evals)
     beat = int((bench.rel_mae < 1).sum())
     end_to_end = sorted(e["agent_seconds"] + e["harness_seconds"] for e in ex)[len(ex) // 2]
@@ -112,7 +112,7 @@ Iowa liquor orders (2016 to 2026). A fixed Python harness then builds the data, 
 simplest honest benchmark, the same month last year, and publishes a dashboard that says how far to trust the answer.</p>
 <div class="tiles">{tiles_html}</div>
 
-<h2>How it works</h2>
+<h2 id="how">How it works</h2>
 {DIAGRAM}
 <ul>
 <li><strong>The AI decides what to forecast; code decides how.</strong> The agent resolves products, places, measures
@@ -130,11 +130,11 @@ categories, renumbered products, inconsistent spellings. They are documented on
 in the Python process and never appear in a prompt.</li>
 </ul>
 
-<h2>Example forecasts</h2>
+<h2 id="examples">Example forecasts</h2>
 <p>Five requests typed in plain English, each run once, shown as they came out, the misses included.</p>
 <div class="cards">{cards}</div>
 
-<h2>How good is it?</h2>
+<h2 id="results">How good is it?</h2>
 <p><strong>Forecast accuracy.</strong> On {len(bench)} forecasts sampled from the warehouse (products, categories,
 vendors; counties and statewide; bottles, dollars and liters; 3 to 12 months ahead), the chosen model beat "same month
 last year" on <strong>{beat}</strong>, with a median error {1 - bench.rel_mae.median():.0%} lower than that baseline

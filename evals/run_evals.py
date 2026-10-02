@@ -101,7 +101,9 @@ if __name__ == "__main__":
             print(f"  {'PASS' if r['passed'] else 'FAIL'} {r['id']} #{r['run']}  ${r['cost']:.3f} {r['seconds']:.0f}s"
                   + ("" if r["passed"] else "  " + "; ".join(f"{c['check']}: {c['why']}" for c in r["checks"] if not c["ok"])[:200]))
     (HERE / "results").mkdir(exist_ok=True)
-    (HERE / "results" / f"{time.strftime('%Y%m%d_%H%M')}.json").write_text(json.dumps(results, indent=1, default=str))
+    # a subset run (--only) is saved as partial_*, so readers of the latest full run (landing page, dashboards) skip it
+    prefix = "partial_" if "--only" in args else ""
+    (HERE / "results" / f"{prefix}{time.strftime('%Y%m%d_%H%M')}.json").write_text(json.dumps(results, indent=1, default=str))
     name = "report_partial.md" if "--only" in args else "report.md"  # a subset never overwrites the full report
     (HERE / name).write_text(report(results, cases))
     print((HERE / name).read_text())

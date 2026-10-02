@@ -4,6 +4,8 @@ import ast
 import html
 import json
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -400,6 +402,76 @@ def prep_section(spec, panel, res, unit, wide):
             f"<tbody>{body}</tbody></table></div>")
 
 
+REPO = "https://github.com/joehahn/demand-on-demand"
+ROOT = Path(__file__).parent.parent
+
+
+def track_record():
+    """The project's measured results, read from the latest reports: (benchmark beat, benchmark n, eval ok, eval runs,
+    eval cases, grounded, summaries). Anything missing is None, and the page leaves that part out."""
+    import glob
+    import re
+    out = dict(beat=None, n=None, ok=None, runs=None, cases=None, grounded=None, summaries=None)
+    try:
+        b = pd.read_csv(ROOT / "benchmark" / "results.csv").dropna(subset=["rel_mae"])
+        out.update(beat=int((b.rel_mae < 1).sum()), n=len(b))
+    except (OSError, ValueError, KeyError):
+        pass
+    full = sorted(glob.glob(str(ROOT / "evals" / "results" / "2*.json")))  # full runs; partial_* are subsets
+    if full:
+        r = json.loads(Path(full[-1]).read_text())
+        out.update(ok=sum(x["passed"] for x in r), runs=len(r), cases=len({x["id"] for x in r}))
+    g = ROOT / "evals" / "grounding.md"
+    m = re.search(r"(\d+) summaries, (\d+) fully grounded", g.read_text()) if g.exists() else None
+    if m:
+        out.update(summaries=int(m.group(1)), grounded=int(m.group(2)))
+    return out
+
+
+def nav_html():
+    return (f'<p class="note"><a href="{SITE}/">demand-on-demand</a> &middot; <a href="{SITE}/#how">how it works</a> '
+            f'&middot; <a href="{SITE}/#examples">examples</a> &middot; <a href="{SITE}/data_dictionary.html">data '
+            f'dictionary</a> &middot; <a href="{REPO}">GitHub</a></p>')
+
+
+def summary_note(usage):
+    """Which words on the page come from the AI, and how they are kept honest."""
+    t = track_record()
+    model = (usage or {}).get("model", "Claude")
+    check = (f" In a separate check, every number matched the harness in {t['grounded']} of {t['summaries']} such "
+             f"summaries (<a href=\"{REPO}/blob/main/evals/grounding.md\">grounding report</a>).") if t["summaries"] else ""
+    return (f'<p class="note">The first sentence is written by the AI ({esc(model)}) from the harness\'s numbers only; '
+            f"the second, and every other number on this page, come from fixed code.{check}</p>")
+
+
+def toolbox_html(usage):
+    """What the agent can and cannot do, and where its instructions live."""
+    from .tools import TOOLS
+    words = {"find_values": "search product, place and vendor names", "run_select": "run one SELECT query",
+             "preview_spec": "preview a request without training", "ask_user": "ask one clarifying question",
+             "submit_spec": "submit the request"}
+    tools = "; ".join(f"<code>{t['name']}</code> ({words.get(t['name'], '')})" for t in TOOLS)
+    model = (usage or {}).get("model", "Claude")
+    return (f"<p><strong>The agent's toolbox.</strong> One AI agent ({esc(model)}) with {len(TOOLS)} tools: {tools}. "
+            f"Guardrails: its database login can only read the clean tables (60-second limit, read-only), and any SQL it "
+            f"writes is checked to be a single SELECT before it runs; that SQL only answers its questions, never feeds "
+            f"the forecast. Read its <a href=\"{REPO}/blob/main/dod/agent.py\">instructions</a> and "
+            f"<a href=\"{REPO}/blob/main/dod/tools.py\">tool definitions</a>.</p>")
+
+
+def reliability_html():
+    t = track_record()
+    parts = []
+    if t["n"]:
+        parts.append(f"across {t['n']} sampled forecasts, the harness beat repeating last year on {t['beat']} "
+                     f"(<a href=\"{REPO}/blob/main/benchmark/report.md\">benchmark report</a>)")
+    if t["runs"]:
+        parts.append(f"the agent turned {t['ok']} of {t['runs']} test requests ({t['cases']} requests, run twice each) "
+                     f"into exactly the right request or correctly declined them "
+                     f"(<a href=\"{REPO}/blob/main/evals/report.md\">eval report</a>)")
+    return f"<p><strong>Track record beyond this forecast:</strong> {'; '.join(parts)}.</p>" if parts else ""
+
+
 def big_buyer_note(stores, unit, n_series):
     """One store with a large share of recent volume, ordering on and off, makes the monthly total hard to predict:
     say so next to the forecast range. Single-series forecasts only (a breakout would need a share per series)."""
@@ -637,18 +709,19 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
     if agent:
         assumptions = "".join(f"<li>{esc(a)}</li>" for a in agent.get("assumptions", []))
         ask_html = (f'<p class="asked">&ldquo;{esc(agent["request"])}&rdquo;</p>' + read_as_html(spec, unit, months, wide, assumptions)
-                    + (f'<p class="headline">{esc(agent["summary"])}</p>' if agent.get("summary") else ""))
+                    + (f'<p class="headline">{esc(agent["summary"])}</p>' + summary_note(usage) if agent.get("summary") else ""))
         tr = pd.DataFrame(agent.get("trace", []))
         if not tr.empty:
             steps = "".join(f"<li>{esc(agent_step(t))}</li>" for t in agent.get("trace", []))
             trace_html = ("<h2>What the agent did</h2><p>How the AI agent (Claude) turned the request into what "
                           "\u201cRead as\u201d shows at the top: the exact products, place, measure and months. Its tools "
                           "only look things up; it never writes the SQL or the models, and the harness checks the request "
-                          f"before running it.</p>{agent_knowledge()}<p><strong>What it did, step by step:</strong></p>"
+                          f"before running it.</p>{toolbox_html(usage)}{agent_knowledge()}<p><strong>What it did, step by step:</strong></p>"
                           f"<ol>{steps}</ol><details><summary>The raw tool calls</summary>"
                           + table(tr[["turn", "tool", "input", "result"]], nowrap=("turn", "tool"), mono=("result",), wide=("input",)) + "</details>")
 
     body = f"""
+{nav_html()}
 <h1>{esc(spec.title)}</h1>
 {ask_html or read_as_html(spec, unit, months, wide, "")}
 <div class="tiles">{tiles_html}</div>
@@ -670,6 +743,7 @@ Green band: the range that held 80% of outcomes in the Test period.{units_note}<
 <p>Every month in the Test period was forecast by a model trained only on earlier months, then compared with what
 actually happened and with the simplest serious baseline: the same month last year.</p>
 {plot(fig_accuracy(ps))}
+{reliability_html()}
 
 <h2>How the data was prepared</h2>
 {prep_section(spec, panel, res, unit, wide)}
