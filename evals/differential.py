@@ -1,7 +1,10 @@
 """Differential test: does AI-written SQL (NL2SQL, dod/nl2sql.py) produce the same monthly series as the slot-filling
 path (dod/agent.py + the harness's fixed SQL), which serves as the reference?
 
-    python evals/differential.py [--only titos_polk,chicago]
+    python evals/differential.py [--rules] [--only titos_polk,chicago]
+
+--rules gives the NL2SQL agent explicit rules for this warehouse (dod/nl2sql.RULES); results then go to
+evals/differential_rules.json, so the two configurations can be compared.
 
 For every eval case the reference can answer, both agents get the same request. The reference agent fills in the
 request form and the harness builds the series with fixed SQL; the NL2SQL agent writes the series query itself.
@@ -39,8 +42,11 @@ def reference(request, last_month):
             "seconds": r["usage"].get("agent_seconds")}
 
 
+RULES = "--rules" in sys.argv
+
+
 def generated(request, last_month):
-    r = nl2sql.ask(request, log=lambda *a: None)
+    r = nl2sql.ask(request, log=lambda *a: None, rules=RULES)
     if r["status"] != "ok":
         return {"status": r["status"], "cost": r["usage"]["est_cost_usd"], "message": r.get("message", "")}
     rows = r["rows"].copy()
@@ -102,7 +108,7 @@ if __name__ == "__main__":
     _, last_month = panel.data_end()
     with ThreadPoolExecutor(4) as pool:
         rows = list(pool.map(lambda c: one(c, last_month), cases))
-    path = HERE / "differential.json"
+    path = HERE / ("differential_rules.json" if RULES else "differential.json")
     if "--only" in sys.argv and path.exists():   # a partial rerun updates those cases in the saved results
         saved = {r["id"]: r for r in json.loads(path.read_text())}
         saved.update({r["id"]: r for r in rows})

@@ -1,0 +1,1014 @@
+[
+ {
+  "id": "titos_polk",
+  "request": "Monthly forecast of Tito's vodka bottles in Polk County for the next 5 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0233,
+  "gen_cost": 0.0118,
+  "ref_seconds": 18.3,
+  "gen_seconds": 19.7,
+  "spec": {
+   "title": "Tito's Vodka, Polk County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "titos"
+    ],
+    "label": "Tito's Handmade Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153"
+    ],
+    "label": "Polk County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE il.item_no IN (\n    SELECT i.item_no FROM sales.item i\n    JOIN sales.item h ON h.item_no = i.family_item_no\n    WHERE h.item_desc ILIKE '%TITO%' AND h.item_desc ILIKE '%VODKA%'\n)\nAND s.county_fips = '19153'\nAND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Tito's Vodka identified as all products whose family item description contains both 'TITO' and 'VODKA' (covers all sizes: 50ml mini, 100ml, 200ml, 375ml, 750ml, 1000ml, 1750ml, and mini 4-pack)",
+   "Polk County identified by county_fips 19153, based on store location",
+   "Measure is total bottles sold (sales_bottles), which accounts for mini packs correctly",
+   "History included from 2016-01-01 through the latest available data; incomplete current month will be dropped by downstream processing",
+   "Forecast horizon is 5 months as requested"
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 4326478.0,
+  "gen_total": 4326478.0,
+  "ref_last12": 610906.0,
+  "gen_last12": 610906.0,
+  "match": true
+ },
+ {
+  "id": "titos_minis_by_item",
+  "request": "How many bottles of each Tito's mini item will sell statewide over the next 6 months?",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0203,
+  "gen_cost": 0.0284,
+  "ref_seconds": 12.1,
+  "gen_seconds": 13.9,
+  "spec": {
+   "title": "Tito's mini items, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Mini items"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', ordered_on)::date AS month,\n  CASE WHEN il.item_no IN (SELECT item_no FROM sales.item WHERE family_item_no='38194') THEN 'Tito''s Mini (5pk)' ELSE 'Tito''s Mini 4 Pack' END AS series,\n  SUM(sales_bottles) AS value\nFROM sales.invoice_line il\nWHERE il.item_no IN (SELECT item_no FROM sales.item WHERE family_item_no IN ('38194','38185'))\n  AND ordered_on >= '2016-01-01'\nGROUP BY 1,2\nORDER BY 1,2",
+  "assumptions": [
+   "Tito's mini products map to two distinct current item families: item_no 38194 (TITOS HANDMADE VODKA MINI, sold as 50ml 5-packs) and item_no 38185 (TITOS HANDMADE VODKA MINI 4 PACK), each tracked across all historical renumberings via family_item_no.",
+   "Measure is bottles sold (sales_bottles), which already accounts for multi-packs as individual bottle counts.",
+   "History covers all available data from 2016-01-01 through the latest available month; the current incomplete month is dropped by downstream processing.",
+   "Forecast horizon is 6 months as requested, produced separately for each of the two mini item series."
+  ],
+  "message": null,
+  "ref_series": 2,
+  "gen_series": 2,
+  "matched_series": 2,
+  "months": 128,
+  "cells": 256,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 3618784.0,
+  "gen_total": 3618784.0,
+  "ref_last12": 843276.0,
+  "gen_last12": 843276.0,
+  "match": true
+ },
+ {
+  "id": "titos_minis_des_moines",
+  "request": "monthly forecast of Tito's minis in Des Moines for the next 5 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0224,
+  "gen_cost": 0.0219,
+  "ref_seconds": 12.4,
+  "gen_seconds": 9.8,
+  "spec": {
+   "title": "Tito's minis, Des Moines, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml, single and 4-pack)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "DES MOINES"
+    ],
+    "label": "Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE il.item_no IN (\n    SELECT item_no FROM sales.item WHERE family_item_no IN ('38194','38185')\n)\nAND s.city = 'DES MOINES'\nAND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "'Tito's minis' interpreted as the Tito's Handmade Vodka Mini product family (50ml, both single and 4-pack SKUs, item family 38194/38185).",
+   "'Des Moines' interpreted as the city of Des Moines (store city = 'DES MOINES'), not West Des Moines or the broader Polk County.",
+   "Measure is bottles sold (sales_bottles), which accounts for multi-packs by counting individual minis.",
+   "History starts 2016-01-01 and includes all months through the latest available; incomplete current month is dropped by downstream processing."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 486908.0,
+  "gen_total": 486908.0,
+  "ref_last12": 93256.0,
+  "gen_last12": 93256.0,
+  "match": true
+ },
+ {
+  "id": "crown_mount_pleasant",
+  "request": "Monthly liters of Crown Royal in Mount Pleasant for the next 4 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0343,
+  "gen_cost": 0.0285,
+  "ref_seconds": 14.3,
+  "gen_seconds": 60.0,
+  "spec": {
+   "title": "Crown Royal, Mount Pleasant, next 4 months",
+   "target": "sales_liters",
+   "horizon": 4,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "crown royal"
+    ],
+    "label": "Crown Royal (all sizes/variants)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "MOUNT PLEASANT"
+    ],
+    "label": "Mount Pleasant"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month, 'total' AS series, SUM(il.sales_liters) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE s.city = 'MOUNT PLEASANT'\nAND il.item_no IN (\n  SELECT i.item_no FROM sales.item i\n  JOIN sales.item h ON h.item_no = i.family_item_no\n  WHERE h.item_desc ILIKE '%CROWN%' AND h.item_desc ILIKE '%ROYAL%'\n)\nAND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "City resolved to Mount Pleasant, Henry County, IA (sales.store.city = 'MOUNT PLEASANT')",
+   "Crown Royal brand matched to all product family members whose current family name contains both 'CROWN' and 'ROYAL' (all sizes and flavors, including minis and specialty packs)",
+   "Measure is sales_liters (volume), summed monthly, per the request for 'liters'",
+   "History starts 2016-01-01 per warehouse convention; incomplete current month will be dropped by downstream processing",
+   "Single total series (no breakout) since the request did not ask for a split by sub-category"
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 42996.55,
+  "gen_total": 42996.55,
+  "ref_last12": 4807.7,
+  "gen_last12": 4807.7,
+  "match": true
+ },
+ {
+  "id": "tennessee_whiskey",
+  "request": "Forecast Tennessee whiskey bottles across Iowa for the next 3 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0247,
+  "gen_cost": 0.0159,
+  "ref_seconds": 20.8,
+  "gen_seconds": 19.3,
+  "spec": {
+   "title": "Tennessee Whiskies, Iowa statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011400"
+    ],
+    "label": "Tennessee Whiskies"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nWHERE il.item_no IN (\n    SELECT item_no FROM sales.item WHERE category_current = '1011400'\n)\nAND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Tennessee whiskey is defined by today's category taxonomy code 1011400 (TENNESSEE WHISKIES) in sales.category, applied via item.category_current to capture the full product family regardless of renumbering.",
+   "Measure is bottles sold (sales_bottles), matching the 'bottles' request.",
+   "Scope is statewide Iowa (all stores/counties combined) since no geography narrower than Iowa was specified.",
+   "History starts 2016-01-01 per warehouse convention; incomplete current month will be dropped by downstream processing.",
+   "Forecast horizon is 3 months as requested."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 12095720.0,
+  "gen_total": 12095720.0,
+  "ref_last12": 1244052.0,
+  "gen_last12": 1244052.0,
+  "match": true
+ },
+ {
+  "id": "vodka_top_counties",
+  "request": "American vodka sales dollars for each of the five largest counties, next 6 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.019,
+  "gen_cost": 0.014,
+  "ref_seconds": 21.1,
+  "gen_seconds": 16.6,
+  "spec": {
+   "title": "American Vodka, dollars, top 5 counties, next 6 months",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100"
+    ],
+    "label": "American Vodkas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153",
+     "19113",
+     "19163",
+     "19103",
+     "19013"
+    ],
+    "label": "Polk, Linn, Scott, Johnson, Black Hawk counties"
+   },
+   "series_by": "county",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       s.county_name AS series,\n       SUM(il.sales_dollars) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE il.item_no IN (\n        SELECT item_no FROM sales.item WHERE category_current = '1031100'\n      )\n  AND s.county_name IN ('POLK','LINN','SCOTT','JOHNSON','BLACK HAWK')\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1, 2\nORDER BY 1, 2",
+  "assumptions": [
+   "American vodka interpreted as category 'AMERICAN VODKAS' (code 1031100), excluding flavored vodka which is a separate category",
+   "Largest counties determined by total historical American vodka sales dollars (Polk, Linn, Scott, Johnson, Black Hawk)",
+   "Product category assigned using each item's current category (category_current) per warehouse rules, not the category recorded on the order line",
+   "Measure is sales dollars (revenue) as requested",
+   "History included from 2016-01-01 through the latest available data; incomplete current month will be dropped by downstream processing"
+  ],
+  "message": null,
+  "ref_series": 5,
+  "gen_series": 5,
+  "matched_series": 5,
+  "months": 128,
+  "cells": 640,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 314220564.57,
+  "gen_total": 314220564.57,
+  "ref_last12": 31537306.849999998,
+  "gen_last12": 31537306.849999998,
+  "match": true
+ },
+ {
+  "id": "jack_iowa_city",
+  "request": "Forecast Jack Daniel's bottle sales in Iowa City for the next 4 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0261,
+  "gen_cost": 0.0288,
+  "ref_seconds": 15.8,
+  "gen_seconds": 26.7,
+  "spec": {
+   "title": "Jack Daniel's bottle sales, Iowa City, next 4 months",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "jack daniels"
+    ],
+    "label": "Jack Daniel's (all products)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "IOWA CITY"
+    ],
+    "label": "Iowa City"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month, 'total' AS series, SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE s.city = 'IOWA CITY'\n  AND il.item_no IN (\n    SELECT i.item_no FROM sales.item i JOIN sales.item h ON h.item_no = i.family_item_no\n    WHERE h.item_desc ILIKE '%JACK%' AND h.item_desc ILIKE '%DANIEL%'\n  )\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Jack Daniel's defined as all products whose current family name contains both 'JACK' and 'DANIEL' (all sizes and flavors: Old No.7, Honey, Fire, Apple, Rye, Single Barrel, etc.), matched via family_item_no per renumbering rules.",
+   "Iowa City defined as the city field on sales.store matching 'IOWA CITY' (Johnson County), covering all 64 stores recorded there.",
+   "Measure is total bottles sold (sales_bottles), summed monthly, since the request did not specify dollars or liters.",
+   "History starts 2016-01-01 and includes all months through the latest available; incomplete current month will be dropped by downstream processing.",
+   "Forecast horizon is 4 months as requested."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 261920.0,
+  "gen_total": 261920.0,
+  "ref_last12": 23569.0,
+  "gen_last12": 23569.0,
+  "match": true
+ },
+ {
+  "id": "fireball_linn_revenue",
+  "request": "What revenue should we expect from Fireball in Linn County next quarter?",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0245,
+  "gen_cost": 0.0274,
+  "ref_seconds": 19.8,
+  "gen_seconds": 30.9,
+  "spec": {
+   "title": "Fireball revenue, Linn County, next quarter",
+   "target": "sales_dollars",
+   "horizon": 3,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "fireball"
+    ],
+    "label": "Fireball (all products)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19113"
+    ],
+    "label": "Linn County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_dollars) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE s.county_fips = '19113'\n  AND il.item_no IN (\n    SELECT i.item_no\n    FROM sales.item i\n    JOIN sales.item h ON h.item_no = i.family_item_no\n    WHERE h.item_desc ILIKE '%FIREBALL%'\n  )\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Fireball includes all current and historical products whose family (current) name contains 'FIREBALL' (all sizes, flavors like Blazin Apple/Torch'd Vanilla, minis, gift packs, etc.) sold under vendor Sazerac Company.",
+   "Linn County identified via county_fips 19113 (Cedar Rapids area), matched via the ordering store's county.",
+   "Revenue measured as sales_dollars (amount retailers paid the state), summed monthly, matching the 'revenue' wording in the request.",
+   "History starts 2016-01-01 as required; incomplete current month will be dropped automatically by the forecasting pipeline.",
+   "'Next quarter' interpreted as a 3-month-ahead forecast horizon."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 17365721.78,
+  "gen_total": 17365721.78,
+  "ref_last12": 2141886.58,
+  "gen_last12": 2141886.58,
+  "match": true
+ },
+ {
+  "id": "statewide_liters",
+  "request": "Total liters of liquor sold statewide over the next 6 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0078,
+  "gen_cost": 0.0079,
+  "ref_seconds": 24.1,
+  "gen_seconds": 14.8,
+  "spec": {
+   "title": "Statewide total liters, next 6 months",
+   "target": "sales_liters",
+   "horizon": 6,
+   "product": {
+    "kind": "all",
+    "codes": [],
+    "label": "All products"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa statewide"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', ordered_on)::date AS month, 'total' AS series, SUM(sales_liters) AS value\nFROM sales.invoice_line\nWHERE ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Statewide total across all stores, products, and vendors (no filtering).",
+   "Measure is total liters sold (sales_liters), as 'volume' was requested.",
+   "History starts 2016-01-01 as required; incomplete latest month will be dropped by downstream processing.",
+   "Single aggregate series named 'total' (no breakout by county/category/etc.)."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 245187292.134,
+  "gen_total": 245187292.134,
+  "ref_last12": 22161744.775,
+  "gen_last12": 22161744.775,
+  "match": true
+ },
+ {
+  "id": "diageo_scott",
+  "request": "Monthly bottle sales for all Diageo products in Scott County, next 6 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0108,
+  "gen_cost": 0.0134,
+  "ref_seconds": 15.8,
+  "gen_seconds": 14.9,
+  "spec": {
+   "title": "Diageo products, Scott County, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "vendor",
+    "codes": [
+     "260"
+    ],
+    "label": "Diageo Americas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19163"
+    ],
+    "label": "Scott County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE il.vendor_no = '260'\n  AND s.county_fips = '19163'\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Diageo is resolved to vendor_no 260 (DIAGEO AMERICAS), matching all products sold by this vendor.",
+   "Scott County is resolved to county_fips 19163 using the store's current county.",
+   "Measure is bottles sold (sales_bottles), summed by month, per the request for 'bottle sales'.",
+   "History starts 2016-01-01 as required; incomplete latest month will be dropped by downstream processing.",
+   "Forecast horizon is 6 months as requested."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 3351267.0,
+  "gen_total": 3351267.0,
+  "ref_last12": 304472.0,
+  "gen_last12": 304472.0,
+  "match": true
+ },
+ {
+  "id": "titos_st_ansgar",
+  "request": "Tito's bottles in St. Ansgar for the next 4 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0147,
+  "gen_cost": 0.0172,
+  "ref_seconds": 13.0,
+  "gen_seconds": 18.3,
+  "spec": {
+   "title": "Tito's Vodka, Saint Ansgar, next 4 months",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "titos"
+    ],
+    "label": "Tito's Handmade Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "SAINT ANSGAR"
+    ],
+    "label": "Saint Ansgar"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE s.city = 'SAINT ANSGAR'\n  AND il.item_no IN (\n      SELECT i.item_no\n      FROM sales.item i\n      JOIN sales.item h ON h.item_no = i.family_item_no\n      WHERE h.item_desc ILIKE '%TITOS%'\n        AND h.item_desc ILIKE '%HANDMADE%'\n        AND h.item_desc ILIKE '%VODKA%'\n  )\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1;",
+  "assumptions": [
+   "City 'St. Ansgar' matched to warehouse city name 'SAINT ANSGAR' (Mitchell County)",
+   "Product scope: all sizes/flavors of Tito's Handmade Vodka, matched by current family name (TITOS + HANDMADE + VODKA), including all bottle sizes (50ml minis through 1.75L)",
+   "Measure: sales_bottles (bottle count), summed monthly, since units requested were bottles not dollars or liters",
+   "History starts 2016-01-01 as required; incomplete latest month will be dropped by downstream processing",
+   "Forecast horizon: 4 months as requested"
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 8485.0,
+  "gen_total": 8485.0,
+  "ref_last12": 1227.0,
+  "gen_last12": 1227.0,
+  "match": true
+ },
+ {
+  "id": "bottled_in_bond",
+  "request": "Bottled in bond bourbon bottles statewide, next 3 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0103,
+  "gen_cost": 0.0147,
+  "ref_seconds": 9.8,
+  "gen_seconds": 11.0,
+  "spec": {
+   "title": "Bottled in Bond Bourbon, Iowa statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011500"
+    ],
+    "label": "Bottled in Bond Bourbon"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa statewide"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total'::text AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nWHERE il.item_no IN (\n    SELECT item_no FROM sales.item WHERE category_current = '1011500'\n)\nAND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Product scope: the 'BOTTLED IN BOND BOURBON' category (code 1011500) using each item's current category classification (category_current), to keep products consistent across renumbering and category reassignments over time.",
+   "Measure: bottles sold (sales_bottles), which accounts for multi-packs/minis correctly.",
+   "Geography: statewide, i.e. all Iowa stores (no store/county filter), since 'statewide' was specified.",
+   "History starts 2016-01-01 per warehouse convention; the current (incomplete) month is included in the query but will be dropped by downstream processing.",
+   "Forecast horizon: 3 months as requested."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 286897.0,
+  "gen_total": 286897.0,
+  "ref_last12": 53064.0,
+  "gen_last12": 53064.0,
+  "match": true
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "request": "Forecast ready-to-drink cocktail bottles statewide for the next 6 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0105,
+  "gen_cost": 0.0116,
+  "ref_seconds": 13.6,
+  "gen_seconds": 13.4,
+  "spec": {
+   "title": "Ready-to-drink cocktails, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1071000"
+    ],
+    "label": "Cocktails/RTD"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month, 'total' AS series, SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nWHERE il.item_no IN (SELECT item_no FROM sales.item WHERE category_current = '1071000')\nAND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "'Ready-to-drink cocktails' mapped to category code 1071000 (COCKTAILS/RTD) using each product's current category classification, per warehouse rules.",
+   "Statewide = all stores/counties combined (no geographic filter).",
+   "Measure is bottles sold (sales_bottles), consistent with the default unit for 'bottles' requests.",
+   "History starts 2016-01-01 and includes all months through the latest available; incomplete trailing month will be dropped by downstream processing.",
+   "Forecast horizon is 6 months as requested."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 7739771.0,
+  "gen_total": 7739771.0,
+  "ref_last12": 825795.0,
+  "gen_last12": 825795.0,
+  "match": true
+ },
+ {
+  "id": "hawkeye_johnson",
+  "request": "Hawkeye Vodka bottles in Johnson County, next 5 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0162,
+  "gen_cost": 0.0225,
+  "ref_seconds": 15.2,
+  "gen_seconds": 23.7,
+  "spec": {
+   "title": "Hawkeye Vodka, Johnson County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "hawkeye vodka"
+    ],
+    "label": "Hawkeye Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19103"
+    ],
+    "label": "Johnson County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE il.item_no IN (\n  SELECT i.item_no\n  FROM sales.item i\n  JOIN sales.item h ON h.item_no = i.family_item_no\n  WHERE h.item_desc ILIKE '%HAWKEYE VODKA%'\n)\nAND s.county_fips = '19103'\nAND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Hawkeye Vodka defined as all sizes/variants of the plain 'Hawkeye Vodka' product family (excludes flavored variants like Hawkeye Blue Raspberry Vodka and Hawkeye Bacon Vodka, which are distinct products)",
+   "Johnson County identified by county_fips 19103 based on store location",
+   "Measure is total bottles sold (sales_bottles), summed monthly",
+   "History included from 2016-01-01 through the most recent complete month"
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 23,
+  "first_bad": "2016-01-01",
+  "ref_total": 857521.0,
+  "gen_total": 857355.0,
+  "ref_last12": 79891.0,
+  "gen_last12": 79891.0,
+  "match": false
+ },
+ {
+  "id": "ames_whiskey",
+  "request": "How many bottles of whiskey will Ames stores order next month?",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0188,
+  "gen_cost": 0.0175,
+  "ref_seconds": 19.4,
+  "gen_seconds": 16.5,
+  "spec": {
+   "title": "Whiskey, Ames stores, next month",
+   "target": "sales_bottles",
+   "horizon": 1,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011000",
+     "1011100",
+     "1011200",
+     "1011250",
+     "1011300",
+     "1011400",
+     "1011600",
+     "1011700",
+     "1011800",
+     "1012000",
+     "1012100",
+     "1012200",
+     "1012400"
+    ],
+    "label": "Whiskey (all whiskey categories, excluding whiskey liqueur)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "AMES"
+    ],
+    "label": "Ames"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE s.city = 'AMES'\n  AND il.item_no IN (\n      SELECT item_no FROM sales.item\n      WHERE category_current IN (\n        '1011000','1011100','1011200','1011250','1011300','1011400',\n        '1011600','1011700','1011800','1012000','1012100','1012200','1012400'\n      )\n  )\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Ames refers to the city of Ames, Iowa (all stores located there).",
+   "Whiskey includes all whiskey spirit categories (American, Blended, Straight Bourbon, Single Barrel Bourbon, Tennessee, Straight Rye, Corn, Iowa Distillery, Imported, Canadian, Scotch, Irish) using each product's current category classification.",
+   "Whiskey Liqueur is excluded as it is a liqueur product, not a whiskey spirit.",
+   "Measure is bottles ordered (sales_bottles), summed by month.",
+   "History starts 2016-01-01; the current partial month is handled by downstream processing.",
+   "Forecast horizon is 1 month (\"next month\")."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 1987084.0,
+  "gen_total": 1987084.0,
+  "ref_last12": 173437.0,
+  "gen_last12": 173437.0,
+  "match": true
+ },
+ {
+  "id": "vague_vodka",
+  "request": "Forecast vodka",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0119,
+  "gen_cost": 0.013,
+  "ref_seconds": 18.2,
+  "gen_seconds": 14.9,
+  "spec": {
+   "title": "Vodka, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100",
+     "1031200",
+     "1032100",
+     "1032200",
+     "1031080"
+    ],
+    "label": "Vodka (all categories)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', ordered_on)::date AS month, 'total' AS series, SUM(sales_bottles) AS value\nFROM sales.invoice_line il\nWHERE il.item_no IN (\n  SELECT item_no FROM sales.item WHERE category_current IN ('1031100','1031200','1032100','1032200','1031080')\n)\nAND ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "Vodka defined as all current categories containing 'vodka': American Vodkas, American Flavored Vodka, Imported Vodkas, Imported Flavored Vodka, and the legacy 'Vodka 80 Proof' category.",
+   "Products matched by their current category classification (category_current) rather than the category recorded on each historical order line, per warehouse rules.",
+   "Measure is total bottles sold per month (sales_bottles), summed across all Iowa stores statewide.",
+   "History starts 2016-01-01 as requested; the most recent (possibly incomplete) month is included and will be handled by the forecasting pipeline.",
+   "Single aggregate 'total' series requested (no breakout by region, vendor, or vodka subtype)."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 107179756.0,
+  "gen_total": 107179756.0,
+  "ref_last12": 11109683.0,
+  "gen_last12": 11109683.0,
+  "match": true
+ },
+ {
+  "id": "cream_liqueur_holidays",
+  "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0142,
+  "gen_cost": 0.0138,
+  "ref_seconds": 18.7,
+  "gen_seconds": 16.6,
+  "spec": {
+   "title": "Cream liqueurs, Iowa, forecast through the 2026 holidays (Sep-Dec 2026)",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1081200"
+    ],
+    "label": "Cream liqueurs"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "select date_trunc('month', il.ordered_on)::date as month, 'total' as series, sum(il.sales_bottles) as value\nfrom sales.invoice_line il\nwhere il.item_no in (select item_no from sales.item where category_current = '1081200')\nand il.ordered_on >= '2016-01-01'\ngroup by 1 order by 1",
+  "assumptions": [
+   "Cream liqueur = category_current '1081200' (CREAM LIQUEURS), using the item's current category classification per warehouse rules.",
+   "Measure is bottles ordered (sales_bottles), matching 'how many bottles' in the request.",
+   "History starts 2016-01-01 and includes all stores statewide (no geographic filter since 'Iowa stores' means all of Iowa).",
+   "Forecast horizon set to 12 months so the holiday season (Nov-Dec) of the upcoming year is covered; the dashboard's forecast will show the expected holiday-season bottle volumes along with the rest of the year.",
+   "Incomplete current month will be dropped automatically before forecasting, per system behavior."
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 6650320.0,
+  "gen_total": 6650320.0,
+  "ref_last12": 545088.0,
+  "gen_last12": 545088.0,
+  "match": true
+ },
+ {
+  "id": "bdi_store",
+  "request": "Forecast Tito's minis ordered by Hy-Vee #3 BDI in Des Moines for the next 6 months",
+  "ref_status": "ok",
+  "gen_status": "ok",
+  "ref_cost": 0.0184,
+  "gen_cost": 0.0125,
+  "ref_seconds": 15.9,
+  "gen_seconds": 9.9,
+  "spec": {
+   "title": "Tito's minis, Hy-Vee #3 BDI (Des Moines), next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka minis (50ml)"
+   },
+   "region": {
+    "kind": "store",
+    "codes": [
+     "2633"
+    ],
+    "label": "Hy-Vee #3 / BDI / Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "sql": "SELECT date_trunc('month', il.ordered_on)::date AS month,\n       'total' AS series,\n       SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nWHERE il.store_no = '2633'\n  AND il.item_no IN (\n    SELECT item_no FROM sales.item WHERE family_item_no IN ('38194','38185')\n  )\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY 1\nORDER BY 1",
+  "assumptions": [
+   "'Tito's minis' = Tito's Handmade Vodka Mini (50ml) and its 4-pack variant, matched by product family across renumbering",
+   "Store = Hy-Vee #3 / BDI / Des Moines (store_no 2633)",
+   "Measure = bottles ordered (sales_bottles), summed monthly, since minis are counted per bottle",
+   "History included from 2016-01-01 through latest available data; incomplete current month will be dropped by downstream processing",
+   "Forecast horizon: 6 months"
+  ],
+  "message": null,
+  "ref_series": 1,
+  "gen_series": 1,
+  "matched_series": 1,
+  "months": 128,
+  "cells": 128,
+  "bad_cells": 0,
+  "first_bad": null,
+  "ref_total": 138552.0,
+  "gen_total": 138552.0,
+  "ref_last12": 28140.0,
+  "gen_last12": 28140.0,
+  "match": true
+ }
+]

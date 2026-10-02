@@ -37,8 +37,21 @@ One SELECT over the sales and ref schemas (schema-qualified tables) returning ex
   value  (number: the measure summed over the month: bottles unless dollars/revenue or liters/volume are asked)
 Include all history from 2016-01-01. Do not filter out the latest month; fixed code drops incomplete months.
 
-## Warehouse tables (read-only)
+{rules}## Warehouse tables (read-only)
 {schema}
+"""
+
+# Explicit rules for the three mistakes the first differential test found (evals/differential.md). Optional, so the
+# test can compare AI-written SQL with and without them.
+RULES = """## Rules for this warehouse (follow them exactly)
+1. Products: never filter order lines on item_no alone. Products were renumbered over the years; select the product's
+   whole family: il.item_no IN (SELECT item_no FROM sales.item WHERE family_item_no IN (...)).
+2. A brand (every size and flavor): match ALL the brand's words anywhere in the family's current name, not as a
+   prefix (barrel picks are named e.g. 'BP CROWN ROYAL ...'): il.item_no IN (SELECT i.item_no FROM sales.item i JOIN
+   sales.item h ON h.item_no = i.family_item_no WHERE h.item_desc ILIKE '%CROWN%' AND h.item_desc ILIKE '%ROYAL%').
+3. Categories: never use invoice_line.category_code (codes were reassigned in 2016). Use today's category of the
+   product: il.item_no IN (SELECT item_no FROM sales.item WHERE category_current IN (...)).
+
 """
 
 SUBMIT = {"name": "submit_series",
@@ -70,11 +83,11 @@ def run_series(sql):
     return df, None
 
 
-def ask(request, log=print):
+def ask(request, log=print, rules=False):
     """Turn a request into a checked monthly series via AI-written SQL. Returns a dict with status, sql, series rows,
     horizon, title, assumptions, usage and trace."""
     client = anthropic.Anthropic()
-    system = SYSTEM.format(max_h=MAX_HORIZON, schema=schema_text())
+    system = SYSTEM.format(max_h=MAX_HORIZON, schema=schema_text(), rules=RULES if rules else "")
     messages = [{"role": "user", "content": request}]
     usage = {"model": MODEL, "calls": 0, "input_tokens": 0, "output_tokens": 0, "cache_write_tokens": 0,
              "cache_read_tokens": 0, "est_cost_usd": 0.0}
@@ -114,7 +127,7 @@ def ask(request, log=print):
 
 
 if __name__ == "__main__":
-    r = ask(" ".join(a for a in sys.argv[1:] if not a.startswith("--")))
+    r = ask(" ".join(a for a in sys.argv[1:] if not a.startswith("--")), rules="--rules" in sys.argv)
     print(r["status"], r.get("message", ""))
     if r["status"] == "ok":
         print(r["sql"]); print(r["rows"].groupby("series").value.sum())

@@ -128,4 +128,5 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    docs/differential.html. First run found a reference bug (find_values showed at most 60 products: Crown Royal 91,
    Jack Daniel's 80); fixed 2026-10-02 with product kind "name" (one brand's words, resolved by panel.member_items) and
    a "N products match" note in find_values. After the fix: 11/18 identical, 7 AI-written queries wrong (renumbered
-   items, recorded category codes, brand-prefix matches), all on the AI side; evals 42/42.
+   items, recorded category codes, brand-prefix matches), all on the AI side; evals 42/42. With three explicit rules
+   (dod/nl2sql.RULES, `differential.py --rules`): 17/18 (the miss: a brand matched as one phrase).

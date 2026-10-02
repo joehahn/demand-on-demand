@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from dod.panel import build_sql  # noqa: E402
 from dod.spec import Spec  # noqa: E402
+from dod.nl2sql import RULES as RULES_TEXT  # noqa: E402
 from dod.viz import page  # noqa: E402
 
 HERE = Path(__file__).parent
@@ -66,29 +67,50 @@ def pct(a, b):
     return "under 0.1%" if abs(d) < 0.0005 else f"{d:+.1%}"
 
 
+# The same, for the run with explicit rules (dod/nl2sql.RULES).
+WHY_RULES = {
+    "hawkeye_johnson": ("AI matched a phrase", "The AI matched the phrase 'HAWKEYE VODKA' instead of each word, so "
+                        "flavors named 'HAWKEYE BLUE RASPBERRY VODKA' were left out (rule 2 says to match each word)."),
+}
+
+
+def cell(r, why):
+    """Result cell for one run: verdict, explanation, and the size of the difference in all history."""
+    if r is None:
+        return "<td></td>"
+    if r["match"]:
+        return "<td><strong>Identical</strong></td>"
+    verdict, text = why.get(r["id"], ("Different", ""))
+    return (f"<td><strong>{html.escape(verdict)}</strong> ({pct(r.get('ref_total'), r.get('gen_total'))} over all "
+            f"history, {pct(r.get('ref_last12'), r.get('gen_last12'))} in the last 12 months)<br>{html.escape(text)}</td>")
+
+
 def build():
-    rows = json.loads((HERE / "differential.json").read_text())
-    rows = [r for r in rows if r.get("ref_status") == "ok"]
-    same = [r for r in rows if r["match"]]
-    ai = [r for r in rows if not r["match"]]
-    avg = lambda key: sum(r[key] or 0 for r in rows) / len(rows)
-    tiles = [(f"{len(same)} of {len(rows)}", "requests where AI-written SQL matched the reference exactly"),
-             (str(len(ai)), "AI-written queries that were wrong (but ran fine)"),
+    load = lambda f: {r["id"]: r for r in json.loads((HERE / f).read_text()) if r.get("ref_status") == "ok"}
+    plain = load("differential.json")
+    ruled = load("differential_rules.json") if (HERE / "differential_rules.json").exists() else {}
+    n = len(plain)
+    same1 = sum(r["match"] for r in plain.values())
+    same2 = sum(r["match"] for r in ruled.values())
+    cost = sum(r["gen_cost"] or 0 for r in plain.values()) / n
+    ref_cost = sum(r["ref_cost"] or 0 for r in plain.values()) / n
+    tiles = [(f"{same1} of {n}", "matched the reference exactly, with the data dictionary alone"),
+             (f"{same2} of {len(ruled)}", "matched with three short rules added to the AI's instructions"),
              ("1", "bug found in the reference path (fixed)"),
-             (f"${avg('gen_cost'):.3f}", f"per AI-written query (reference: ${avg('ref_cost'):.3f})")]
+             (f"${cost:.3f}", f"per AI-written query (reference: ${ref_cost:.3f})")]
     tiles_html = "".join(f'<div class="tile"><div class="v">{html.escape(v)}</div><div class="k">{html.escape(k)}</div></div>'
                          for v, k in tiles)
-    trs = []
     order = {k: i for i, k in enumerate(WHY)}   # explanations that say "same mistake" follow the one they refer to
-    for r in sorted(rows, key=lambda r: (r["match"], order.get(r["id"], 99), r["id"])):
-        verdict, why = ("Identical", "Same series, month by month.") if r["match"] else WHY.get(r["id"], ("Different", ""))
-        hist = pct(r.get("ref_total"), r.get("gen_total")) if not r["match"] else ""
-        last = pct(r.get("ref_last12"), r.get("gen_last12")) if not r["match"] else ""
-        sqls = (f"<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p>"
-                f"<pre>{html.escape(reference_sql(r['spec']))}</pre><p><strong>AI-written:</strong></p>"
-                f"<pre>{html.escape(r['sql'] or '')}</pre></details>") if r.get("spec") and r.get("sql") else ""
-        trs.append(f"<tr><td>{html.escape(r['request'])}{sqls}</td><td><strong>{html.escape(verdict)}</strong>"
-                   f"<br>{html.escape(why)}</td><td class=\"num\">{hist}</td><td class=\"num\">{last}</td></tr>")
+    trs = []
+    for rid in sorted(plain, key=lambda i: (plain[i]["match"] and ruled.get(i, {}).get("match", True),
+                                            order.get(i, 99), i)):
+        r1, r2 = plain[rid], ruled.get(rid)
+        q = [("Reference (fixed code)", reference_sql(r1["spec"]) if r1.get("spec") else ""),
+             ("AI-written, data dictionary only", r1.get("sql") or ""), ("AI-written, with rules", (r2 or {}).get("sql") or "")]
+        sqls = "<details><summary>the queries</summary>" + "".join(
+            f"<p><strong>{t}:</strong></p><pre>{html.escape(x)}</pre>" for t, x in q if x) + "</details>"
+        trs.append(f"<tr><td>{html.escape(r1['request'])}{sqls}</td>{cell(r1, WHY)}{cell(r2, WHY_RULES)}</tr>")
+    rules = html.escape(RULES_TEXT)
     body = f"""
 <p class="note"><a href="index.html">demand-on-demand</a> &middot; <a href="data_dictionary.html">data dictionary</a>
 &middot; <a href="https://github.com/joehahn/demand-on-demand">GitHub</a></p>
@@ -100,42 +122,48 @@ months), and fixed, tested code writes the SQL. Predictable, but it only handles
 <li><strong>Text-to-SQL (NL2SQL).</strong> The AI writes the SQL itself. It can handle requests nobody planned for, but
 every query is new code. How do you know it is right?</li>
 </ul>
-<p><strong>The test:</strong> give both the same {len(rows)} requests, with the same data dictionary, the same lookup
-tools and the same read-only database login, and compare the two monthly histories month by month. Where the slot
-form can express a request, the two must agree; any difference is a bug on one side.</p>
+<p><strong>The test:</strong> give both the same {n} requests, with the same data dictionary, the same lookup tools and
+the same read-only database login, and compare the two monthly histories month by month. Where the form can express a
+request, the two must agree; any difference is a bug on one side. Then run it again with three short rules added to
+the AI's instructions.</p>
 <div class="tiles">{tiles_html}</div>
 <h2>What we learned</h2>
 <ol>
-<li><strong>The AI's mistakes passed every quick check.</strong> The wrong queries ran without error, and their last
-12 months matched the reference exactly or within 1%. The errors were in older history, the part the model learns from. Only a
+<li><strong>The AI's mistakes passed every quick check.</strong> Its wrong queries ran without error, and their last 12
+months matched the reference within 1%. The errors were in older history, the part the model learns from. Only a
 month-by-month comparison against a reference found them.</li>
 <li><strong>The same request can produce different SQL.</strong> Several requests were right in one run and wrong in
 another.</li>
-<li><strong>Documentation was not enough.</strong> The data dictionary the AI reads says to use the product family for
-renumbered items and today's category for history; the AI still used the raw codes in {len(ai)} of {len(rows)}
-requests.</li>
-<li><strong>The reference had a bug too.</strong> {FIXED} Differential testing finds problems on both sides; after the
-fix, every remaining difference is on the AI side.</li>
+<li><strong>Documentation was not enough; explicit rules were.</strong> The data dictionary the AI reads already
+explains renumbered products and today's categories, yet {n - same1} of {n} queries got them wrong. Three short rules
+in the AI's instructions took it to {same2} of {len(ruled)}.</li>
+<li><strong>But the rules came from the test.</strong> Each rule fixes a trap the reference exposed. A new kind of
+request can hit a trap nobody has written a rule for, so the reference stays useful after the rules.</li>
+<li><strong>The reference had a bug too.</strong> {FIXED} Differential testing finds problems on both sides.</li>
 </ol>
-<p><strong>What this means:</strong> AI-written SQL is promising for requests the form cannot express, but it needs a
-reference to be checked against. A practical design keeps slot filling for the common requests, lets the AI write SQL
-for the rest, and checks every AI-written series against anything the reference can compute (for example, weekly
-totals must add up to the monthly reference).</p>
+<p><strong>What this means:</strong> AI-written SQL is close to reliable on this warehouse once its traps are spelled
+out, which makes it a real option for requests the form cannot express (weekly, ratios, store groups). A practical
+design keeps slot filling for the common requests, lets the AI write SQL for the rest, and checks every AI-written
+series against anything the reference can compute (for example, weekly totals must add up to the monthly reference).</p>
+<details><summary>The three rules</summary><pre>{rules}</pre></details>
 <h2>Every request</h2>
-<div class="tbl"><table><thead><tr><th>request</th><th>result</th><th class="num">all history, AI vs reference</th>
-<th class="num">last 12 months</th></tr></thead><tbody>{"".join(trs)}</tbody></table></div>
+<div class="tbl"><table><thead><tr><th>request</th><th>data dictionary only</th><th>with the three rules</th></tr>
+</thead><tbody>{"".join(trs)}</tbody></table></div>
 <p class="note">Model: both paths use the same Claude agent (claude-sonnet-5) and tools. Code:
 <a href="{REPO}/dod/nl2sql.py">the NL2SQL agent</a>, <a href="{REPO}/dod/agent.py">the slot-filling agent</a>,
-<a href="{REPO}/evals/differential.py">the test</a>. Results: <a href="{REPO}/evals/differential.json">differential.json</a>.</p>
+<a href="{REPO}/evals/differential.py">the test</a>. Results: <a href="{REPO}/evals/differential.json">without rules</a>,
+<a href="{REPO}/evals/differential_rules.json">with rules</a>.</p>
 <footer>Data: Iowa Liquor Sales, State of Iowa, via the Iowa Data Hub, CC BY 4.0; modified (see the data fixes page).</footer>"""
     md = [f"# Differential test: AI-written SQL vs the slot-filling reference\n",
-          f"{len(rows)} requests: {len(same)} identical month by month, {len(ai)} AI-written queries wrong. The first "
-          f"run also found a reference bug, since fixed: {FIXED} Details and both queries: docs/differential.html.\n",
-          "| request | result | all history | last 12 months |", "|---|---|---|---|"]
-    for r in sorted(rows, key=lambda r: (r["match"], order.get(r["id"], 99), r["id"])):
-        verdict = "identical" if r["match"] else WHY.get(r["id"], ("different",))[0]
-        md.append(f"| {r['request']} | {verdict} | {'' if r['match'] else pct(r.get('ref_total'), r.get('gen_total'))} | "
-                  f"{'' if r['match'] else pct(r.get('ref_last12'), r.get('gen_last12'))} |")
+          f"{n} requests. Matched month by month: {same1} with the data dictionary alone, {same2} with three explicit "
+          f"rules (dod/nl2sql.RULES). The first run also found a reference bug, since fixed: {FIXED} "
+          f"Details and all queries: docs/differential.html.\n",
+          "| request | data dictionary only | with rules |", "|---|---|---|"]
+    for rid, r1 in plain.items():
+        r2 = ruled.get(rid)
+        v = lambda r, why: "" if r is None else ("identical" if r["match"] else
+                                                 f"{why.get(r['id'], ('different',))[0]} ({pct(r.get('ref_total'), r.get('gen_total'))})")
+        md.append(f"| {r1['request']} | {v(r1, WHY)} | {v(r2, WHY_RULES)} |")
     (HERE / "differential.md").write_text("\n".join(md) + "\n")
     return page("AI-written SQL vs a Reference", body)
 
