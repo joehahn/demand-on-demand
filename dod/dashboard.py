@@ -738,8 +738,11 @@ regression and LightGBM, each with different targets, inputs and history lengths
 chosen: {esc(short_model(res))}.</li>
 <li><strong>Test</strong> ({tw[0]:%b %Y} to {tw[1]:%b %Y}): that model retrained each month on earlier months only; dotted
 orange is its forecast 1 to {max(ps.step)} months ahead (pick above the chart).</li>
-<li><strong>Forecast</strong> ({months}): retrained on {pd.Timestamp(panel.start):%b %Y} to {wide.index[-1]:%b %Y}, then applied.
-Green band: the range that held 80% of outcomes in the Test period.{units_note}</li>
+<li><strong>Forecast</strong> ({months}): retrained on {pd.Timestamp(panel.start):%b %Y} to {wide.index[-1]:%b %Y}, then applied.{units_note}</li>
+<li><strong>Green band (80% range):</strong> in the Test period, the model's {int(ps.folds.max())} forecasts at each number of
+months ahead were compared with what actually sold. The band spans the middle 80% of those misses (10th to 90th
+percentile, as a percent of the forecast), applied to this forecast. It is lopsided when past misses were, for example
+mostly unforecast spikes.</li>
 {big_buyer_note(panel.stores, unit, wide.shape[1])}
 </ul>
 {table(ft, {"forecast": num, "low (10%)": num, "high (90%)": num})}
