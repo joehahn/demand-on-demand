@@ -69,11 +69,14 @@ Write plain text without em dashes.
   "title": "short title, e.g. Tito's minis, Polk County, next 5 months",
   "target": "sales_bottles" | "sales_dollars" | "sales_liters",   // bottles unless dollars/revenue or liters/volume asked
   "horizon": 1-{max_h},                                             // months ahead; 6 if not stated
-  "product": {{"kind": "all" | "item" | "category" | "vendor", "codes": [...], "label": "readable name"}},
+  "product": {{"kind": "all" | "item" | "category" | "vendor" | "name", "codes": [...], "label": "readable name"}},
   "region":  {{"kind": "statewide" | "county" | "city" | "store", "codes": [...], "label": "readable name"}},
   "series_by": "none" | "county" | "city" | "item" | "category"    // one series per value; "none" = one total
 }}
 Codes: item -> item_no values exactly as find_values returns them; category -> category_code; vendor -> vendor_no;
+name -> the words of ONE brand in one string (e.g. ["crown royal"], ["hawkeye vodka"]): every product whose name
+contains all the words. Use name when a brand has more products than find_values shows, so none are left out, and
+check the product count preview_spec reports;
 county -> 5-digit county_fips; city -> city names as returned; store -> store_no.
 Products: a brand means all its sizes unless a size is named ("minis" = 50 ml). A kind of spirit ("whiskey",
 "vodka") means every category of that kind. Places: a county name -> that county; a city name -> the city (ask if

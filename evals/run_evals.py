@@ -13,7 +13,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from dod import agent  # noqa: E402
+from dod import agent, panel  # noqa: E402
+from dod.spec import Spec  # noqa: E402
 
 HERE = Path(__file__).parent
 
@@ -36,10 +37,16 @@ def check(case, res):
         if scope not in exp:
             continue
         want, got = exp[scope], spec[scope]
-        add(f"{scope}.kind", got["kind"] == want["kind"], f"got {got['kind']}, want {want['kind']}")
-        missing = sorted(set(want.get("must", [])) - set(got["codes"]))
+        codes = got["codes"]
+        if scope == "product" and want["kind"] == "item" and got["kind"] == "name":
+            # a whole brand named by its search words: check the items it resolves to
+            codes = panel.member_items(Spec.model_validate(spec))
+            add(f"{scope}.kind", True)
+        else:
+            add(f"{scope}.kind", got["kind"] == want["kind"], f"got {got['kind']}, want {want['kind']}")
+        missing = sorted(set(want.get("must", [])) - set(codes))
         add(f"{scope}.codes", not missing, f"missing {missing}")
-        extra = sorted(set(want.get("forbid", [])) & set(got["codes"]))
+        extra = sorted(set(want.get("forbid", [])) & set(codes))
         if want.get("forbid"):
             add(f"{scope}.forbid", not extra, f"included {extra}")
     return out

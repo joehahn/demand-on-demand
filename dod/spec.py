@@ -18,7 +18,8 @@ class Scope(BaseModel):
 
 
 class Product(Scope):
-    kind: Literal["all", "item", "category", "vendor"]   # item codes are product families (family_item_no)
+    kind: Literal["all", "item", "category", "vendor", "name"]   # item codes are product families (family_item_no);
+    # name codes are the words of one brand: every product whose name contains all of them
 
 
 class Region(Scope):

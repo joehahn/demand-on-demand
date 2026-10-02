@@ -1,0 +1,2435 @@
+[
+ {
+  "id": "titos_polk",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "fresh"
+  ],
+  "status": "crash",
+  "passed": false,
+  "checks": [
+   {
+    "check": "status",
+    "ok": false,
+    "why": "got crash"
+   }
+  ],
+  "cost": 0,
+  "seconds": 20.9,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "KeyError('name')"
+ },
+ {
+  "id": "titos_polk",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "fresh"
+  ],
+  "status": "crash",
+  "passed": false,
+  "checks": [
+   {
+    "check": "status",
+    "ok": false,
+    "why": "got crash"
+   }
+  ],
+  "cost": 0,
+  "seconds": 20.9,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "KeyError('name')"
+ },
+ {
+  "id": "titos_minis_by_item",
+  "run": 1,
+  "tags": [
+   "dev"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0208,
+  "seconds": 13.9,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Tito's minis, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Vodka Minis (50ml, single and 4-pack)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Interpreted 'Tito's mini' as the 50 ml Tito's Handmade Vodka items: the single mini (item 38194) and the 4-pack of minis (item 38185).",
+   "Statewide means all of Iowa, no regional breakout.",
+   "Forecasting bottles sold (not dollars or liters), per item, for the next 6 months.",
+   "The 4-pack item has 29 months of history (since 2024-04), enough to forecast but with less seasonal history than the single mini item (since 2016)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_minis_by_item",
+  "run": 2,
+  "tags": [
+   "dev"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0208,
+  "seconds": 13.7,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Tito's mini vodka items, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Mini items"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Interpreted 'Tito's mini' as the two 50 ml Tito's Handmade Vodka mini items in the warehouse: the single mini (item 38194) and the 4-pack of minis (item 38185), bottle counts already reflect individual 50 ml bottles.",
+   "Statewide scope (no county/city/store specified).",
+   "Target metric is bottles sold since the user asked 'how many bottles'.",
+   "Forecast broken out per item (series_by item) since the user asked for each item separately.",
+   "6-month horizon as explicitly requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_minis_des_moines",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "dev",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.forbid",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0132,
+  "seconds": 11.1,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Tito's minis, Des Moines, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka minis (50ml, incl. 4-pack)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "DES MOINES"
+    ],
+    "label": "Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Tito's minis\" means the 50 ml Tito's Handmade Vodka items, including both the single mini and the 4-pack SKU.",
+   "\"Des Moines\" refers to the city of Des Moines itself, not West Des Moines or the broader Polk County metro area.",
+   "Forecast target is bottles sold (not dollars or liters), monthly, for the next 5 months.",
+   "One combined total series for the city (not broken out by item)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_minis_des_moines",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "dev",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.forbid",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0136,
+  "seconds": 11.2,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Tito's minis, Des Moines, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml, incl. 4-pack)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "DES MOINES"
+    ],
+    "label": "Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Tito's minis means the 50ml Tito's Handmade Vodka products, including both the single mini and the 4-pack of minis (same 50ml bottle size), in bottle counts.",
+   "Des Moines refers to the city of Des Moines itself, not West Des Moines or Polk County/metro area as a whole.",
+   "Target metric is sales in bottles since no dollar or liter figure was requested.",
+   "Forecast horizon is 5 months as explicitly requested.",
+   "Single combined forecast series for Des Moines (not broken out by product or sub-area)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "crown_mount_pleasant",
+  "run": 1,
+  "tags": [
+   "dev"
+  ],
+  "status": "crash",
+  "passed": false,
+  "checks": [
+   {
+    "check": "status",
+    "ok": false,
+    "why": "got crash"
+   }
+  ],
+  "cost": 0,
+  "seconds": 10.1,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "KeyError('name')"
+ },
+ {
+  "id": "crown_mount_pleasant",
+  "run": 2,
+  "tags": [
+   "dev"
+  ],
+  "status": "crash",
+  "passed": false,
+  "checks": [
+   {
+    "check": "status",
+    "ok": false,
+    "why": "got crash"
+   }
+  ],
+  "cost": 0,
+  "seconds": 10.1,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "KeyError('name')"
+ },
+ {
+  "id": "tennessee_whiskey",
+  "run": 1,
+  "tags": [
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.02,
+  "seconds": 18.9,
+  "tool_calls": 6,
+  "spec": {
+   "title": "Tennessee Whiskey bottles, Iowa, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011400"
+    ],
+    "label": "Tennessee Whiskies"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Tennessee whiskey interpreted as the warehouse category TENNESSEE WHISKIES (code 1011400), covering all brands and sizes in that category.",
+   "Forecast target is bottles sold (sales_bottles), since the user said 'bottles'.",
+   "Iowa statewide totals (no breakout by county/city/store).",
+   "Horizon set to 3 months as requested, with one combined series (not split by product or place)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "tennessee_whiskey",
+  "run": 2,
+  "tags": [
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0197,
+  "seconds": 19.3,
+  "tool_calls": 6,
+  "spec": {
+   "title": "Tennessee Whiskies, Iowa statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011400"
+    ],
+    "label": "Tennessee Whiskies"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Tennessee whiskey\" maps to the warehouse category TENNESSEE WHISKIES (code 1011400), which covers all Tennessee whiskey products regardless of brand or size.",
+   "No specific place was named, so this is statewide Iowa, all stores combined.",
+   "Target is bottles sold (sales_bottles), not dollars or liters, since the request said bottles.",
+   "One combined series for the whole category and state (no per-county or per-item breakdown), matching the request's wording."
+  ],
+  "message": ""
+ },
+ {
+  "id": "vodka_top_counties",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "breakout",
+   "fresh",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0191,
+  "seconds": 21.1,
+  "tool_calls": 6,
+  "spec": {
+   "title": "American Vodka dollars, top 5 counties, next 6 months",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100"
+    ],
+    "label": "American Vodkas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153",
+     "19113",
+     "19163",
+     "19103",
+     "19013"
+    ],
+    "label": "Polk, Linn, Scott, Johnson, Black Hawk counties"
+   },
+   "series_by": "county",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "American vodka interpreted as the 'American Vodkas' category (unflavored), excluding American Flavored Vodka.",
+   "Five largest counties determined by latest Census population estimate: Polk, Linn, Scott, Johnson, and Black Hawk.",
+   "Target metric is sales dollars as requested (revenue, not bottles or liters).",
+   "One forecast series produced per county (series_by = county) since the user asked for each of the five counties.",
+   "Forecast horizon set to 6 months as requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "vodka_top_counties",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "breakout",
+   "fresh",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0161,
+  "seconds": 20.3,
+  "tool_calls": 5,
+  "spec": {
+   "title": "American vodka sales dollars, top 5 counties, next 6 months",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100"
+    ],
+    "label": "American Vodkas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153",
+     "19113",
+     "19163",
+     "19103",
+     "19013"
+    ],
+    "label": "Polk, Linn, Scott, Johnson, Black Hawk counties"
+   },
+   "series_by": "county",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "American vodka interpreted as the 'American Vodkas' category (code 1031100), excluding flavored American vodka which is a separate category",
+   "Five largest counties by current population are Polk, Linn, Scott, Johnson, and Black Hawk, based on store county assignments",
+   "One forecast series produced per county (series_by=county) as requested by 'for each'",
+   "Target is sales dollars (revenue) as explicitly requested",
+   "Horizon set to 6 months as requested"
+  ],
+  "message": ""
+ },
+ {
+  "id": "chicago",
+  "run": 1,
+  "tags": [
+   "refusal",
+   "dev",
+   "demo"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0052,
+  "seconds": 8.5,
+  "tool_calls": 1,
+  "spec": null,
+  "assumptions": null,
+  "message": "This data only covers Iowa liquor retailers (Iowa Class E licensees), so there is no Chicago in the warehouse at all. I can't substitute a different city for the one you asked about.\n\nIf you'd like, I can forecast Tito's vodka sales for an Iowa city or county instead (for example, Council Bluffs or another Iowa location), or give you a statewide Iowa forecast. Let me know which you'd prefer."
+ },
+ {
+  "id": "chicago",
+  "run": 2,
+  "tags": [
+   "refusal",
+   "dev",
+   "demo"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0024,
+  "seconds": 2.5,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "This request asks for Chicago, but Chicago is not an Iowa city, this dataset covers only Iowa liquor retail sales (stores licensed in Iowa). I cannot substitute a different place for the one you asked about.\n\nI can forecast Tito's vodka sales for an Iowa city or county instead, if you have one in mind, or do it statewide for Iowa. Let me know how you'd like to proceed."
+ },
+ {
+  "id": "horizon_24",
+  "run": 1,
+  "tags": [
+   "refusal",
+   "dev"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.003,
+  "seconds": 6.0,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "This request asks for a 24-month horizon, but the harness only supports forecasts up to 12 months ahead. I can't submit a spec for 24 months without substituting a different horizon than what you asked for.\n\nHere's what I'd suggest instead:\n- A 12-month forecast of total Iowa liquor sales dollars (the maximum horizon supported), or\n- Two sequential 12-month forecasts if you need a view further out, understanding the second year would carry more uncertainty since it's beyond the direct backtest window.\n\nLet me know which you'd like, or if 12 months statewide works, I can set that up now."
+ },
+ {
+  "id": "horizon_24",
+  "run": 2,
+  "tags": [
+   "refusal",
+   "dev"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0024,
+  "seconds": 2.6,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "This request can't be served as asked: the forecasting harness only supports horizons up to 12 months ahead, and 24 months is beyond that limit.\n\nI'd suggest one of these instead:\n- A 12-month forecast of total Iowa liquor sales dollars (the maximum allowed horizon), or\n- A 6-month forecast if you want tighter, more reliable near-term numbers.\n\nLet me know which you'd prefer, or if 12 months works, I can proceed with that."
+ },
+ {
+  "id": "jack_iowa_city",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "fresh"
+  ],
+  "status": "crash",
+  "passed": false,
+  "checks": [
+   {
+    "check": "status",
+    "ok": false,
+    "why": "got crash"
+   }
+  ],
+  "cost": 0,
+  "seconds": 11.9,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "KeyError('name')"
+ },
+ {
+  "id": "jack_iowa_city",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "fresh"
+  ],
+  "status": "crash",
+  "passed": false,
+  "checks": [
+   {
+    "check": "status",
+    "ok": false,
+    "why": "got crash"
+   }
+  ],
+  "cost": 0,
+  "seconds": 11.6,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "KeyError('name')"
+ },
+ {
+  "id": "fireball_linn_revenue",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "target",
+   "fresh",
+   "demo"
+  ],
+  "status": "crash",
+  "passed": false,
+  "checks": [
+   {
+    "check": "status",
+    "ok": false,
+    "why": "got crash"
+   }
+  ],
+  "cost": 0,
+  "seconds": 11.8,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "KeyError('name')"
+ },
+ {
+  "id": "fireball_linn_revenue",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "target",
+   "fresh",
+   "demo"
+  ],
+  "status": "crash",
+  "passed": false,
+  "checks": [
+   {
+    "check": "status",
+    "ok": false,
+    "why": "got crash"
+   }
+  ],
+  "cost": 0,
+  "seconds": 12.6,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "KeyError('name')"
+ },
+ {
+  "id": "statewide_liters",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "target",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0077,
+  "seconds": 25.7,
+  "tool_calls": 2,
+  "spec": {
+   "title": "Statewide total liters, next 6 months",
+   "target": "sales_liters",
+   "horizon": 6,
+   "product": {
+    "kind": "all",
+    "codes": [],
+    "label": "All products"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa statewide"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Interpreted 'total liquor sold statewide' as all products, all categories, all vendors, across all of Iowa.",
+   "Used sales_liters as the target since the request specified liters/volume.",
+   "Forecast horizon set to 6 months as explicitly requested.",
+   "Single aggregated series (not broken out by county, city, item, or category) since no breakdown was requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "statewide_liters",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "target",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0071,
+  "seconds": 24.5,
+  "tool_calls": 2,
+  "spec": {
+   "title": "Statewide total liquor sales, next 6 months",
+   "target": "sales_liters",
+   "horizon": 6,
+   "product": {
+    "kind": "all",
+    "codes": [],
+    "label": "All products"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa statewide"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Interpreted 'total liquor sold' as all products, all categories, statewide.",
+   "Used liters as the target metric since 'liters of liquor' was specified.",
+   "Forecast horizon set to 6 months as requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "diageo_scott",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "vendor",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.011,
+  "seconds": 16.0,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Diageo products, Scott County, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "vendor",
+    "codes": [
+     "260"
+    ],
+    "label": "Diageo Americas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19163"
+    ],
+    "label": "Scott County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Diageo = vendor Diageo Americas (vendor_no 260), all its products across all sizes.",
+   "Scott County identified by county_fips 19163, matched on store location.",
+   "Target metric is bottle sales (sales_bottles) since no dollar/liter volume was specified.",
+   "Single aggregate series for the whole vendor x county combination (not broken out by item or city).",
+   "Horizon set to 6 months as requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "diageo_scott",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "vendor",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0108,
+  "seconds": 18.7,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Diageo products, Scott County, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "vendor",
+    "codes": [
+     "260"
+    ],
+    "label": "Diageo Americas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19163"
+    ],
+    "label": "Scott County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Diageo Americas (vendor_no 260) is the intended vendor for 'Diageo'.",
+   "Scott County (FIPS 19163) is the intended place, including all stores in the county.",
+   "All sizes and all product categories from this vendor are included, matching 'all Diageo products'.",
+   "Forecast target is bottle sales (not dollars or liters), per the request wording.",
+   "One combined monthly total series for the whole county (not broken out by store or product)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_st_ansgar",
+  "run": 1,
+  "tags": [
+   "fresh"
+  ],
+  "status": "crash",
+  "passed": false,
+  "checks": [
+   {
+    "check": "status",
+    "ok": false,
+    "why": "got crash"
+   }
+  ],
+  "cost": 0,
+  "seconds": 9.6,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "KeyError('name')"
+ },
+ {
+  "id": "titos_st_ansgar",
+  "run": 2,
+  "tags": [
+   "fresh"
+  ],
+  "status": "crash",
+  "passed": false,
+  "checks": [
+   {
+    "check": "status",
+    "ok": false,
+    "why": "got crash"
+   }
+  ],
+  "cost": 0,
+  "seconds": 9.3,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "KeyError('name')"
+ },
+ {
+  "id": "bottled_in_bond",
+  "run": 1,
+  "tags": [
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0187,
+  "seconds": 10.6,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Bottled in Bond Bourbon, Statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011500"
+    ],
+    "label": "Bottled in Bond Bourbon"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Interpreted 'Bottled in bond bourbon bottles' as the BOTTLED IN BOND BOURBON category (category_code 1011500), which covers 75 products and is the standard taxonomy classification for this spirit type.",
+   "Target is bottle count (sales_bottles) since 'bottles' was explicitly named.",
+   "Statewide scope as no place was specified.",
+   "Single total series (no breakout) since the request did not ask for a per-group split.",
+   "3-month horizon as explicitly requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "bottled_in_bond",
+  "run": 2,
+  "tags": [
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0102,
+  "seconds": 9.3,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Bottled in Bond Bourbon, Iowa statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011500"
+    ],
+    "label": "Bottled in Bond Bourbon"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Interpreted 'bottled in bond bourbon' as the category BOTTLED IN BOND BOURBON (code 1011500), covering all bottle sizes.",
+   "Target metric is bottles sold (sales_bottles) since no revenue or volume was specified.",
+   "Statewide means all of Iowa, single total series (no breakout by region).",
+   "Horizon is 3 months ahead as requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "titos_100_by_item",
+  "run": 1,
+  "tags": [
+   "refusal",
+   "too_new",
+   "fresh"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0116,
+  "seconds": 9.8,
+  "tool_calls": 2,
+  "spec": null,
+  "assumptions": null,
+  "message": "I checked the Tito's lineup for a 100 ml bottle. There is exactly one such item in the warehouse:\n\n- item_no 102747, \"TITOS HANDMADE VODKA 100\" (100 ml), first ordered 2025-11-10, through 2026-08-31.\n\nThat's only about 10 months of sales history. Our guideline requires at least 24 months of history to build a reliable forecast, and this item simply hasn't been sold long enough yet. I can't responsibly produce a 6-month forecast for it as asked.\n\nOptions I'd suggest instead:\n1. Wait until the 100 ml item has accumulated 24 months of history (would be usable around late 2027).\n2. Forecast a different, well-established Tito's size instead (e.g. the 50 ml mini, 375 ml, 750 ml, 1L, or 1.75L, all of which have data back to 2016-2017).\n3. If you want an \"all sizes combined\" Tito's forecast, I can build that using the full brand history, which would include the 100 ml volume blended in.\n\nLet me know which of these you'd like, and I can proceed right away."
+ },
+ {
+  "id": "titos_100_by_item",
+  "run": 2,
+  "tags": [
+   "refusal",
+   "too_new",
+   "fresh"
+  ],
+  "status": "no_forecast",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0095,
+  "seconds": 7.8,
+  "tool_calls": 2,
+  "spec": null,
+  "assumptions": null,
+  "message": "There is a Tito's 100 ml item (item_no 102747), but it only entered the catalog in November 2025 and has under a year of order history, well short of the 24 months of history needed to fit and backtest a model. I can't responsibly forecast it yet.\n\nOptions I'd suggest instead:\n- Forecast the Tito's 750 ml, 375 ml, 200 ml, or the 50 ml mini (single or 4-pack), all of which have 8+ years of history, statewide for the next 6 months.\n- Wait until the 100 ml item has at least ~24 months of sales data.\n- Forecast all Tito's sizes combined (brand-level), which has long history, if that meets your need.\n\nLet me know which you'd like and I'll proceed."
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "run": 1,
+  "tags": [
+   "fresh",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.01,
+  "seconds": 15.9,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Ready-to-drink cocktails, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1071000"
+    ],
+    "label": "Cocktails/RTD"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Interpreted 'ready-to-drink cocktails' as the warehouse category COCKTAILS/RTD (code 1071000), covering all sizes and vendors.",
+   "Forecasting bottle counts (sales_bottles), as no dollar/liter measure was requested.",
+   "Statewide means all of Iowa, single total series (not broken out by county/city/item).",
+   "Horizon set to 6 months as requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "run": 2,
+  "tags": [
+   "fresh",
+   "demo"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.01,
+  "seconds": 16.0,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Ready-to-drink cocktails, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1071000"
+    ],
+    "label": "Cocktails/RTD"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Ready-to-drink cocktails\" maps to the warehouse category COCKTAILS/RTD (code 1071000), covering all products in that category and all sizes.",
+   "Forecast is for bottles sold (sales_bottles), statewide (all of Iowa), as one combined total series, not broken out by place or product.",
+   "Horizon is 6 months ahead as requested."
+  ],
+  "message": ""
+ },
+ {
+  "id": "hawkeye_johnson",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "fresh"
+  ],
+  "status": "crash",
+  "passed": false,
+  "checks": [
+   {
+    "check": "status",
+    "ok": false,
+    "why": "got crash"
+   }
+  ],
+  "cost": 0,
+  "seconds": 13.6,
+  "tool_calls": 0,
+  "spec": null,
+  "assumptions": null,
+  "message": "KeyError('name')"
+ },
+ {
+  "id": "hawkeye_johnson",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.016,
+  "seconds": 18.2,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Hawkeye Vodka, Johnson County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "36301",
+     "36308",
+     "36304",
+     "36306",
+     "36305",
+     "36307",
+     "36302"
+    ],
+    "label": "Hawkeye Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19103"
+    ],
+    "label": "Johnson County"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Hawkeye Vodka\" means the core Hawkeye Vodka product line (all bottle sizes, including minis and PET), excluding the separately branded Hawkeye Blue Raspberry (flavored) and Hawkeye Bacon Vodka items, which are treated as different products.",
+   "Johnson County refers to Johnson County, Iowa (FIPS 19103), covering all stores in that county.",
+   "Forecast target is bottle sales (sales_bottles), as requested.",
+   "Horizon is 5 months ahead, as explicitly requested.",
+   "Single combined series for the whole product group and county (no breakout by item or sub-area)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "ames_whiskey",
+  "run": 1,
+  "tags": [
+   "resolution",
+   "vague",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0176,
+  "seconds": 26.0,
+  "tool_calls": 6,
+  "spec": {
+   "title": "Whiskey bottles, Ames, next month",
+   "target": "sales_bottles",
+   "horizon": 1,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011000",
+     "1011100",
+     "1011200",
+     "1011250",
+     "1011300",
+     "1011400",
+     "1011600",
+     "1011700",
+     "1011800",
+     "1012000",
+     "1012100",
+     "1012200",
+     "1012400",
+     "1081600"
+    ],
+    "label": "Whiskey (all types)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "AMES"
+    ],
+    "label": "Ames"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Whiskey includes all whiskey-type categories: American, Blended, Straight Bourbon, Single Barrel Bourbon, Tennessee, Straight Rye, Corn, Iowa Distillery, Imported, Canadian, Scotch, Irish whiskies, and Whiskey Liqueur.",
+   "'Ames' interpreted as the city of Ames (all stores located in Ames), not all of Story County.",
+   "'Next month' interpreted as a 1-month-ahead forecast from the latest complete month (2026-08), i.e. September 2026.",
+   "Target metric is bottles ordered (sales_bottles), matching 'how many bottles'."
+  ],
+  "message": ""
+ },
+ {
+  "id": "ames_whiskey",
+  "run": 2,
+  "tags": [
+   "resolution",
+   "vague",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0168,
+  "seconds": 26.8,
+  "tool_calls": 5,
+  "spec": {
+   "title": "Whiskey bottles, Ames, next month",
+   "target": "sales_bottles",
+   "horizon": 1,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011000",
+     "1011100",
+     "1011200",
+     "1011250",
+     "1011300",
+     "1011400",
+     "1011600",
+     "1011700",
+     "1011800",
+     "1012000",
+     "1012100",
+     "1012200",
+     "1012400",
+     "1081600"
+    ],
+    "label": "Whiskey (all whiskey categories)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "AMES"
+    ],
+    "label": "Ames"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Whiskey\" includes all whiskey-type categories in today's taxonomy: American, Blended, Straight Bourbon, Single Barrel Bourbon, Tennessee, Straight Rye, Corn, Iowa Distillery, Imported, Canadian, Scotch, Irish whiskies, and Whiskey Liqueur.",
+   "\"Ames\" is interpreted as the city of Ames (all stores located in Ames), not all of Story County.",
+   "Forecast is for bottles ordered (sales_bottles), one month ahead (next calendar month after the last complete month of data, 2026-08), as a single total across all Ames stores combined."
+  ],
+  "message": ""
+ },
+ {
+  "id": "vague_vodka",
+  "run": 1,
+  "tags": [
+   "vague",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0111,
+  "seconds": 21.8,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Vodka, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100",
+     "1031200",
+     "1032100",
+     "1032200",
+     "1031080"
+    ],
+    "label": "Vodka (all categories)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Vodka\" interpreted as all vodka categories (American, American Flavored, Imported, Imported Flavored, and the legacy 80 Proof code), combining all sizes and vendors.",
+   "No place specified, so forecast is statewide (all of Iowa).",
+   "No horizon specified, so defaulted to 6 months ahead.",
+   "Target metric defaulted to bottles sold (sales_bottles) since dollars/liters were not requested.",
+   "Single combined series requested (not broken out by category, county, etc.)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "vague_vodka",
+  "run": 2,
+  "tags": [
+   "vague",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0113,
+  "seconds": 25.2,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Vodka, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100",
+     "1031200",
+     "1032100",
+     "1032200",
+     "1031080"
+    ],
+    "label": "Vodka (all categories)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Vodka = all vodka categories in the warehouse (American, American Flavored, Imported, Imported Flavored, and the legacy 'Vodka 80 Proof' code), covering all sizes and brands.",
+   "No specific region mentioned, so forecast is statewide (all of Iowa).",
+   "No horizon specified, so defaulted to 6 months ahead.",
+   "Target metric defaulted to bottles sold (sales_bottles), since no mention of dollars or liters.",
+   "Single aggregate series (not broken out by county/city/item), since user did not ask for a breakdown."
+  ],
+  "message": ""
+ },
+ {
+  "id": "cream_liqueur_holidays",
+  "run": 1,
+  "tags": [
+   "demo",
+   "vague",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0137,
+  "seconds": 19.0,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Cream liqueurs, Iowa, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1081200"
+    ],
+    "label": "Cream Liqueurs"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "Interpreted 'cream liqueur' as the warehouse category CREAM LIQUEURS (code 1081200), covering all products and sizes in that category.",
+   "Interpreted 'Iowa stores' as statewide, all stores.",
+   "Interpreted 'the holidays' as the upcoming holiday season; used the default 6 month horizon (Sept 2026 to Feb 2027) so the forecast window includes November and December.",
+   "Measured demand in bottles ordered (sales_bottles), not dollars or liters.",
+   "Forecasting one total statewide series, not broken out by county, city or individual product."
+  ],
+  "message": ""
+ },
+ {
+  "id": "cream_liqueur_holidays",
+  "run": 2,
+  "tags": [
+   "demo",
+   "vague",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0154,
+  "seconds": 20.3,
+  "tool_calls": 3,
+  "spec": {
+   "title": "Cream liqueur bottles, Iowa, next 4 months (holiday season)",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1081200"
+    ],
+    "label": "Cream liqueurs"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Cream liqueur\" maps to the warehouse category CREAM LIQUEURS (code 1081200), covering all products and sizes in that category.",
+   "\"Iowa stores\" means statewide, all Iowa liquor retailers (no single city/county/store).",
+   "\"The holidays\" is interpreted as the upcoming Nov-Dec holiday season; forecasting the next 4 months (Sep-Dec 2026) from the last complete month of data (Aug 2026) so the holiday months are included.",
+   "Metric is bottles ordered (sales_bottles), not dollars or liters, since the question asked \"how many bottles\".",
+   "One combined statewide total series, not broken out by county/city/item."
+  ],
+  "message": ""
+ },
+ {
+  "id": "bdi_store",
+  "run": 1,
+  "tags": [
+   "demo",
+   "resolution",
+   "store",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0142,
+  "seconds": 11.6,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Tito's minis, Hy-Vee #3 BDI Des Moines, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml)"
+   },
+   "region": {
+    "kind": "store",
+    "codes": [
+     "2633"
+    ],
+    "label": "Hy-Vee #3 / BDI / Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Tito's minis\" means Tito's Handmade Vodka in 50ml bottles, including both the single 50ml SKU and the 50ml 4-pack SKU, combined into one series.",
+   "\"Hy-Vee #3 BDI\" refers to the single store Hy-Vee #3 / BDI / Des Moines (store_no 2633); the forecast is for that store only, not citywide or statewide Tito's mini sales.",
+   "Target is bottles sold (sales_bottles), since no dollar or liter figure was requested.",
+   "Horizon is 6 months ahead as requested, with a single combined series (not broken out by anything)."
+  ],
+  "message": ""
+ },
+ {
+  "id": "bdi_store",
+  "run": 2,
+  "tags": [
+   "demo",
+   "resolution",
+   "store",
+   "fresh"
+  ],
+  "status": "ok",
+  "passed": true,
+  "checks": [
+   {
+    "check": "status",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "target",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "horizon",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "series_by",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "product.codes",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.kind",
+    "ok": true,
+    "why": ""
+   },
+   {
+    "check": "region.codes",
+    "ok": true,
+    "why": ""
+   }
+  ],
+  "cost": 0.0142,
+  "seconds": 11.8,
+  "tool_calls": 4,
+  "spec": {
+   "title": "Tito's minis, Hy-Vee #3 BDI Des Moines, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml, incl. 4-pack)"
+   },
+   "region": {
+    "kind": "store",
+    "codes": [
+     "2633"
+    ],
+    "label": "Hy-Vee #3 / BDI / Des Moines"
+   },
+   "series_by": "none",
+   "start": "2016-01-01",
+   "features": [
+    "calendar",
+    "population"
+   ]
+  },
+  "assumptions": [
+   "\"Tito's minis\" interpreted as 50 ml Tito's Handmade Vodka products, including both the single mini (item 38194) and the 4-pack of minis (item 38185), since both are 50 ml bottles.",
+   "\"Hy-Vee #3 BDI\" matched to store 2633, HY-VEE #3 / BDI / DES MOINES, the only store matching that name in Des Moines.",
+   "Forecasting bottle volume (sales_bottles) as the target since no dollar or liter measure was requested.",
+   "Single combined series for the store (not broken out by item), since the user did not ask for a per-item breakdown."
+  ],
+  "message": ""
+ }
+]

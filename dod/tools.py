@@ -71,14 +71,25 @@ FIND_COLUMN = {"item": "h.item_desc", "category": "c.category_name", "vendor": "
                "city": "city", "county": "county_name", "store": "store_name"}
 
 
-def find_values(kind, text):
+def name_match(col, text, prefix="w"):
+    """SQL condition and parameters: every search word of `text` appears in the name column (punctuation ignored)."""
     words = _tokens(text)
-    if kind not in FIND_SQL or not words:
+    cond = " AND ".join(f"{_canonical(col)} LIKE %({prefix}{n})s" for n in range(len(words)))
+    return cond, {f"{prefix}{n}": f"%{w}%" for n, w in enumerate(words)}
+
+
+def find_values(kind, text):
+    if kind not in FIND_SQL or not _tokens(text):
         return "Error: kind must be one of item, category, vendor, city, county, store, and text must contain a word."
-    col = _canonical(FIND_COLUMN[kind])
-    match = " AND ".join(f"{col} LIKE %(w{n})s" for n in range(len(words)))
-    params = {f"w{n}": f"%{w}%" for n, w in enumerate(words)}
-    return as_text(db.query(FIND_SQL[kind].format(match=match), params))
+    match, params = name_match(FIND_COLUMN[kind], text)
+    out = as_text(db.query(FIND_SQL[kind].format(match=match), params))
+    if kind == "item":   # the list is capped at 60: say so, and how to include every match
+        n = db.query(f"SELECT count(DISTINCT i.family_item_no) AS n FROM sales.item i JOIN sales.item h "
+                     f"ON h.item_no = i.family_item_no WHERE {match}", params).n[0]
+        if n > 60:
+            out += (f"\n({n} products match; the 60 largest are shown. To include every product matching these "
+                    f"words, use product kind \"name\" with codes [\"{text}\"].)")
+    return out
 
 
 def run_select(sql):
@@ -109,6 +120,11 @@ def preview(spec_json):
     except ValueError as e:
         return f"Error: {e}", None
     lines = [f"Last complete month {p.series.index[-1]:%Y-%m}; {p.series.shape[1]} series."]
+    if spec.product.kind == "name":   # show what the brand words matched, so an overreach is visible before submitting
+        heads = db.query("SELECT DISTINCT h.item_desc, h.total_bottles FROM sales.item i JOIN sales.item h "
+                         "ON h.item_no = i.family_item_no WHERE i.item_no = ANY(%s) ORDER BY 2 DESC NULLS LAST",
+                         (panel.member_items(spec),))
+        lines.append(f"Product name matches {len(heads)} products, largest: " + "; ".join(heads.item_desc.head(8)))
     for c in p.series:
         s = p.series[c].dropna()
         nz = s[s > 0]

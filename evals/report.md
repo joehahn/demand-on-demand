@@ -1,10 +1,10 @@
 # Agent eval report
 
-21 cases, 42 runs, model `claude-sonnet-5`, 2026-09-30 22:11.
+21 cases, 42 runs, model `claude-sonnet-5`, 2026-10-02 13:03.
 
 - Runs fully correct: **42/42** (100%)
 - Cases correct on every run: **21/21**
-- Cost: $0.68 total, $0.016 per run; median 20s and 4 tool calls per run
+- Cost: $0.61 total, $0.015 per run; median 18s and 4 tool calls per run
 
 | tag | runs correct |
 |---|---|

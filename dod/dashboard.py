@@ -272,11 +272,11 @@ def spec_table(spec, res):
 
 def sql_words(spec, panel):
     """What the aggregation SQL does, in one sentence."""
-    from .panel import member_items   # the same item list the SQL was built from
+    from .panel import member_items, older_numbers   # the same item list the SQL was built from
     unit = MEASURE_WORDS.get(spec.target, spec.target)
     extra = ""
-    if spec.product.kind == "item":   # renumbered items: the SQL also reads the products' older item numbers
-        older = [c for c in member_items(spec) if c not in spec.product.codes]
+    if spec.product.kind in ("item", "name"):   # renumbered items: the SQL also reads the products' older numbers
+        older = older_numbers(member_items(spec))
         if older:
             which = ", ".join(older) if len(older) <= 3 else f"{len(older)} older item numbers"
             extra = (f" (with {which}{', older item numbers of the same products' if len(older) <= 3 else ' of the same products'},"
@@ -318,7 +318,7 @@ def prep_section(spec, panel, res, unit, wide):
     n = lambda k: f"{int(fixes.get(k, 0)):,}"
     fixed = lambda anchor: f'<a href="{SITE}/data_fixes.html#{anchor}">details</a>'
     code = lambda f, what: f'<a href="{GITHUB}/{f}">{what}</a>'
-    items = member_items(spec) if spec.product.kind in ("item", "category") else []
+    items = member_items(spec) if spec.product.kind in ("item", "category", "name") else []
     rows = []
 
     # once, in the warehouse
@@ -329,8 +329,9 @@ def prep_section(spec, panel, res, unit, wide):
                  f"SQL run by {w} (raw, curate)"))
     rows.append(("Warehouse, once", f"Removed {n('export_duplicates')} rows the state's export repeats verbatim, and "
                  f"{n('zero_value_lines')} zero lines (likely cancelled). {fixed('duplicates')}", f"SQL in {w} (clean)"))
-    if spec.product.kind == "item":
-        older = [c for c in items if c not in spec.product.codes]
+    if spec.product.kind in ("item", "name"):
+        from .panel import older_numbers
+        older = older_numbers(items)
         if older:
             which = ", ".join(older[:4]) + (f" and {len(older) - 4} more" if len(older) > 4 else "")
             verb = "is an older number" if len(older) == 1 else "are older numbers"

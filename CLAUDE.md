@@ -125,5 +125,7 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    0.880, 2x slower) and 192 configs (grid_experiment_middle.md: 20 vs 23, median 0.920, 1.4x slower).
 9. NL2SQL prototype (2026-10-01): `dod/nl2sql.py` (same agent and tools, writes the series SQL itself);
    `python evals/differential.py` compares it with slot filling month by month; `evals/differential_report.py` ->
-   docs/differential.html. First run: 11/18 identical, 5 AI queries wrong (missed family_item_no or category_current;
-   last 12 months still matched), 2 reference bugs (find_values shows at most 60 products: Crown Royal 91, Jack Daniel's 80).
+   docs/differential.html. First run found a reference bug (find_values showed at most 60 products: Crown Royal 91,
+   Jack Daniel's 80); fixed 2026-10-02 with product kind "name" (one brand's words, resolved by panel.member_items) and
+   a "N products match" note in find_values. After the fix: 11/18 identical, 7 AI-written queries wrong (renumbered
+   items, recorded category codes, brand-prefix matches), all on the AI side; evals 42/42.

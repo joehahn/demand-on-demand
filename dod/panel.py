@@ -13,6 +13,7 @@ from . import db
 # Products resolve to their member item numbers first (member_items), so every query filters on the indexed
 # l.item_no; filtering through the item join would scan all 26M order lines.
 PRODUCT_FILTER = {"item": "l.item_no = ANY(%(items)s)", "category": "l.item_no = ANY(%(items)s)",
+                  "name": "l.item_no = ANY(%(items)s)",
                   "vendor": "l.vendor_no = ANY(%(product)s)", "all": "TRUE"}
 REGION_FILTER = {"county": "s.county_fips = ANY(%(region)s)", "city": "s.city = ANY(%(region)s)",
                  "store": "l.store_no = ANY(%(region)s)", "statewide": "TRUE"}
@@ -36,10 +37,23 @@ class Panel:
 
 def member_items(spec):
     """Item numbers behind a product scope: every member of the named families, or every item in the categories."""
+    if spec.product.kind == "name":   # one brand: every product whose family name contains all the words of the codes
+        from .tools import name_match
+        cond, params = name_match("h.item_desc", " ".join(spec.product.codes))
+        return list(db.query(f"SELECT i.item_no FROM sales.item i JOIN sales.item h ON h.item_no = i.family_item_no "
+                             f"WHERE {cond}", params).item_no)
     col = {"item": "family_item_no", "category": "category_current"}.get(spec.product.kind)
     if col is None:
         return []
     return list(db.query(f"SELECT item_no FROM sales.item WHERE {col} = ANY(%s)", (spec.product.codes,)).item_no)
+
+
+def older_numbers(items):
+    """Item numbers among `items` that are an older number of a renumbered product (not its family's current item)."""
+    if not items:
+        return []
+    return list(db.query("SELECT item_no FROM sales.item WHERE item_no = ANY(%s) AND item_no <> family_item_no "
+                         "ORDER BY item_no", (list(items),)).item_no)
 
 
 def build_sql(spec, items=None):
@@ -83,6 +97,7 @@ def unknown_packs(spec, items):
     """Items in this product that the state sells as a sleeve or pack of unknown size: they count one bottle per pack
     (sales.item_units, units_per_sale NULL). Largest first."""
     where = {"item": "u.item_no = ANY(%(items)s)", "category": "u.item_no = ANY(%(items)s)",
+             "name": "u.item_no = ANY(%(items)s)",
              "vendor": "i.vendor_no = ANY(%(product)s)", "all": "TRUE"}[spec.product.kind]
     return list(db.query(f"""SELECT i.item_desc FROM sales.item_units u JOIN sales.item i USING (item_no)
                              WHERE u.units_per_sale IS NULL AND {where} ORDER BY i.total_bottles DESC NULLS LAST""",

@@ -57,18 +57,19 @@ every query is new code. How do you know it is right?</li>
 <p><strong>The test:</strong> give both the same 18 requests, with the same data dictionary, the same lookup
 tools and the same read-only database login, and compare the two monthly histories month by month. Where the slot
 form can express a request, the two must agree; any difference is a bug on one side.</p>
-<div class="tiles"><div class="tile"><div class="v">11 of 18</div><div class="k">requests where AI-written SQL matched the reference exactly</div></div><div class="tile"><div class="v">5</div><div class="k">AI-written queries that were wrong (but ran fine)</div></div><div class="tile"><div class="v">2</div><div class="k">bugs found in the reference path</div></div><div class="tile"><div class="v">$0.016</div><div class="k">per AI-written query (reference: $0.018)</div></div></div>
+<div class="tiles"><div class="tile"><div class="v">11 of 18</div><div class="k">requests where AI-written SQL matched the reference exactly</div></div><div class="tile"><div class="v">7</div><div class="k">AI-written queries that were wrong (but ran fine)</div></div><div class="tile"><div class="v">1</div><div class="k">bug found in the reference path (fixed)</div></div><div class="tile"><div class="v">$0.017</div><div class="k">per AI-written query (reference: $0.015)</div></div></div>
 <h2>What we learned</h2>
 <ol>
-<li><strong>The AI's mistakes passed every quick check.</strong> The wrong queries ran without error, and for 4 of
-the 5 the last 12 months matched the reference exactly. The errors were in older history, the part the model learns from. Only a
+<li><strong>The AI's mistakes passed every quick check.</strong> The wrong queries ran without error, and their last
+12 months matched the reference exactly or within 1%. The errors were in older history, the part the model learns from. Only a
 month-by-month comparison against a reference found them.</li>
-<li><strong>The same request can produce different SQL.</strong> One request was right in one run and wrong in the next.</li>
+<li><strong>The same request can produce different SQL.</strong> Several requests were right in one run and wrong in
+another.</li>
 <li><strong>Documentation was not enough.</strong> The data dictionary the AI reads says to use the product family for
-renumbered items and today's category for history; the AI still used the raw codes in 5 of 18
+renumbered items and today's category for history; the AI still used the raw codes in 7 of 18
 requests.</li>
-<li><strong>The reference had bugs too.</strong> Its product search showed at most 60 products, so for big brands it
-quietly left some out. Differential testing finds problems on both sides.</li>
+<li><strong>The reference had a bug too.</strong> The reference agent's product search showed at most 60 products, so for Crown Royal (91 products) and Jack Daniel's (80) it quietly left out the smallest ones. Fixed: the search now says when more products match, and the request form can name a whole brand. Differential testing finds problems on both sides; after the
+fix, every remaining difference is on the AI side.</li>
 </ol>
 <p><strong>What this means:</strong> AI-written SQL is promising for requests the form cannot express, but it needs a
 reference to be checked against. A practical design keeps slot filling for the common requests, lets the AI write SQL
@@ -92,11 +93,10 @@ ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>select date_trunc(
        sum(il.sales_bottles) as value
 from sales.invoice_line il
 join sales.store s on s.store_no = il.store_no
-where il.item_no in (&#x27;38194&#x27;,&#x27;38185&#x27;)
-  and s.city = &#x27;DES MOINES&#x27;
-  and il.ordered_on &gt;= &#x27;2016-01-01&#x27;
+where s.city = &#x27;DES MOINES&#x27;
+  and il.item_no in (&#x27;38194&#x27;,&#x27;38185&#x27;)
 group by 1
-order by 1</pre></details></td><td><strong>AI missed renumbered items</strong><br>The AI filtered on today&#x27;s item numbers (item_no) instead of the product family (family_item_no), so the mini&#x27;s older numbers 38180 and 938180 were left out and history before mid-2020 is too low.</td><td class="num">-13.9%</td><td class="num">+0.0%</td></tr><tr><td>How many bottles of each Tito&#x27;s mini item will sell statewide over the next 6 months?<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+order by 1</pre></details></td><td><strong>AI missed renumbered items</strong><br>The AI filtered on today&#x27;s item numbers (item_no) instead of the product family (family_item_no), so the mini&#x27;s older numbers 38180 and 938180 were left out and history before mid-2020 is too low.</td><td class="num">-13.9%</td><td class="num">under 0.1%</td></tr><tr><td>How many bottles of each Tito&#x27;s mini item will sell statewide over the next 6 months?<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
        i.family_item_no AS series,
        l.store_no,
        sum(l.sales_bottles) AS value
@@ -107,35 +107,13 @@ WHERE l.item_no = ANY(ARRAY[&#x27;38185&#x27;, &#x27;38194&#x27;, &#x27;38180&#x
   AND TRUE
   AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>select date_trunc(&#x27;month&#x27;, il.ordered_on)::date as month,
-       i.item_desc as series,
-       sum(il.sales_bottles) as value
-from sales.invoice_line il
-join sales.item i on i.item_no = il.item_no
-where il.item_no in (&#x27;38194&#x27;,&#x27;38185&#x27;)
-  and il.ordered_on &gt;= &#x27;2016-01-01&#x27;
-group by 1,2
-order by 1</pre></details></td><td><strong>AI missed renumbered items</strong><br>Same mistake as above, in a per-item forecast. In the first full run the AI got this request right; in a rerun it got it wrong: same request, different SQL.</td><td class="num">-13.0%</td><td class="num">+0.0%</td></tr><tr><td>Tito&#x27;s bottles in St. Ansgar for the next 4 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
-       &#x27;total&#x27; AS series,
-       l.store_no,
-       sum(l.sales_bottles) AS value
-FROM sales.invoice_line l
-JOIN sales.item i USING (item_no)
-JOIN sales.store s USING (store_no)
-WHERE l.item_no = ANY(ARRAY[&#x27;102747&#x27;, &#x27;38174&#x27;, &#x27;38176&#x27;, &#x27;38177&#x27;, &#x27;38178&#x27;, &#x27;38179&#x27;, &#x27;38185&#x27;, &#x27;38194&#x27;, &#x27;38180&#x27;, &#x27;38449&#x27;, &#x27;938180&#x27;])
-  AND s.city = ANY(ARRAY[&#x27;SAINT ANSGAR&#x27;])
-  AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
-GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month,
-       &#x27;total&#x27; AS series,
-       SUM(il.sales_bottles) AS value
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, ordered_on)::date AS month, i.item_desc AS series, SUM(il.sales_bottles) AS value
 FROM sales.invoice_line il
-JOIN sales.store s ON s.store_no = il.store_no
-WHERE il.item_no IN (&#x27;38177&#x27;,&#x27;38176&#x27;,&#x27;38194&#x27;,&#x27;38178&#x27;,&#x27;38174&#x27;,&#x27;38179&#x27;,&#x27;38185&#x27;,&#x27;102747&#x27;)
-  AND s.city = &#x27;SAINT ANSGAR&#x27;
-  AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
-GROUP BY 1
-ORDER BY 1</pre></details></td><td><strong>AI missed renumbered items</strong><br>Same mistake; only one month differs (July 2020, when the mini had a temporary number).</td><td class="num">-0.1%</td><td class="num">+0.0%</td></tr><tr><td>Forecast Tito&#x27;s minis ordered by Hy-Vee #3 BDI in Des Moines for the next 6 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+JOIN sales.item i ON i.item_no = il.item_no
+WHERE il.item_no IN (&#x27;38194&#x27;,&#x27;38185&#x27;)
+AND ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1,2
+ORDER BY 1</pre></details></td><td><strong>AI missed renumbered items</strong><br>Same mistake as above, in a per-item forecast. In an earlier run the AI got this request right: same request, different SQL.</td><td class="num">-13.0%</td><td class="num">under 0.1%</td></tr><tr><td>Forecast Tito&#x27;s minis ordered by Hy-Vee #3 BDI in Des Moines for the next 6 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
        l.store_no,
        sum(l.sales_bottles) AS value
@@ -146,67 +124,34 @@ WHERE l.item_no = ANY(ARRAY[&#x27;38185&#x27;, &#x27;38194&#x27;, &#x27;38180&#x
   AND l.store_no = ANY(ARRAY[&#x27;2633&#x27;])
   AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, ordered_on)::date AS month, &#x27;total&#x27; AS series, sum(sales_bottles) AS value
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, ordered_on)::date AS month, &#x27;total&#x27; AS series, SUM(sales_bottles) AS value
 FROM sales.invoice_line
 WHERE store_no = &#x27;2633&#x27;
   AND item_no IN (&#x27;38194&#x27;,&#x27;38185&#x27;)
   AND ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1
-ORDER BY 1</pre></details></td><td><strong>AI missed renumbered items</strong><br>Same mistake, for a single store.</td><td class="num">-14.7%</td><td class="num">+0.0%</td></tr><tr><td>Bottled in bond bourbon bottles statewide, next 3 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+ORDER BY 1</pre></details></td><td><strong>AI missed renumbered items</strong><br>Same mistake, for a single store.</td><td class="num">-14.7%</td><td class="num">under 0.1%</td></tr><tr><td>Monthly forecast of Tito&#x27;s vodka bottles in Polk County for the next 5 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
        l.store_no,
        sum(l.sales_bottles) AS value
 FROM sales.invoice_line l
 JOIN sales.item i USING (item_no)
 JOIN sales.store s USING (store_no)
-WHERE l.item_no = ANY(ARRAY[&#x27;16017&#x27;, &#x27;16050&#x27;, &#x27;16096&#x27;, &#x27;16098&#x27;, &#x27;16168&#x27;, &#x27;16196&#x27;, &#x27;16253&#x27;, &#x27;16254&#x27;, &#x27;16307&#x27;, &#x27;16380&#x27;, &#x27;16416&#x27;, &#x27;16435&#x27;, &#x27;...&#x27;])
-  AND TRUE
-  AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
-GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, ordered_on)::date AS month, &#x27;total&#x27; AS series, SUM(sales_bottles) AS value
-FROM sales.invoice_line
-WHERE category_code = &#x27;1011500&#x27; AND ordered_on &gt;= &#x27;2016-01-01&#x27;
-GROUP BY 1 ORDER BY 1</pre></details></td><td><strong>AI used old category codes</strong><br>The AI filtered on the category code recorded on each order (category_code) instead of today&#x27;s category (category_current). The state reassigned codes in 2016, so older history counts the wrong products.</td><td class="num">+13.0%</td><td class="num">+0.4%</td></tr><tr><td>Monthly liters of Crown Royal in Mount Pleasant for the next 4 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
-       &#x27;total&#x27; AS series,
-       l.store_no,
-       sum(l.sales_liters) AS value
-FROM sales.invoice_line l
-JOIN sales.item i USING (item_no)
-JOIN sales.store s USING (store_no)
-WHERE l.item_no = ANY(ARRAY[&#x27;100501&#x27;, &#x27;100639&#x27;, &#x27;100944&#x27;, &#x27;102040&#x27;, &#x27;102188&#x27;, &#x27;102286&#x27;, &#x27;102340&#x27;, &#x27;102814&#x27;, &#x27;10646&#x27;, &#x27;10647&#x27;, &#x27;10775&#x27;, &#x27;10776&#x27;, &#x27;...&#x27;])
-  AND s.city = ANY(ARRAY[&#x27;MOUNT PLEASANT&#x27;])
+WHERE l.item_no = ANY(ARRAY[&#x27;102747&#x27;, &#x27;38174&#x27;, &#x27;38176&#x27;, &#x27;38177&#x27;, &#x27;38178&#x27;, &#x27;38179&#x27;, &#x27;38185&#x27;, &#x27;38194&#x27;, &#x27;38180&#x27;, &#x27;38449&#x27;, &#x27;938180&#x27;])
+  AND s.county_fips = ANY(ARRAY[&#x27;19153&#x27;])
   AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1, 2, 3
 ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
-       SUM(il.sales_liters) AS value
+       SUM(il.sales_bottles) AS value
 FROM sales.invoice_line il
 JOIN sales.item i ON i.item_no = il.item_no
 JOIN sales.store s ON s.store_no = il.store_no
-WHERE i.item_desc ILIKE &#x27;CROWN ROYAL%&#x27;
-  AND s.city = &#x27;MOUNT PLEASANT&#x27;
-  AND il.ordered_on &gt;= DATE &#x27;2016-01-01&#x27;
+WHERE i.item_no IN (&#x27;38177&#x27;,&#x27;38176&#x27;,&#x27;38194&#x27;,&#x27;38178&#x27;,&#x27;38174&#x27;,&#x27;38179&#x27;,&#x27;38185&#x27;,&#x27;102747&#x27;)
+  AND s.county_fips = &#x27;19153&#x27;
+  AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1
-ORDER BY 1</pre></details></td><td><strong>Reference bug</strong><br>The reference agent&#x27;s product search shows at most 60 products, and Crown Royal has 91, so the reference left out 31 small ones (about 0.5% of liters). The AI-written SQL (item_desc ILIKE &#x27;CROWN ROYAL%&#x27;) included them all.</td><td class="num">+0.5%</td><td class="num">+0.9%</td></tr><tr><td>Forecast Jack Daniel&#x27;s bottle sales in Iowa City for the next 4 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
-       &#x27;total&#x27; AS series,
-       l.store_no,
-       sum(l.sales_bottles) AS value
-FROM sales.invoice_line l
-JOIN sales.item i USING (item_no)
-JOIN sales.store s USING (store_no)
-WHERE l.item_no = ANY(ARRAY[&#x27;100488&#x27;, &#x27;100744&#x27;, &#x27;101299&#x27;, &#x27;25962&#x27;, &#x27;102781&#x27;, &#x27;25984&#x27;, &#x27;159&#x27;, &#x27;16222&#x27;, &#x27;16620&#x27;, &#x27;25059&#x27;, &#x27;308&#x27;, &#x27;470&#x27;, &#x27;...&#x27;])
-  AND s.city = ANY(ARRAY[&#x27;IOWA CITY&#x27;])
-  AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
-GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month, &#x27;total&#x27; AS series, SUM(il.sales_bottles) AS value
-FROM sales.invoice_line il
-JOIN sales.item i ON i.item_no = il.item_no
-JOIN sales.store s ON s.store_no = il.store_no
-WHERE i.item_desc ILIKE &#x27;JACK DANIEL%&#x27;
-AND s.city = &#x27;IOWA CITY&#x27;
-AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
-GROUP BY 1
-ORDER BY 1</pre></details></td><td><strong>Reference bug</strong><br>Same search limit: Jack Daniel&#x27;s has 80 products and the reference used 60. The AI-written SQL included them all.</td><td class="num">+0.0%</td><td class="num">+0.3%</td></tr><tr><td>How many bottles of whiskey will Ames stores order next month?<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+ORDER BY 1</pre></details></td><td><strong>AI missed renumbered items</strong><br>The AI listed today&#x27;s Tito&#x27;s item numbers instead of the whole brand, leaving out older numbers and small products.</td><td class="num">-3.5%</td><td class="num">-0.1%</td></tr><tr><td>How many bottles of whiskey will Ames stores order next month?<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
        l.store_no,
        sum(l.sales_bottles) AS value
@@ -221,13 +166,109 @@ ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>select date_trunc(
        &#x27;total&#x27; as series,
        sum(il.sales_bottles) as value
 from sales.invoice_line il
-join sales.item it on it.item_no = il.item_no
 join sales.store s on s.store_no = il.store_no
-join sales.category c on c.category_code = it.category_current
 where s.city = &#x27;AMES&#x27;
-  and c.category_name ilike &#x27;%whiskies%&#x27;
+  and il.category_code in (
+        select category_code from sales.category
+        where category_name ilike &#x27;%whisk%&#x27; and category_name not ilike &#x27;%liqueur%&#x27;
+      )
+  and il.ordered_on &gt;= date &#x27;2016-01-01&#x27;
 group by 1
-order by 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>How many bottles of cream liqueur will Iowa stores order for the holidays?<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+order by 1</pre></details></td><td><strong>AI used old category codes</strong><br>The AI chose its own whiskey categories by name and filtered on the category codes as recorded, not today&#x27;s taxonomy.</td><td class="num">-1.5%</td><td class="num">-0.6%</td></tr><tr><td>Monthly liters of Crown Royal in Mount Pleasant for the next 4 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+       &#x27;total&#x27; AS series,
+       l.store_no,
+       sum(l.sales_liters) AS value
+FROM sales.invoice_line l
+JOIN sales.item i USING (item_no)
+JOIN sales.store s USING (store_no)
+WHERE l.item_no = ANY(ARRAY[&#x27;100501&#x27;, &#x27;100639&#x27;, &#x27;100865&#x27;, &#x27;100944&#x27;, &#x27;102040&#x27;, &#x27;102187&#x27;, &#x27;102188&#x27;, &#x27;102286&#x27;, &#x27;102339&#x27;, &#x27;102340&#x27;, &#x27;10255&#x27;, &#x27;102814&#x27;, &#x27;...&#x27;])
+  AND s.city = ANY(ARRAY[&#x27;MOUNT PLEASANT&#x27;])
+  AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1, 2, 3
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month,
+       &#x27;total&#x27; AS series,
+       SUM(il.sales_liters) AS value
+FROM sales.invoice_line il
+JOIN sales.item i ON i.item_no = il.item_no
+JOIN sales.store s ON s.store_no = il.store_no
+WHERE i.item_desc LIKE &#x27;CROWN ROYAL%&#x27;
+  AND s.city = &#x27;MOUNT PLEASANT&#x27;
+  AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1
+ORDER BY 1</pre></details></td><td><strong>AI missed some products</strong><br>The AI matched names starting with CROWN ROYAL, so barrel picks named &quot;BP CROWN ROYAL ...&quot; were left out (a tiny difference).</td><td class="num">under 0.1%</td><td class="num">under 0.1%</td></tr><tr><td>Forecast Jack Daniel&#x27;s bottle sales in Iowa City for the next 4 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+       &#x27;total&#x27; AS series,
+       l.store_no,
+       sum(l.sales_bottles) AS value
+FROM sales.invoice_line l
+JOIN sales.item i USING (item_no)
+JOIN sales.store s USING (store_no)
+WHERE l.item_no = ANY(ARRAY[&#x27;100414&#x27;, &#x27;100488&#x27;, &#x27;21561&#x27;, &#x27;100744&#x27;, &#x27;100746&#x27;, &#x27;101299&#x27;, &#x27;25962&#x27;, &#x27;102781&#x27;, &#x27;25984&#x27;, &#x27;25988&#x27;, &#x27;159&#x27;, &#x27;16222&#x27;, &#x27;...&#x27;])
+  AND s.city = ANY(ARRAY[&#x27;IOWA CITY&#x27;])
+  AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1, 2, 3
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month, &#x27;total&#x27; AS series, SUM(il.sales_bottles) AS value
+FROM sales.invoice_line il
+JOIN sales.item i ON i.item_no = il.item_no
+JOIN sales.store s ON s.store_no = il.store_no
+WHERE i.item_desc ILIKE &#x27;JACK DANIEL%&#x27; AND s.city = &#x27;IOWA CITY&#x27; AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1
+ORDER BY 1</pre></details></td><td><strong>AI missed some products</strong><br>Same: names starting with JACK DANIEL, so special releases named &quot;HA JACK DANIELS ...&quot; were left out.</td><td class="num">under 0.1%</td><td class="num">under 0.1%</td></tr><tr><td>Tito&#x27;s bottles in St. Ansgar for the next 4 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+       &#x27;total&#x27; AS series,
+       l.store_no,
+       sum(l.sales_bottles) AS value
+FROM sales.invoice_line l
+JOIN sales.item i USING (item_no)
+JOIN sales.store s USING (store_no)
+WHERE l.item_no = ANY(ARRAY[&#x27;102747&#x27;, &#x27;38174&#x27;, &#x27;38176&#x27;, &#x27;38177&#x27;, &#x27;38178&#x27;, &#x27;38179&#x27;, &#x27;38185&#x27;, &#x27;38194&#x27;, &#x27;38180&#x27;, &#x27;38449&#x27;, &#x27;938180&#x27;])
+  AND s.city = ANY(ARRAY[&#x27;SAINT ANSGAR&#x27;])
+  AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1, 2, 3
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month, &#x27;total&#x27; AS series, SUM(il.sales_bottles) AS value
+FROM sales.invoice_line il
+JOIN sales.item i ON il.item_no = i.item_no
+JOIN sales.store s ON il.store_no = s.store_no
+WHERE i.item_desc ILIKE &#x27;TITOS%&#x27; AND s.city = &#x27;SAINT ANSGAR&#x27;
+  AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1
+ORDER BY 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>Bottled in bond bourbon bottles statewide, next 3 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+       &#x27;total&#x27; AS series,
+       l.store_no,
+       sum(l.sales_bottles) AS value
+FROM sales.invoice_line l
+JOIN sales.item i USING (item_no)
+JOIN sales.store s USING (store_no)
+WHERE l.item_no = ANY(ARRAY[&#x27;16017&#x27;, &#x27;16050&#x27;, &#x27;16096&#x27;, &#x27;16098&#x27;, &#x27;16168&#x27;, &#x27;16196&#x27;, &#x27;16253&#x27;, &#x27;16254&#x27;, &#x27;16307&#x27;, &#x27;16380&#x27;, &#x27;16416&#x27;, &#x27;16435&#x27;, &#x27;...&#x27;])
+  AND TRUE
+  AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1, 2, 3
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month, &#x27;total&#x27; AS series, SUM(il.sales_bottles) AS value
+FROM sales.invoice_line il
+JOIN sales.item it ON it.item_no = il.item_no
+WHERE it.category_current = &#x27;1011500&#x27;
+  AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1
+ORDER BY 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>American vodka sales dollars for each of the five largest counties, next 6 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+       coalesce(s.county_name, &#x27;(no county)&#x27;) AS series,
+       l.store_no,
+       sum(l.sales_dollars) AS value
+FROM sales.invoice_line l
+JOIN sales.item i USING (item_no)
+JOIN sales.store s USING (store_no)
+WHERE l.item_no = ANY(ARRAY[&#x27;101873&#x27;, &#x27;102149&#x27;, &#x27;102747&#x27;, &#x27;937101&#x27;, &#x27;937117&#x27;, &#x27;33221&#x27;, &#x27;33642&#x27;, &#x27;33647&#x27;, &#x27;37988&#x27;, &#x27;34546&#x27;, &#x27;34578&#x27;, &#x27;34579&#x27;, &#x27;...&#x27;])
+  AND s.county_fips = ANY(ARRAY[&#x27;19153&#x27;, &#x27;19113&#x27;, &#x27;19163&#x27;, &#x27;19103&#x27;, &#x27;19013&#x27;])
+  AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1, 2, 3
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>select date_trunc(&#x27;month&#x27;, il.ordered_on)::date as month,
+       s.county_name as series,
+       sum(il.sales_dollars) as value
+from sales.invoice_line il
+join sales.item i on il.item_no = i.item_no
+join sales.store s on il.store_no = s.store_no
+where i.category_current = &#x27;1031100&#x27;
+  and s.county_name in (&#x27;POLK&#x27;,&#x27;LINN&#x27;,&#x27;SCOTT&#x27;,&#x27;JOHNSON&#x27;,&#x27;BLACK HAWK&#x27;)
+  and il.ordered_on &gt;= &#x27;2016-01-01&#x27;
+group by 1, 2
+order by 1, 2</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>How many bottles of cream liqueur will Iowa stores order for the holidays?<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
        l.store_no,
        sum(l.sales_bottles) AS value
@@ -257,14 +298,10 @@ WHERE l.vendor_no = ANY(ARRAY[&#x27;260&#x27;])
   AND s.county_fips = ANY(ARRAY[&#x27;19163&#x27;])
   AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month,
-       &#x27;total&#x27; AS series,
-       SUM(il.sales_bottles) AS value
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month, &#x27;total&#x27; AS series, SUM(il.sales_bottles) AS value
 FROM sales.invoice_line il
 JOIN sales.store s ON il.store_no = s.store_no
-WHERE il.vendor_no = &#x27;260&#x27;
-  AND s.county_fips = &#x27;19163&#x27;
-  AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
+WHERE il.vendor_no = &#x27;260&#x27; AND s.county_fips = &#x27;19163&#x27;
 GROUP BY 1
 ORDER BY 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>What revenue should we expect from Fireball in Linn County next quarter?<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
@@ -277,17 +314,17 @@ WHERE l.item_no = ANY(ARRAY[&#x27;100413&#x27;, &#x27;100423&#x27;, &#x27;100535
   AND s.county_fips = ANY(ARRAY[&#x27;19113&#x27;])
   AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>select date_trunc(&#x27;month&#x27;, il.ordered_on)::date as month,
-       &#x27;total&#x27; as series,
-       sum(il.sales_dollars) as value
-from sales.invoice_line il
-join sales.store s on s.store_no = il.store_no
-join sales.item it on it.item_no = il.item_no
-where s.county_fips = &#x27;19113&#x27;
-  and it.item_desc ilike &#x27;FIREBALL%&#x27;
-  and il.ordered_on &gt;= &#x27;2016-01-01&#x27;
-group by 1
-order by 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>Hawkeye Vodka bottles in Johnson County, next 5 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month,
+       &#x27;total&#x27; AS series,
+       SUM(il.sales_dollars) AS value
+FROM sales.invoice_line il
+JOIN sales.item it ON it.item_no = il.item_no
+JOIN sales.store st ON st.store_no = il.store_no
+WHERE it.item_desc ILIKE &#x27;FIREBALL%&#x27;
+  AND st.county_name = &#x27;LINN&#x27;
+  AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1
+ORDER BY 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>Hawkeye Vodka bottles in Johnson County, next 5 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
        l.store_no,
        sum(l.sales_bottles) AS value
@@ -298,15 +335,13 @@ WHERE l.item_no = ANY(ARRAY[&#x27;36302&#x27;, &#x27;36304&#x27;, &#x27;36305&#x
   AND s.county_fips = ANY(ARRAY[&#x27;19103&#x27;])
   AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month,
-       &#x27;total&#x27; AS series,
-       SUM(il.sales_bottles) AS value
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month, &#x27;total&#x27; AS series, SUM(il.sales_bottles) AS value
 FROM sales.invoice_line il
-JOIN sales.item it ON it.item_no = il.item_no
+JOIN sales.item i ON i.item_no = il.item_no
 JOIN sales.store s ON s.store_no = il.store_no
-WHERE s.county_fips = &#x27;19103&#x27;
-  AND it.item_desc LIKE &#x27;HAWKEYE VODKA%&#x27;
-  AND il.ordered_on &gt;= DATE &#x27;2016-01-01&#x27;
+WHERE i.item_desc LIKE &#x27;HAWKEYE VODKA%&#x27;
+  AND s.county_fips = &#x27;19103&#x27;
+  AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1
 ORDER BY 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>Forecast ready-to-drink cocktail bottles statewide for the next 6 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
@@ -321,10 +356,11 @@ WHERE l.item_no = ANY(ARRAY[&#x27;100686&#x27;, &#x27;100803&#x27;, &#x27;100939
 GROUP BY 1, 2, 3
 ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
-       SUM(il.sales_bottles) AS value
+       sum(il.sales_bottles) AS value
 FROM sales.invoice_line il
 JOIN sales.item i ON i.item_no = il.item_no
 WHERE i.category_current = &#x27;1071000&#x27;
+  AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1
 ORDER BY 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>Total liters of liquor sold statewide over the next 6 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
@@ -337,7 +373,11 @@ WHERE TRUE
   AND TRUE
   AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, ordered_on)::date AS month, &#x27;total&#x27; AS series, sum(sales_liters) AS value FROM sales.invoice_line GROUP BY 1 ORDER BY 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>Forecast Tennessee whiskey bottles across Iowa for the next 3 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, ordered_on)::date AS month, &#x27;total&#x27; AS series, SUM(sales_liters) AS value
+FROM sales.invoice_line
+WHERE ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1
+ORDER BY 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>Forecast Tennessee whiskey bottles across Iowa for the next 3 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
        l.store_no,
        sum(l.sales_bottles) AS value
@@ -350,31 +390,10 @@ WHERE l.item_no = ANY(ARRAY[&#x27;25962&#x27;, &#x27;25980&#x27;, &#x27;25988&#x
 GROUP BY 1, 2, 3
 ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month,
        &#x27;total&#x27; AS series,
-       sum(il.sales_bottles) AS value
+       SUM(il.sales_bottles) AS value
 FROM sales.invoice_line il
 JOIN sales.item i ON i.item_no = il.item_no
 WHERE i.category_current = &#x27;1011400&#x27;
-  AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
-GROUP BY 1
-ORDER BY 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>Monthly forecast of Tito&#x27;s vodka bottles in Polk County for the next 5 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
-       &#x27;total&#x27; AS series,
-       l.store_no,
-       sum(l.sales_bottles) AS value
-FROM sales.invoice_line l
-JOIN sales.item i USING (item_no)
-JOIN sales.store s USING (store_no)
-WHERE l.item_no = ANY(ARRAY[&#x27;102747&#x27;, &#x27;38174&#x27;, &#x27;38176&#x27;, &#x27;38177&#x27;, &#x27;38178&#x27;, &#x27;38179&#x27;, &#x27;38185&#x27;, &#x27;38194&#x27;, &#x27;38180&#x27;, &#x27;38449&#x27;, &#x27;938180&#x27;])
-  AND s.county_fips = ANY(ARRAY[&#x27;19153&#x27;])
-  AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
-GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month,
-       &#x27;total&#x27; AS series,
-       SUM(il.sales_bottles) AS value
-FROM sales.invoice_line il
-JOIN sales.store s ON s.store_no = il.store_no
-JOIN sales.item i ON i.item_no = il.item_no
-WHERE s.county_fips = &#x27;19153&#x27;
-  AND i.item_desc LIKE &#x27;TITOS HANDMADE VODKA%&#x27;
   AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1
 ORDER BY 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>Forecast vodka<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
@@ -388,34 +407,13 @@ WHERE l.item_no = ANY(ARRAY[&#x27;101873&#x27;, &#x27;102149&#x27;, &#x27;102200
   AND TRUE
   AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
 GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>select date_trunc(&#x27;month&#x27;, il.ordered_on)::date as month, &#x27;total&#x27; as series, sum(il.sales_bottles) as value
-from sales.invoice_line il
-join sales.item i on i.item_no = il.item_no
-where i.category_current in (&#x27;1031100&#x27;,&#x27;1031200&#x27;,&#x27;1032100&#x27;,&#x27;1032200&#x27;,&#x27;1031080&#x27;)
-  and il.ordered_on &gt;= date &#x27;2016-01-01&#x27;
-group by 1
-order by 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr><tr><td>American vodka sales dollars for each of the five largest counties, next 6 months<details><summary>both queries</summary><p><strong>Reference (fixed code):</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, l.ordered_on)::date AS month,
-       coalesce(s.county_name, &#x27;(no county)&#x27;) AS series,
-       l.store_no,
-       sum(l.sales_dollars) AS value
-FROM sales.invoice_line l
-JOIN sales.item i USING (item_no)
-JOIN sales.store s USING (store_no)
-WHERE l.item_no = ANY(ARRAY[&#x27;101873&#x27;, &#x27;102149&#x27;, &#x27;102747&#x27;, &#x27;937101&#x27;, &#x27;937117&#x27;, &#x27;33221&#x27;, &#x27;33642&#x27;, &#x27;33647&#x27;, &#x27;37988&#x27;, &#x27;34546&#x27;, &#x27;34578&#x27;, &#x27;34579&#x27;, &#x27;...&#x27;])
-  AND s.county_fips = ANY(ARRAY[&#x27;19153&#x27;, &#x27;19113&#x27;, &#x27;19163&#x27;, &#x27;19103&#x27;, &#x27;19013&#x27;])
-  AND l.ordered_on &gt;= &#x27;2016-01-01&#x27;
-GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, il.ordered_on)::date AS month,
-       s.county_name AS series,
-       SUM(il.sales_dollars) AS value
+ORDER BY 1, 2, 3</pre><p><strong>AI-written:</strong></p><pre>SELECT date_trunc(&#x27;month&#x27;, ordered_on)::date AS month, &#x27;total&#x27; AS series, SUM(sales_bottles) AS value
 FROM sales.invoice_line il
-JOIN sales.item i ON il.item_no = i.item_no
-JOIN sales.store s ON il.store_no = s.store_no
-WHERE i.category_current = &#x27;1031100&#x27;
-  AND s.county_name IN (&#x27;POLK&#x27;,&#x27;LINN&#x27;,&#x27;SCOTT&#x27;,&#x27;JOHNSON&#x27;,&#x27;BLACK HAWK&#x27;)
-  AND il.ordered_on &gt;= &#x27;2016-01-01&#x27;
-GROUP BY 1, 2
-ORDER BY 1, 2</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr></tbody></table></div>
+JOIN sales.item i ON i.item_no = il.item_no
+WHERE i.category_current IN (&#x27;1031100&#x27;,&#x27;1031200&#x27;,&#x27;1032100&#x27;,&#x27;1032200&#x27;,&#x27;1031080&#x27;)
+  AND ordered_on &gt;= &#x27;2016-01-01&#x27;
+GROUP BY 1
+ORDER BY 1</pre></details></td><td><strong>Identical</strong><br>Same series, month by month.</td><td class="num"></td><td class="num"></td></tr></tbody></table></div>
 <p class="note">Model: both paths use the same Claude agent (claude-sonnet-5) and tools. Code:
 <a href="https://github.com/joehahn/demand-on-demand/blob/main/dod/nl2sql.py">the NL2SQL agent</a>, <a href="https://github.com/joehahn/demand-on-demand/blob/main/dod/agent.py">the slot-filling agent</a>,
 <a href="https://github.com/joehahn/demand-on-demand/blob/main/evals/differential.py">the test</a>. Results: <a href="https://github.com/joehahn/demand-on-demand/blob/main/evals/differential.json">differential.json</a>.</p>
