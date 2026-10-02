@@ -39,7 +39,11 @@ def facts_for(spec, p, res):
                                  "baseline_error_pct": round(100 * r["wape_naive"], 1), "verdict": r["reliability"]}
                                 for r in res["per_step"].to_dict("records")],
             "not_forecast": {p.labels.get(c, c): why for c, why in res["skipped"].items()},
-            "unvalidated": [p.labels.get(c, c) for c in res["unvalidated"]]}
+            "unvalidated": [p.labels.get(c, c) for c in res["unvalidated"]],
+            # weeks or quarters: say so, since the keys above are named for months (monthly facts stay as they were)
+            **({"period": model.GRAIN, "compare_with": f"the same {model.GRAIN}s last year",
+                "note": f"each 'month' entry above is one {model.GRAIN}, labeled by its first day"}
+               if model.GRAIN != "month" else {})}
 
 
 def trust_sentence(rel):

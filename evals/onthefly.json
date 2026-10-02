@@ -726,17 +726,17 @@
  {
   "request": "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
   "status": "ok",
-  "title": "Weekly forecast of Cream Liqueur bottles sold, statewide Iowa",
+  "title": "Weekly Forecast: Cream Liqueur Bottles Sold, Statewide",
   "grain": "week",
   "horizon": 12,
   "model_grain": "week",
-  "sql": "SELECT l.ordered_on AS day, 'total' AS series, SUM(l.sales_bottles) AS value\nFROM sales.invoice_line l\nWHERE l.item_no IN (SELECT item_no FROM sales.item WHERE category_current = '1081200')\nAND l.ordered_on >= '2016-01-01'\nGROUP BY l.ordered_on\nORDER BY l.ordered_on",
+  "sql": "SELECT il.ordered_on AS day, 'total' AS series, SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nWHERE il.item_no IN (SELECT item_no FROM sales.item WHERE category_current = '1081200')\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY il.ordered_on\nORDER BY il.ordered_on",
   "scope": "{\"target\": \"sales_bottles\", \"product\": {\"kind\": \"category\", \"codes\": [\"1081200\"], \"label\": \"Cream Liqueurs\"}, \"region\": {\"kind\": \"statewide\", \"codes\": [], \"label\": \"Iowa\"}, \"series_by\": \"none\"}",
   "assumptions": [
-   "Cream Liqueur category mapped to category_current code 1081200 (today's taxonomy), capturing all products ever classified as cream liqueurs regardless of historical category code changes.",
-   "All of Iowa means statewide, no regional breakout.",
-   "Measure is bottles sold (sales_bottles), not dollars or liters.",
-   "History starts 2016-01-01 as required."
+   "Cream Liqueur category mapped to category_current code 1081200 (Cream Liqueurs), using today's taxonomy per item.",
+   "Measure is bottles sold (sales_bottles), summed daily across all Iowa stores.",
+   "History starts 2016-01-01 through the latest available data.",
+   "Forecast horizon is 12 weeks ahead."
   ],
   "check": {
    "status": "passed",
@@ -1383,8 +1383,8 @@
     "hi": 17004.83011110051
    }
   ],
-  "cost": 0.0259,
-  "seconds": 25.6
+  "cost": 0.0159,
+  "seconds": 25.4
  },
  {
   "request": "Total Iowa vodka sales dollars for the next year",

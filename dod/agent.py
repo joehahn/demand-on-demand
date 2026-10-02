@@ -97,7 +97,7 @@ def narrate(client, facts, usage):
                "from the same months last year. Do not discuss accuracy; a sentence about it is added after yours. "
                "Quote only numbers and percentages that appear in the facts JSON; never compute new ones (no ranges you "
                "derived yourself). Round large numbers to about three significant figures ($15.2 million, 53,000 "
-               "bottles); a forecast is not precise to the unit. Mention unvalidated or skipped series only if there are any. Do not name the model. No em dashes.",
+               "bottles); a forecast is not precise to the unit. Speak of the facts' period if they name one (weeks or quarters), otherwise months. Mention unvalidated or skipped series only if there are any. Do not name the model. No em dashes.",
         messages=[{"role": "user", "content": json.dumps(facts, default=str)}],
         output_config={"effort": "low", "format": {"type": "json_schema", "schema": {
             "type": "object", "properties": {"summary": {"type": "string"}},
