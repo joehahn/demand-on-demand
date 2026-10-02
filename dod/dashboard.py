@@ -658,7 +658,7 @@ Green band: the range that held 80% of outcomes in the Test period.{units_note}<
 actually happened and with the simplest serious baseline: the same month last year.</p>
 {plot(fig_accuracy(ps))}
 
-<h2>The data</h2>
+<h2>How the data was prepared</h2>
 {prep_section(spec, panel, res, unit, wide)}
 {features_section(spec, panel, res, unit, fc)}
 {stores_section(panel.stores, spec, unit, wide.index[-1], plot)}
