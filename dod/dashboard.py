@@ -365,10 +365,25 @@ def prep_section(spec, panel, res, unit, wide):
         rows.append(("Warehouse, once", "Carried the latest Census population forward to months Census has not published "
                      f"yet, flagged. {fixed('census')}", f"SQL in {w} (clean)"))
 
+    if spec.region.kind in ("city", "county") or spec.series_by in ("city", "county"):
+        rows.append(("Warehouse, once", "Counted each store in its current city and county for its whole history (a few "
+                     "stores moved or were re-recorded over the years).", f"SQL in {w} (curate)"))
+
     # for this forecast, in the harness
+    panel_py = code("dod/panel.py", "dod/panel.py")
+    rows.append(("This forecast", f"Checked that the warehouse has orders in every month from {pd.Timestamp(panel.start):%b %Y} "
+                 f"to {wide.index[-1]:%b %Y}, so a month with none here is a real zero, not missing data; used complete "
+                 f"months only (a partly loaded latest month is left out).", panel_py + " (SQL)"))
     rows.append(("This forecast", f"Summed {unit} per month and store for this product and place (see The SQL as run). "
                  f"A month with no orders counts as 0; months before the first sale are left blank.",
-                 code("dod/panel.py", "dod/panel.py") + " (SQL + Python)"))
+                 panel_py + " (SQL + Python)"))
+    if any(c.get("pool") for c in res.get("ensemble") or []) and panel.pool is not None:
+        rows.append(("This forecast", f"Also summed the same product per month in the {panel.pool[0].shape[1]} busiest "
+                     "counties, for the pooled model to learn from (it still forecasts only this place).",
+                     panel_py + " (SQL + Python)"))
+    if "calendar" in res.get("feature_groups", []):
+        rows.append(("This forecast", "Built calendar inputs for every month, including the months ahead: month of year, "
+                     "business days and federal holidays, from the warehouse's calendar table.", panel_py + " (Python)"))
     targets = {c["target"] for c in res.get("ensemble") or []}
     scaled = "each series and input scaled to mean 0, spread 1 before fitting, and predictions scaled back"
     if targets == {"yoy"}:
