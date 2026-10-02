@@ -434,14 +434,20 @@ def nav_html():
             f'dictionary</a> &middot; <a href="{REPO}">GitHub</a></p>')
 
 
+def model_label(usage):
+    """'claude-sonnet-5' -> 'Claude Sonnet 5' for readers; the exact id stays in Exactly what ran."""
+    m = (usage or {}).get("model") or "Claude"
+    return " ".join(w.capitalize() for w in m.replace("-", " ").split())
+
+
 def summary_note(usage):
     """Which words on the page come from the AI, and how they are kept honest."""
     t = track_record()
-    model = (usage or {}).get("model", "Claude")
-    check = (f" In a separate check, every number matched the harness in {t['grounded']} of {t['summaries']} such "
-             f"summaries (<a href=\"{REPO}/blob/main/evals/grounding.md\">grounding report</a>).") if t["summaries"] else ""
-    return (f'<p class="note">The first sentence is written by the AI ({esc(model)}) from the harness\'s numbers only; '
-            f"the second, and every other number on this page, come from fixed code.{check}</p>")
+    check = (f" In a separate check, every number matched in {t['grounded']} of {t['summaries']} such sentences "
+             f"(<a href=\"{REPO}/blob/main/evals/grounding.md\">grounding report</a>).") if t["summaries"] else ""
+    return (f'<p class="note">The first sentence above is written by AI ({esc(model_label(usage))}) from the forecast\'s '
+            f"computed numbers, and may quote only those; the second sentence, and every other number on this page, come "
+            f"from fixed code.{check}</p>")
 
 
 def toolbox_html(usage):
@@ -451,8 +457,7 @@ def toolbox_html(usage):
              "preview_spec": "preview a request without training", "ask_user": "ask one clarifying question",
              "submit_spec": "submit the request"}
     tools = "; ".join(f"<code>{t['name']}</code> ({words.get(t['name'], '')})" for t in TOOLS)
-    model = (usage or {}).get("model", "Claude")
-    return (f"<p><strong>The agent's toolbox.</strong> One AI agent ({esc(model)}) with {len(TOOLS)} tools: {tools}. "
+    return (f"<p><strong>The agent's toolbox.</strong> One AI agent ({esc(model_label(usage))}) with {len(TOOLS)} tools: {tools}. "
             f"Guardrails: its database login can only read the clean tables (60-second limit, read-only), and any SQL it "
             f"writes is checked to be a single SELECT before it runs; that SQL only answers its questions, never feeds "
             f"the forecast. Read its <a href=\"{REPO}/blob/main/dod/agent.py\">instructions</a> and "
