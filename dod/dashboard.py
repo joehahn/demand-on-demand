@@ -521,6 +521,15 @@ def track_record():
     return out
 
 
+def updated_html(panel):
+    """When this page was built, and how far its data goes."""
+    import datetime
+    d = datetime.datetime.now().astimezone()
+    end = pd.Timestamp(panel.data_end)
+    return (f'<p class="note">Updated {d:%b} {d.day}, {d.year} at {d.hour % 12 or 12}:{d:%M %p %Z} &middot; '
+            f"orders through {end:%b} {end.day}, {end.year}</p>")
+
+
 def nav_html():
     return (f'<p class="note"><a href="{SITE}/">demand-on-demand</a> &middot; <a href="{SITE}/#how">how it works</a> '
             f'&middot; <a href="{SITE}/#examples">examples</a> &middot; <a href="{SITE}/data_dictionary.html">data '
@@ -838,6 +847,7 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None, ai=Non
     body = f"""
 {nav_html()}
 <h1>{esc(spec.title)}</h1>
+{updated_html(panel)}
 {ask_html or read_as_html(spec, unit, months, wide, "")}
 <div class="tiles">{tiles_html}</div>
 {skipped_html}
