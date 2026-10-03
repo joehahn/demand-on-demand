@@ -1,6 +1,6 @@
 # AI-written SQL scored against the answer key
 
-34 requests x 3 runs = 102 runs. Passed: **90 of 102** (data right in 92, reading right in 100). Requests right in every run: 29 of 34. Cost $1.83, median 15 s and 4 tool calls per request.
+34 requests x 3 runs = 102 runs. Passed: **99 of 102** (data right in 99, reading right in 102). Requests right in every run: 32 of 34. Cost $1.91, median 14 s and 4 tool calls per request.
 
 | request | passed | what went wrong |
 |---|---|---|
@@ -9,7 +9,7 @@
 | monthly forecast of Tito's minis in Des Moines for the next 5 months | 3/3 |  |
 | Monthly liters of Crown Royal in Mount Pleasant for the next 4 months | 3/3 |  |
 | Forecast Tennessee whiskey bottles across Iowa for the next 3 months | 3/3 |  |
-| American vodka sales dollars for each of the five largest counties, next 6 months | 3/3 |  |
+| American vodka sales dollars for each of the five largest counties, next 6 months | 1/3 | 640 of 640 months differ (first 2016-01-01), off by 19.71% |
 | Forecast Tito's vodka sales in Chicago for the next 5 months | 3/3 |  |
 | Forecast total Iowa liquor sales dollars for the next 24 months | 3/3 |  |
 | Forecast Jack Daniel's bottle sales in Iowa City for the next 4 months | 3/3 |  |
@@ -20,10 +20,10 @@
 | Bottled in bond bourbon bottles statewide, next 3 months | 3/3 |  |
 | Forecast each Tito's 100 ml item statewide for the next 6 months | 3/3 |  |
 | Forecast ready-to-drink cocktail bottles statewide for the next 6 months | 3/3 |  |
-| Hawkeye Vodka bottles in Johnson County, next 5 months | 0/3 | 23 of 128 months differ (first 2016-01-01), off by 0.02% |
-| How many bottles of whiskey will Ames stores order next month? | 1/3 | 128 of 128 months differ (first 2016-01-01), off by 45.72% |
+| Hawkeye Vodka bottles in Johnson County, next 5 months | 3/3 |  |
+| How many bottles of whiskey will Ames stores order next month? | 2/3 | 128 of 128 months differ (first 2016-01-01), off by 31.81% |
 | Forecast vodka | 3/3 |  |
-| How many bottles of cream liqueur will Iowa stores order for the holidays? | 1/3 | read as 2 month, expected 4 month; read as 8 week, expected 4 month |
+| How many bottles of cream liqueur will Iowa stores order for the holidays? | 3/3 |  |
 | Forecast Tito's minis ordered by Hy-Vee #3 BDI in Des Moines for the next 6 months | 3/3 |  |
 | Weekly forecast of Tito's minis in Des Moines for the next 8 weeks | 3/3 |  |
 | Quarterly forecast of Fireball revenue in Linn County for the next 2 quarters | 3/3 |  |
@@ -32,9 +32,9 @@
 | Weekly bottles of liquor ordered by all Hy-Vee stores in Iowa for the next 8 weeks | 3/3 |  |
 | Weekly Crown Royal bottles statewide for the next 10 weeks | 3/3 |  |
 | Jack Daniel's sales dollars in Polk County, next 6 months | 3/3 |  |
-| Hawkeye Vodka bottles statewide by week, next 8 weeks | 1/3 | 80 of 128 months differ (first 2016-01-01), off by 0.09% |
+| Hawkeye Vodka bottles statewide by week, next 8 weeks | 3/3 |  |
 | Captain Morgan liters in Scott County for the next 3 quarters | 3/3 |  |
-| Fireball minis statewide, next 6 months | 0/3 | 85 of 128 months differ (first 2016-02-01), off by 0.48% |
+| Fireball minis statewide, next 6 months | 3/3 |  |
 | Black Velvet bottles in Woodbury County for the next 4 months | 3/3 |  |
 | Weekly whiskey liqueur bottles statewide for the next 6 weeks | 3/3 |  |
 | Spiced rum sales dollars in Black Hawk County for the next 4 months | 3/3 |  |

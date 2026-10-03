@@ -22,7 +22,7 @@ import pandas as pd
 
 from . import db, features, model, panel, tools
 from .agent import EFFORT, MAX_TURNS, MODEL, add_usage, call_tool, schema_text, short
-from .nl2sql import RULES
+from .nl2sql import GLOSSARY, RULES
 from .spec import Spec
 from .sqlcheck import check_sql
 
@@ -95,7 +95,7 @@ def run_daily(sql):
 def ask(request, log=print):
     """The AI's part: SQL for daily history, grain, horizon and (when possible) the reference scope."""
     client = anthropic.Anthropic()
-    system = SYSTEM.format(schema=schema_text(), rules=RULES)
+    system = SYSTEM.format(schema=schema_text(), rules=RULES + GLOSSARY)
     messages = [{"role": "user", "content": request}]
     usage = {"model": MODEL, "calls": 0, "input_tokens": 0, "output_tokens": 0, "cache_write_tokens": 0,
              "cache_read_tokens": 0, "est_cost_usd": 0.0}

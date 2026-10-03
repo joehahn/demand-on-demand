@@ -54,6 +54,19 @@ RULES = """## Rules for this warehouse (follow them exactly)
 
 """
 
+# The company's business definitions: what a word means when a request uses it. Added after evals/score_sql.py found
+# that every remaining miss was a defensible but different definition, not a SQL mistake (evals/sql_report.md).
+GLOSSARY = """## Business definitions (the company's dictionary; follow them unless the user says otherwise)
+- A brand (e.g. Hawkeye Vodka, Crown Royal) means every product of that brand: all sizes, flavors, packs and barrel
+  picks.
+- A spirit type (whiskey, vodka, rum, ...) means its own categories only, not liqueurs or ready-to-drink cocktails made
+  from it. Whiskey does not include Whiskey Liqueur (e.g. Fireball).
+- Sizes go by bottle size, not by words in the product name: minis are 50 ml, pints 375 ml, fifths 750 ml, liters
+  1000 ml, handles 1750 ml. Use the product family's size: h.bottle_volume_ml with h the family's current item.
+- A period named by an event or season means through its end: "for the holidays" is through December 31.
+
+"""
+
 SUBMIT = {"name": "submit_series",
           "description": "Submit the final SQL query for the monthly series, the forecast horizon in months, a short "
                          "title, and the assumptions you made in plain English. The query is checked (one read-only "
