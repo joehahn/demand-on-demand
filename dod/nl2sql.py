@@ -59,8 +59,11 @@ RULES = """## Rules for this warehouse (follow them exactly)
 GLOSSARY = """## Business definitions (the company's dictionary; follow them unless the user says otherwise)
 - A brand (e.g. Hawkeye Vodka, Crown Royal) means every product of that brand: all sizes, flavors, packs and barrel
   picks.
-- A spirit type (whiskey, vodka, rum, ...) means its own categories only, not liqueurs or ready-to-drink cocktails made
-  from it. Whiskey does not include Whiskey Liqueur (e.g. Fireball).
+- A spirit type (whiskey, vodka, American vodka, rum, ...) means its own categories, flavored ones included (American
+  vodka includes American Flavored Vodka), but not liqueurs or ready-to-drink cocktails made from it: whiskey does not
+  include Whiskey Liqueur (e.g. Fireball). Select the categories by name, never by a typed list of codes, e.g. whiskey:
+  il.item_no IN (SELECT i.item_no FROM sales.item i JOIN sales.category c ON c.category_code = i.category_current
+  WHERE c.category_name ILIKE '%WHISK%' AND c.category_name NOT ILIKE '%LIQUEUR%').
 - Sizes go by bottle size, not by words in the product name: minis are 50 ml, pints 375 ml, fifths 750 ml, liters
   1000 ml, handles 1750 ml. Use the product family's size: h.bottle_volume_ml with h the family's current item.
 - A period named by an event or season means through its end: "for the holidays" is through December 31.

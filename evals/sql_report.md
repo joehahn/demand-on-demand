@@ -1,6 +1,6 @@
 # AI-written SQL scored against the answer key
 
-34 requests x 3 runs = 102 runs. Passed: **99 of 102** (data right in 99, reading right in 102). Requests right in every run: 32 of 34. Cost $1.91, median 14 s and 4 tool calls per request.
+34 requests x 3 runs = 102 runs. Passed: **101 of 102** (data right in 102, reading right in 101). Requests right in every run: 33 of 34. Cost $1.84, median 14 s and 4 tool calls per request.
 
 | request | passed | what went wrong |
 |---|---|---|
@@ -9,7 +9,7 @@
 | monthly forecast of Tito's minis in Des Moines for the next 5 months | 3/3 |  |
 | Monthly liters of Crown Royal in Mount Pleasant for the next 4 months | 3/3 |  |
 | Forecast Tennessee whiskey bottles across Iowa for the next 3 months | 3/3 |  |
-| American vodka sales dollars for each of the five largest counties, next 6 months | 1/3 | 640 of 640 months differ (first 2016-01-01), off by 19.71% |
+| American vodka sales dollars for each of the five largest counties, next 6 months | 3/3 |  |
 | Forecast Tito's vodka sales in Chicago for the next 5 months | 3/3 |  |
 | Forecast total Iowa liquor sales dollars for the next 24 months | 3/3 |  |
 | Forecast Jack Daniel's bottle sales in Iowa City for the next 4 months | 3/3 |  |
@@ -21,9 +21,9 @@
 | Forecast each Tito's 100 ml item statewide for the next 6 months | 3/3 |  |
 | Forecast ready-to-drink cocktail bottles statewide for the next 6 months | 3/3 |  |
 | Hawkeye Vodka bottles in Johnson County, next 5 months | 3/3 |  |
-| How many bottles of whiskey will Ames stores order next month? | 2/3 | 128 of 128 months differ (first 2016-01-01), off by 31.81% |
+| How many bottles of whiskey will Ames stores order next month? | 3/3 |  |
 | Forecast vodka | 3/3 |  |
-| How many bottles of cream liqueur will Iowa stores order for the holidays? | 3/3 |  |
+| How many bottles of cream liqueur will Iowa stores order for the holidays? | 2/3 | read as 3 month, expected 4 month |
 | Forecast Tito's minis ordered by Hy-Vee #3 BDI in Des Moines for the next 6 months | 3/3 |  |
 | Weekly forecast of Tito's minis in Des Moines for the next 8 weeks | 3/3 |  |
 | Quarterly forecast of Fireball revenue in Linn County for the next 2 quarters | 3/3 |  |

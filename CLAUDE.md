@@ -150,3 +150,7 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    the 21 eval cases + 13 new weekly/quarterly/year, brand, category and store-group requests; hand-reviewed request
    forms, a "definition" where a person had to choose, 3 expected refusals); `python evals/build_answers.py` ->
    evals/answers.json (correct monthly totals from the fixed SQL; reproduces the differential test's 18 references).
+   `python evals/score_sql.py` scores the AI-written-SQL agent (dod/onthefly.ask) against it, 3 runs each: baseline
+   90/102 (every miss a definition, none a warehouse trap); with the business glossary (dod/nl2sql.GLOSSARY: brands
+   include flavors, spirit types include flavored categories but not liqueurs and are selected by category name, sizes
+   by bottle size, event periods through their end) 101/102, data right in 102/102 (2026-10-02, $1.84).

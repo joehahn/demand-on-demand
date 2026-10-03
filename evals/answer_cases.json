@@ -163,9 +163,10 @@
    "product": {
     "kind": "category",
     "codes": [
-     "1031100"
+     "1031100",
+     "1031200"
     ],
-    "label": "American Vodkas"
+    "label": "American Vodkas, flavored included"
    },
    "region": {
     "kind": "county",
@@ -179,7 +180,8 @@
     "label": "Polk, Linn, Scott, Johnson, Black Hawk counties"
    },
    "series_by": "county"
-  }
+  },
+  "definition": "American vodka includes American Flavored Vodka"
  },
  {
   "id": "chicago",
@@ -508,7 +510,8 @@
     "label": "Ames"
    },
    "series_by": "none"
-  }
+  },
+  "definition": "whiskey = every category named WHISK..., not Whiskey Liqueur"
  },
  {
   "id": "vague_vodka",
