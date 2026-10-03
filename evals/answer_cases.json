@@ -234,7 +234,17 @@
   "expect": {
    "status": "ok",
    "grain": "month",
-   "horizon": 3
+   "horizon": 3,
+   "accept": [
+    [
+     "month",
+     3
+    ],
+    [
+     "quarter",
+     1
+    ]
+   ]
   },
   "form": {
    "title": "Fireball revenue, Linn County, next quarter",
@@ -376,8 +386,29 @@
   "request": "Forecast each Tito's 100 ml item statewide for the next 6 months",
   "source": "evals/cases.json",
   "expect": {
-   "status": "no_forecast"
-  }
+   "status": "ok",
+   "grain": "month",
+   "horizon": 6
+  },
+  "form": {
+   "title": "Tito's 100 ml statewide",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "series_by": "item",
+   "product": {
+    "kind": "item",
+    "codes": [
+     "102747"
+    ],
+    "label": "Tito's 100 ml"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   }
+  },
+  "definition": "one Tito's 100 ml product, first ordered Nov 2025: the harness declines it (too little history)"
  },
  {
   "id": "rtd_cocktails_recode",
@@ -486,7 +517,8 @@
   "expect": {
    "status": "ok",
    "grain": "month",
-   "horizon": 6
+   "horizon": 6,
+   "accept": "any"
   },
   "form": {
    "title": "Vodka, statewide, next 6 months",
@@ -509,7 +541,8 @@
     "label": "Iowa"
    },
    "series_by": "none"
-  }
+  },
+  "definition": "no horizon or grain given: any reading is fine"
  },
  {
   "id": "cream_liqueur_holidays",
@@ -518,7 +551,25 @@
   "expect": {
    "status": "ok",
    "grain": "month",
-   "horizon": 4
+   "horizon": 4,
+   "accept": [
+    [
+     "month",
+     4
+    ],
+    [
+     "week",
+     16
+    ],
+    [
+     "week",
+     17
+    ],
+    [
+     "week",
+     18
+    ]
+   ]
   },
   "form": {
    "title": "Cream liqueurs, Iowa, forecast through the 2026 holidays (Sep-Dec 2026)",
@@ -537,7 +588,8 @@
     "label": "Iowa"
    },
    "series_by": "none"
-  }
+  },
+  "definition": "'for the holidays' = through December (data ends Aug 31): 4 months or about 17 weeks"
  },
  {
   "id": "bdi_store",
@@ -669,7 +721,17 @@
   "expect": {
    "status": "ok",
    "grain": "year",
-   "horizon": 1
+   "horizon": 1,
+   "accept": [
+    [
+     "year",
+     1
+    ],
+    [
+     "month",
+     12
+    ]
+   ]
   },
   "form": {
    "title": "Iowa vodka sales dollars, next 12 months",
