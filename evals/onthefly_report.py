@@ -4,6 +4,7 @@ publish docs/onthefly.html, explained for a general audience.
 
     python evals/onthefly_report.py            # run the requests (about $0.15 of API calls), then build the page
     python evals/onthefly_report.py --page     # rebuild the page from the saved results only
+    python evals/onthefly_report.py --only "<request>"   # rerun one saved request, keep the others
 """
 import html
 import json
@@ -32,9 +33,13 @@ REQUESTS = [
 UNIT = {"week": "week", "month": "month", "quarter": "quarter", "year": "month"}
 
 
-def run_all():
+def run_all(only=None):
+    saved = {r["request"]: r for r in json.loads(SAVED.read_text())} if only else {}
     out = []
     for req in REQUESTS:
+        if only and req != only:
+            out.append(saved[req])
+            continue
         print(f"== {req}", flush=True)
         r = onthefly.forecast(req, log=lambda *a: None)
         if r["status"] != "ok":
@@ -131,7 +136,7 @@ def build():
                f"(the same layout as the monthly examples)</p>" if r["request"] in DASHBOARDS else "")
             + f"<div class=\"tiles\"><div class=\"tile\"><div class=\"v\">{total:,.0f}</div><div class=\"k\">forecast total"
             f"</div></div><div class=\"tile\"><div class=\"v\">{round(abs(1 - r['rel_mae']) * 100)}%</div><div class=\"k\">"
-            f"{html.escape(accuracy(r['rel_mae'], r['model_grain']).split('% ', 1)[1])} (Test period)</div></div>"
+            f"{html.escape(accuracy(r['rel_mae'], r['model_grain']).split('% ', 1)[-1])} (Test period)</div></div>"
             f"<div class=\"tile\"><div class=\"v\">{badge}</div><div class=\"k\">{html.escape(check_text(r['check']))}"
             f"</div></div><div class=\"tile\"><div class=\"v\">{r['seconds']:.0f} s &middot; ${r['cost']:.2f}</div>"
             f"<div class=\"k\">to build from scratch</div></div></div>"
@@ -166,6 +171,6 @@ grain-aware harness</a> (use_grain), <a href="{REPO}/evals/onthefly_report.py">t
 
 if __name__ == "__main__":
     if "--page" not in sys.argv:
-        run_all()
+        run_all(sys.argv[sys.argv.index("--only") + 1] if "--only" in sys.argv else None)
     OUT.write_text(build())
     print(f"wrote {OUT}")

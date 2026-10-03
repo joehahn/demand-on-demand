@@ -759,13 +759,13 @@ def inputs_section(res, plot):
     eff = res.get("effects")
     if eff is None or not len(eff):
         return ""
-    margin = (f"by at least {model.KEEP_MARGIN:.0%}" if model.KEEP_MARGIN else "at all")
+    margin = f" by at least {model.KEEP_MARGIN:.0%}" if model.KEEP_MARGIN else ""
     disagree = [FEATURE_NAMES.get(g, g).split(" (")[0] for g, k, t in zip(eff.group, eff.kept, eff.test) if k != (t > 0)]
     verdict = ("The Test period agreed with every choice." if not disagree else
                f"The Test period disagreed on: {', '.join(disagree)}. Model selection judges on earlier {units()}, and "
                f"small differences there can be noise.")
     return (f"<p>Besides its own past sales, the model was offered these inputs. Each was kept only if the forecast "
-            f"was worse without it {margin} in model selection (blue). The orange bars show, after the fact, the same "
+            f"was worse without it{margin} in model selection (blue). The orange bars show, after the fact, the same "
             f"comparison in the Test period, which no choice ever saw. {verdict}</p>{plot(fig_inputs(eff))}")
 
 

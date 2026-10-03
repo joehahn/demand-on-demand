@@ -726,17 +726,18 @@
  {
   "request": "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
   "status": "ok",
-  "title": "Weekly Forecast: Cream Liqueur Bottles Sold, Statewide",
+  "title": "Weekly Forecast: Cream Liqueur Bottles Sold - Iowa Statewide",
   "grain": "week",
   "horizon": 12,
   "model_grain": "week",
-  "sql": "SELECT il.ordered_on AS day, 'total' AS series, SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nWHERE il.item_no IN (SELECT item_no FROM sales.item WHERE category_current = '1081200')\n  AND il.ordered_on >= '2016-01-01'\nGROUP BY il.ordered_on\nORDER BY il.ordered_on",
+  "sql": "SELECT il.ordered_on AS day, 'total' AS series, SUM(il.sales_bottles) AS value\nFROM sales.invoice_line il\nWHERE il.item_no IN (SELECT item_no FROM sales.item WHERE category_current = '1081200')\nAND il.ordered_on >= '2016-01-01'\nGROUP BY il.ordered_on\nORDER BY il.ordered_on",
   "scope": "{\"target\": \"sales_bottles\", \"product\": {\"kind\": \"category\", \"codes\": [\"1081200\"], \"label\": \"Cream Liqueurs\"}, \"region\": {\"kind\": \"statewide\", \"codes\": [], \"label\": \"Iowa\"}, \"series_by\": \"none\"}",
   "assumptions": [
-   "Cream Liqueur category mapped to category_current code 1081200 (Cream Liqueurs), using today's taxonomy per item.",
-   "Measure is bottles sold (sales_bottles), summed daily across all Iowa stores.",
-   "History starts 2016-01-01 through the latest available data.",
-   "Forecast horizon is 12 weeks ahead."
+   "Cream liqueur category identified as category_current code 1081200 (CREAM LIQUEURS)",
+   "Using category_current to capture all products currently classified as cream liqueurs regardless of historical category_code",
+   "All of Iowa means statewide, no regional breakout",
+   "Measure is bottles sold (sales_bottles), which accounts for mini-pack bottle counts",
+   "History starts 2016-01-01 as required"
   ],
   "check": {
    "status": "passed",
@@ -746,7 +747,7 @@
    "ai_total": 6650320.0,
    "first_bad": null
   },
-  "rel_mae": 0.9054541174194161,
+  "rel_mae": 1.0033763905673194,
   "test_window": [
    "2024-09-02",
    "2026-08-24"
@@ -1312,79 +1313,79 @@
   "forecast": [
    {
     "period": "2026-08-31",
-    "pred": 11306.307233153617,
-    "lo": 8318.660660134523,
-    "hi": 12967.284924344669
+    "pred": 11145.15937482495,
+    "lo": 8329.685827695312,
+    "hi": 13051.631925265225
    },
    {
     "period": "2026-09-07",
-    "pred": 10333.198848437663,
-    "lo": 7496.5270700120755,
-    "hi": 11350.445488754935
+    "pred": 10447.130026213228,
+    "lo": 7768.760970790932,
+    "hi": 12205.791827173143
    },
    {
     "period": "2026-09-14",
-    "pred": 9883.1064465366,
-    "lo": 7327.584358799458,
-    "hi": 10253.054078648236
+    "pred": 10275.033068913004,
+    "lo": 7983.763758953405,
+    "hi": 10727.128324538713
    },
    {
     "period": "2026-09-21",
-    "pred": 10612.516635324186,
-    "lo": 7474.665773040346,
-    "hi": 12041.838157414275
+    "pred": 11101.926473752354,
+    "lo": 7447.010225809808,
+    "hi": 11822.234102813265
    },
    {
     "period": "2026-09-28",
-    "pred": 11282.060305755558,
-    "lo": 7798.031813709526,
-    "hi": 12083.839392483433
+    "pred": 12184.567181445962,
+    "lo": 8243.209450440685,
+    "hi": 12562.026209971431
    },
    {
     "period": "2026-10-05",
-    "pred": 13855.662950801801,
-    "lo": 9936.98390152604,
-    "hi": 15006.126129975004
+    "pred": 15134.635389152103,
+    "lo": 10784.872905763641,
+    "hi": 17194.07506571293
    },
    {
     "period": "2026-10-12",
-    "pred": 12971.850263934073,
-    "lo": 9447.571562594958,
-    "hi": 13113.302300173575
+    "pred": 13980.767429272651,
+    "lo": 10375.28139521807,
+    "hi": 14016.812160463543
    },
    {
     "period": "2026-10-19",
-    "pred": 14294.186831107738,
-    "lo": 9950.477959566557,
-    "hi": 15859.569956008289
+    "pred": 16030.495050199574,
+    "lo": 10801.343933434362,
+    "hi": 16701.31742484559
    },
    {
     "period": "2026-10-26",
-    "pred": 16701.66015172712,
-    "lo": 11553.823517880473,
-    "hi": 18040.252718785705
+    "pred": 17901.4539683132,
+    "lo": 12281.790967849078,
+    "hi": 18884.906241909648
    },
    {
     "period": "2026-11-02",
-    "pred": 17706.386553199205,
-    "lo": 12636.19795399509,
-    "hi": 19202.552390769753
+    "pred": 20054.680354678392,
+    "lo": 13989.188962176178,
+    "hi": 22413.10050891574
    },
    {
     "period": "2026-11-09",
-    "pred": 14703.489877824211,
-    "lo": 10654.928496968418,
-    "hi": 14925.754976371929
+    "pred": 15824.756112914583,
+    "lo": 11837.130306031086,
+    "hi": 15625.483671243966
    },
    {
     "period": "2026-11-16",
-    "pred": 15340.349756224552,
-    "lo": 10603.093104755828,
-    "hi": 17004.83011110051
+    "pred": 17503.59911177734,
+    "lo": 11881.989954438195,
+    "hi": 18289.11830689787
    }
   ],
-  "cost": 0.0159,
-  "seconds": 25.4
+  "cost": 0.0153,
+  "seconds": 30.200000000000003
  },
  {
   "request": "Total Iowa vodka sales dollars for the next year",
