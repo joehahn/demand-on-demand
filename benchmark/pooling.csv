@@ -1,0 +1,31 @@
+forecast,A,B,C,pool_offered,pooled,A_kept
+"All liquor, statewide",0.9685821519412168,0.900869196372724,1.3143336023131635,True,True,"calendar,population"
+"Imported Brandies, Woodbury County, dollars, 3 months",0.8127838529007329,0.7758377139310862,0.9033314807268866,True,True,"calendar,population"
+"American Brandies, Marshall County, dollars, 6 months",0.8476975406719979,0.8908202241782152,1.0742540433731953,True,True,"calendar,population"
+"Jim Beam Brands, Johnson County, bottles, 12 months",0.8822809027880607,0.8822809027880607,1.2872126955151388,True,False,"calendar,population"
+"Southern Comfort Mini 50 ml, Iowa, bottles, 12 months",0.8613634499101233,0.8136451612022337,0.8848640399135014,True,True,"calendar,population"
+"Heaven Hill Brands, Poweshiek County, liters, 12 months",1.1327572730920636,0.9827074042563071,1.039085515140338,True,True,"calendar,population"
+"Imported Cordials & Liqueur, Iowa, bottles, 12 months",1.428469355777773,1.495839438261968,1.3295600077509038,True,True,"calendar,population"
+"American Brandies, Iowa, dollars, 12 months",0.4555130277462988,0.41078736116397047,0.740645271477607,True,False,"calendar,population"
+"American Flavored Vodka, Fayette County, dollars, 12 months",0.83504395764015,1.0614887265457058,1.055652502747433,True,True,"calendar,population"
+"Brown Forman Corp., Buena Vista County, dollars, 6 months",0.9578675286131446,1.036955690124248,1.0450748640351921,True,True,"calendar,population"
+"American Vodkas, Iowa, bottles, 12 months",0.7072707926566928,0.7072707926566928,0.7521913247376247,True,False,"calendar,population"
+"Black Velvet 200 ml, Boone County, liters, 6 months",0.9383727259501154,0.9383727259501154,0.9532635723806623,True,False,calendar
+"Kinky Blue Mini 50 ml, O'Brien County, liters, 6 months",0.9977054922251208,0.9977054922251208,1.2119620233693185,True,False,"calendar,population"
+"Irish Whiskies, Iowa, bottles, 12 months",1.5445783917954474,1.419750617695955,1.3272985550606604,True,True,"calendar,population"
+"Captain Morgan Original Spiced 1000 ml, Story County, bottles, 12 months",0.9894426307466806,1.3325074220627469,1.2108986103477415,True,True,"calendar,population"
+"Hawkeye Vodka Mini 50 ml, Iowa, liters, 6 months",0.8464519249202286,0.8464519249202286,0.8694026927383237,True,False,calendar
+"Imported Vodkas, Iowa, liters, 6 months",0.8592652185221916,0.8976916573920496,0.9034267049367932,True,True,calendar
+"Brown Forman Corp., Black Hawk County, dollars, 12 months",0.731071056048029,1.0187781592048548,0.864856722469893,True,True,"calendar,population"
+"Flavored Rum, Iowa, liters, 3 months",0.8045078315288781,0.7776249552894716,0.8033948881753792,True,False,"calendar,population"
+"Diageo Americas, Warren County, liters, 6 months",1.0695230987295774,1.0381584139068205,0.9566853901059759,True,True,calendar
+"Luxco Inc, Lee County, dollars, 6 months",0.8382863946697284,0.8899814330940999,1.0082145286907085,True,True,calendar
+"American Schnapps, Iowa, bottles, 3 months",0.5516846869523865,0.6525190228966593,1.0405993508052214,True,True,"calendar,population"
+"99 Bananas 100 ml, Woodbury County, liters, 12 months",1.4409542859725317,1.1380178137450558,1.0107440050282874,True,True,"calendar,population"
+"Smirnoff 80Prf Mini 50 ml, Marion County, bottles, 12 months",0.8123973657869352,0.8902475739828288,0.7964702307864779,True,True,population
+"Captain Morgan Original Spiced 375 ml, Iowa, bottles, 3 months",0.9454372551537021,1.091762208191098,1.0554784714983807,True,True,calendar
+"Proximo, O'Brien County, liters, 6 months",0.8771284338089899,0.9577800133019213,1.0073974706766693,True,True,calendar
+"Luxco Inc, Dickinson County, dollars, 12 months",1.0373759951558073,1.0373759951558073,1.0369774023178275,True,False,"calendar,population"
+"Jim Beam Apple Mini 50 ml, Iowa, liters, 12 months",1.1434676423733938,0.8732377134464799,0.8732377134464799,True,True,calendar
+"Bacardi Usa Inc, Marshall County, dollars, 6 months",0.9487881504324716,0.917602688293847,0.9163566978338277,True,True,"calendar,population"
+"Straight Bourbon Whiskies, Iowa, bottles, 6 months",0.8245574452238996,0.8753159360397234,1.1357100811014738,True,True,calendar
