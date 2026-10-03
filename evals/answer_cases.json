@@ -1,0 +1,1205 @@
+[
+ {
+  "id": "titos_polk",
+  "request": "Monthly forecast of Tito's vodka bottles in Polk County for the next 5 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 5
+  },
+  "form": {
+   "title": "Tito's Vodka, Polk County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "titos"
+    ],
+    "label": "Tito's Handmade Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153"
+    ],
+    "label": "Polk County"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "titos_minis_by_item",
+  "request": "How many bottles of each Tito's mini item will sell statewide over the next 6 months?",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 6
+  },
+  "form": {
+   "title": "Tito's mini items, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Mini items"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "item"
+  }
+ },
+ {
+  "id": "titos_minis_des_moines",
+  "request": "monthly forecast of Tito's minis in Des Moines for the next 5 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 5
+  },
+  "form": {
+   "title": "Tito's minis, Des Moines, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml, single and 4-pack)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "DES MOINES"
+    ],
+    "label": "Des Moines"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "crown_mount_pleasant",
+  "request": "Monthly liters of Crown Royal in Mount Pleasant for the next 4 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 4
+  },
+  "form": {
+   "title": "Crown Royal, Mount Pleasant, next 4 months",
+   "target": "sales_liters",
+   "horizon": 4,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "crown royal"
+    ],
+    "label": "Crown Royal (all sizes/variants)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "MOUNT PLEASANT"
+    ],
+    "label": "Mount Pleasant"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "tennessee_whiskey",
+  "request": "Forecast Tennessee whiskey bottles across Iowa for the next 3 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 3
+  },
+  "form": {
+   "title": "Tennessee Whiskies, Iowa statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011400"
+    ],
+    "label": "Tennessee Whiskies"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "vodka_top_counties",
+  "request": "American vodka sales dollars for each of the five largest counties, next 6 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 6
+  },
+  "form": {
+   "title": "American Vodka, dollars, top 5 counties, next 6 months",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100"
+    ],
+    "label": "American Vodkas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153",
+     "19113",
+     "19163",
+     "19103",
+     "19013"
+    ],
+    "label": "Polk, Linn, Scott, Johnson, Black Hawk counties"
+   },
+   "series_by": "county"
+  }
+ },
+ {
+  "id": "chicago",
+  "request": "Forecast Tito's vodka sales in Chicago for the next 5 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "no_forecast"
+  }
+ },
+ {
+  "id": "horizon_24",
+  "request": "Forecast total Iowa liquor sales dollars for the next 24 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "no_forecast"
+  }
+ },
+ {
+  "id": "jack_iowa_city",
+  "request": "Forecast Jack Daniel's bottle sales in Iowa City for the next 4 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 4
+  },
+  "form": {
+   "title": "Jack Daniel's bottle sales, Iowa City, next 4 months",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "jack daniels"
+    ],
+    "label": "Jack Daniel's (all products)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "IOWA CITY"
+    ],
+    "label": "Iowa City"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "fireball_linn_revenue",
+  "request": "What revenue should we expect from Fireball in Linn County next quarter?",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 3
+  },
+  "form": {
+   "title": "Fireball revenue, Linn County, next quarter",
+   "target": "sales_dollars",
+   "horizon": 3,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "fireball"
+    ],
+    "label": "Fireball (all products)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19113"
+    ],
+    "label": "Linn County"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "statewide_liters",
+  "request": "Total liters of liquor sold statewide over the next 6 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 6
+  },
+  "form": {
+   "title": "Statewide total liters, next 6 months",
+   "target": "sales_liters",
+   "horizon": 6,
+   "product": {
+    "kind": "all",
+    "codes": [],
+    "label": "All products"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa statewide"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "diageo_scott",
+  "request": "Monthly bottle sales for all Diageo products in Scott County, next 6 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 6
+  },
+  "form": {
+   "title": "Diageo products, Scott County, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "vendor",
+    "codes": [
+     "260"
+    ],
+    "label": "Diageo Americas"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19163"
+    ],
+    "label": "Scott County"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "titos_st_ansgar",
+  "request": "Tito's bottles in St. Ansgar for the next 4 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 4
+  },
+  "form": {
+   "title": "Tito's Vodka, Saint Ansgar, next 4 months",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "titos"
+    ],
+    "label": "Tito's Handmade Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "SAINT ANSGAR"
+    ],
+    "label": "Saint Ansgar"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "bottled_in_bond",
+  "request": "Bottled in bond bourbon bottles statewide, next 3 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 3
+  },
+  "form": {
+   "title": "Bottled in Bond Bourbon, Iowa statewide, next 3 months",
+   "target": "sales_bottles",
+   "horizon": 3,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011500"
+    ],
+    "label": "Bottled in Bond Bourbon"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa statewide"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "titos_100_by_item",
+  "request": "Forecast each Tito's 100 ml item statewide for the next 6 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "no_forecast"
+  }
+ },
+ {
+  "id": "rtd_cocktails_recode",
+  "request": "Forecast ready-to-drink cocktail bottles statewide for the next 6 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 6
+  },
+  "form": {
+   "title": "Ready-to-drink cocktails, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1071000"
+    ],
+    "label": "Cocktails/RTD"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "hawkeye_johnson",
+  "request": "Hawkeye Vodka bottles in Johnson County, next 5 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 5
+  },
+  "form": {
+   "title": "Hawkeye Vodka, Johnson County, next 5 months",
+   "target": "sales_bottles",
+   "horizon": 5,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "hawkeye vodka"
+    ],
+    "label": "Hawkeye Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19103"
+    ],
+    "label": "Johnson County"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "ames_whiskey",
+  "request": "How many bottles of whiskey will Ames stores order next month?",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 1
+  },
+  "form": {
+   "title": "Whiskey, Ames stores, next month",
+   "target": "sales_bottles",
+   "horizon": 1,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1011000",
+     "1011100",
+     "1011200",
+     "1011250",
+     "1011300",
+     "1011400",
+     "1011600",
+     "1011700",
+     "1011800",
+     "1012000",
+     "1012100",
+     "1012200",
+     "1012400"
+    ],
+    "label": "Whiskey (all whiskey categories, excluding whiskey liqueur)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "AMES"
+    ],
+    "label": "Ames"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "vague_vodka",
+  "request": "Forecast vodka",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 6
+  },
+  "form": {
+   "title": "Vodka, statewide, next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100",
+     "1031200",
+     "1032100",
+     "1032200",
+     "1031080"
+    ],
+    "label": "Vodka (all categories)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "cream_liqueur_holidays",
+  "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 4
+  },
+  "form": {
+   "title": "Cream liqueurs, Iowa, forecast through the 2026 holidays (Sep-Dec 2026)",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1081200"
+    ],
+    "label": "Cream liqueurs"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "bdi_store",
+  "request": "Forecast Tito's minis ordered by Hy-Vee #3 BDI in Des Moines for the next 6 months",
+  "source": "evals/cases.json",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 6
+  },
+  "form": {
+   "title": "Tito's minis, Hy-Vee #3 BDI (Des Moines), next 6 months",
+   "target": "sales_bottles",
+   "horizon": 6,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka minis (50ml)"
+   },
+   "region": {
+    "kind": "store",
+    "codes": [
+     "2633"
+    ],
+    "label": "Hy-Vee #3 / BDI / Des Moines"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "titos_minis_dsm_weekly",
+  "request": "Weekly forecast of Tito's minis in Des Moines for the next 8 weeks",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "week",
+   "horizon": 8
+  },
+  "form": {
+   "title": "Weekly Tito's minis, Des Moines",
+   "target": "sales_bottles",
+   "horizon": 8,
+   "product": {
+    "kind": "item",
+    "codes": [
+     "38194",
+     "38185"
+    ],
+    "label": "Tito's Handmade Vodka Minis (50ml, single and 4-pack)"
+   },
+   "region": {
+    "kind": "city",
+    "codes": [
+     "DES MOINES"
+    ],
+    "label": "Des Moines"
+   },
+   "series_by": "none",
+   "grain": "week"
+  }
+ },
+ {
+  "id": "fireball_linn_quarterly",
+  "request": "Quarterly forecast of Fireball revenue in Linn County for the next 2 quarters",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "quarter",
+   "horizon": 2
+  },
+  "form": {
+   "title": "Fireball revenue, Linn County, next 2 quarters",
+   "target": "sales_dollars",
+   "horizon": 2,
+   "grain": "quarter",
+   "product": {
+    "kind": "name",
+    "codes": [
+     "fireball"
+    ],
+    "label": "Fireball (all sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19113"
+    ],
+    "label": "Linn County"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "cream_weekly",
+  "request": "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "week",
+   "horizon": 12
+  },
+  "form": {
+   "title": "Weekly Cream Liqueur Bottles Statewide",
+   "target": "sales_bottles",
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1081200"
+    ],
+    "label": "Cream Liqueurs"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "grain": "week",
+   "horizon": 12
+  }
+ },
+ {
+  "id": "vodka_dollars_year",
+  "request": "Total Iowa vodka sales dollars for the next year",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "year",
+   "horizon": 1
+  },
+  "form": {
+   "title": "Iowa vodka sales dollars, next 12 months",
+   "target": "sales_dollars",
+   "horizon": 12,
+   "grain": "month",
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1031100",
+     "1031200",
+     "1032100",
+     "1032200",
+     "1031080"
+    ],
+    "label": "Vodka (all types)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none"
+  },
+  "definition": "every product whose current category is a vodka category; 'next year' = the next 12 months"
+ },
+ {
+  "id": "hyvee_weekly",
+  "request": "Weekly bottles of liquor ordered by all Hy-Vee stores in Iowa for the next 8 weeks",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "week",
+   "horizon": 8
+  },
+  "form": {
+   "title": "Weekly liquor bottles, all Hy-Vee stores",
+   "target": "sales_bottles",
+   "product": {
+    "kind": "all",
+    "codes": [],
+    "label": "All liquor"
+   },
+   "region": {
+    "kind": "store",
+    "codes": [
+     "010023",
+     "010024",
+     "010025",
+     "010034",
+     "010041",
+     "010167",
+     "010189",
+     "010285",
+     "010338",
+     "010497",
+     "2500",
+     "2501",
+     "2502",
+     "2505",
+     "2506",
+     "2507",
+     "2508",
+     "2509",
+     "2512",
+     "2513",
+     "2514",
+     "2515",
+     "2517",
+     "2518",
+     "2521",
+     "2522",
+     "2523",
+     "2524",
+     "2527",
+     "2528",
+     "2529",
+     "2532",
+     "2535",
+     "2536",
+     "2538",
+     "2539",
+     "2543",
+     "2544",
+     "2545",
+     "2548",
+     "2549",
+     "2550",
+     "2551",
+     "2552",
+     "2553",
+     "2554",
+     "2555",
+     "2556",
+     "2558",
+     "2559",
+     "2560",
+     "2561",
+     "2562",
+     "2564",
+     "2565",
+     "2566",
+     "2567",
+     "2568",
+     "2569",
+     "2571",
+     "2572",
+     "2573",
+     "2575",
+     "2576",
+     "2578",
+     "2579",
+     "2582",
+     "2584",
+     "2585",
+     "2587",
+     "2588",
+     "2590",
+     "2591",
+     "2592",
+     "2593",
+     "2594",
+     "2595",
+     "2596",
+     "2597",
+     "2600",
+     "2601",
+     "2602",
+     "2603",
+     "2604",
+     "2605",
+     "2606",
+     "2607",
+     "2609",
+     "2611",
+     "2612",
+     "2613",
+     "2614",
+     "2616",
+     "2618",
+     "2619",
+     "2620",
+     "2621",
+     "2622",
+     "2623",
+     "2624",
+     "2625",
+     "2626",
+     "2627",
+     "2628",
+     "2629",
+     "2630",
+     "2633",
+     "2635",
+     "2636",
+     "2637",
+     "2641",
+     "2642",
+     "2643",
+     "2644",
+     "2647",
+     "2648",
+     "2649",
+     "2650",
+     "2651",
+     "2652",
+     "2653",
+     "2655",
+     "2656",
+     "2657",
+     "2658",
+     "2660",
+     "2661",
+     "2662",
+     "2663",
+     "2665",
+     "2666",
+     "2667",
+     "2668",
+     "2669",
+     "2670",
+     "2671",
+     "2672",
+     "2673",
+     "2674",
+     "2675",
+     "2676",
+     "2677",
+     "2678",
+     "2679",
+     "2680",
+     "2681",
+     "2682",
+     "2683",
+     "2684",
+     "2685",
+     "2686",
+     "2687",
+     "2688",
+     "2689",
+     "2690",
+     "2691",
+     "2692",
+     "2693",
+     "2695",
+     "2696",
+     "2697",
+     "2698",
+     "2699",
+     "2700",
+     "2701",
+     "2702",
+     "2703",
+     "2704",
+     "2705",
+     "2706",
+     "2707",
+     "2708",
+     "2709",
+     "2710",
+     "2711",
+     "2712",
+     "2713",
+     "2714",
+     "2715",
+     "2716",
+     "2718",
+     "2719",
+     "2720",
+     "2721",
+     "2722",
+     "2723",
+     "6178",
+     "6181",
+     "6189",
+     "6191",
+     "6192",
+     "6193",
+     "6194",
+     "6200",
+     "6208",
+     "6209",
+     "6216",
+     "6221",
+     "6243",
+     "6249",
+     "6254",
+     "6259",
+     "6273",
+     "6317",
+     "6325",
+     "6341",
+     "6347"
+    ],
+    "label": "All Hy-Vee stores"
+   },
+   "series_by": "none",
+   "grain": "week",
+   "horizon": 8
+  },
+  "definition": "every store whose name contains HY-VEE (207 stores: food stores, gas, wine and spirits, Dollar Fresh)"
+ },
+ {
+  "id": "crown_weekly",
+  "request": "Weekly Crown Royal bottles statewide for the next 10 weeks",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "week",
+   "horizon": 10
+  },
+  "form": {
+   "title": "Weekly Crown Royal bottles statewide",
+   "target": "sales_bottles",
+   "horizon": 10,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "crown royal"
+    ],
+    "label": "Crown Royal (all sizes/variants)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "grain": "week"
+  }
+ },
+ {
+  "id": "jack_polk_dollars",
+  "request": "Jack Daniel's sales dollars in Polk County, next 6 months",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 6
+  },
+  "form": {
+   "title": "Jack Daniel's, Polk County, next 6 months",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "grain": "month",
+   "product": {
+    "kind": "name",
+    "codes": [
+     "jack daniels"
+    ],
+    "label": "Jack Daniel's (all products)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153"
+    ],
+    "label": "Polk County"
+   },
+   "series_by": "none"
+  },
+  "definition": "every product whose name has the words JACK and DANIELS (or DANIEL'S), including barrel picks"
+ },
+ {
+  "id": "hawkeye_weekly",
+  "request": "Hawkeye Vodka bottles statewide by week, next 8 weeks",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "week",
+   "horizon": 8
+  },
+  "form": {
+   "title": "Hawkeye Vodka, statewide, next 2 months",
+   "target": "sales_bottles",
+   "horizon": 8,
+   "grain": "week",
+   "product": {
+    "kind": "name",
+    "codes": [
+     "hawkeye vodka"
+    ],
+    "label": "Hawkeye Vodka (all sizes)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "captain_scott_quarterly",
+  "request": "Captain Morgan liters in Scott County for the next 3 quarters",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "quarter",
+   "horizon": 3
+  },
+  "form": {
+   "title": "Captain Morgan, Scott County, next 3 quarters",
+   "target": "sales_liters",
+   "horizon": 3,
+   "grain": "quarter",
+   "product": {
+    "kind": "name",
+    "codes": [
+     "captain morgan"
+    ],
+    "label": "Captain Morgan (all products)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19163"
+    ],
+    "label": "Scott County"
+   },
+   "series_by": "none"
+  },
+  "definition": "every product named CAPTAIN MORGAN, including its ready-to-drink cocktails"
+ },
+ {
+  "id": "fireball_minis",
+  "request": "Fireball minis statewide, next 6 months",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 6
+  },
+  "form": {
+   "title": "Fireball minis statewide",
+   "target": "sales_bottles",
+   "product": {
+    "kind": "item",
+    "codes": [
+     "100413",
+     "100535",
+     "100847",
+     "100938",
+     "101151",
+     "102031",
+     "102057",
+     "102096",
+     "102556",
+     "102780",
+     "102945",
+     "103039",
+     "64858",
+     "65013",
+     "75969",
+     "76302",
+     "910225",
+     "902446",
+     "101988",
+     "101512",
+     "101513",
+     "101710",
+     "103152",
+     "103155",
+     "103156",
+     "101046",
+     "101200"
+    ],
+    "label": "Fireball minis (50 ml)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "horizon": 6
+  },
+  "definition": "every Fireball product in 50 ml bottles, whether or not its name says MINI"
+ },
+ {
+  "id": "black_velvet_woodbury",
+  "request": "Black Velvet bottles in Woodbury County for the next 4 months",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 4
+  },
+  "form": {
+   "title": "Black Velvet, Woodbury County, next 4 months",
+   "target": "sales_bottles",
+   "horizon": 4,
+   "grain": "month",
+   "product": {
+    "kind": "name",
+    "codes": [
+     "black velvet"
+    ],
+    "label": "Black Velvet (all varieties and sizes)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19193"
+    ],
+    "label": "Woodbury County"
+   },
+   "series_by": "none"
+  }
+ },
+ {
+  "id": "whiskey_liqueur_weekly",
+  "request": "Weekly whiskey liqueur bottles statewide for the next 6 weeks",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "week",
+   "horizon": 6
+  },
+  "form": {
+   "title": "Weekly whiskey liqueur bottles statewide",
+   "target": "sales_bottles",
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1081600"
+    ],
+    "label": "Whiskey Liqueur"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "grain": "week",
+   "horizon": 6
+  },
+  "definition": "every product whose current category is Whiskey Liqueur"
+ },
+ {
+  "id": "spiced_rum_black_hawk",
+  "request": "Spiced rum sales dollars in Black Hawk County for the next 4 months",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "month",
+   "horizon": 4
+  },
+  "form": {
+   "title": "Spiced Rum sales dollars, Black Hawk County, next 4 months",
+   "target": "sales_dollars",
+   "horizon": 4,
+   "grain": "month",
+   "product": {
+    "kind": "category",
+    "codes": [
+     "1062400"
+    ],
+    "label": "Spiced Rum"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19013"
+    ],
+    "label": "Black Hawk County"
+   },
+   "series_by": "none"
+  },
+  "definition": "every product whose current category is Spiced Rum (1062400)"
+ }
+]

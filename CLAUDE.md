@@ -146,3 +146,7 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    model-selection window; a 2% or 5% keep margin was worse (benchmark/margin.md: median 0.849 / 0.854). Dashboards
    show "Which inputs helped" (model.run "effects": error without each group vs with it, selection window and Test
    period, the Test side scored like the final blend).
+13. Answer key for AI-written SQL (2026-10-02; first step to retiring slot filling): evals/answer_cases.json (34 requests:
+   the 21 eval cases + 13 new weekly/quarterly/year, brand, category and store-group requests; hand-reviewed request
+   forms, a "definition" where a person had to choose, 3 expected refusals); `python evals/build_answers.py` ->
+   evals/answers.json (correct monthly totals from the fixed SQL; reproduces the differential test's 18 references).
