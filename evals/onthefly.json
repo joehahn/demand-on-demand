@@ -726,7 +726,7 @@
  {
   "request": "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
   "status": "ok",
-  "title": "Weekly Forecast: Cream Liqueur Bottles Sold - Iowa Statewide",
+  "title": "Weekly Cream Liqueur Bottles Statewide",
   "grain": "week",
   "horizon": 12,
   "model_grain": "week",
