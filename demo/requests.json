@@ -2,7 +2,7 @@
  {"id": "titos_minis_des_moines", "request": "Monthly forecast of Tito's minis in Des Moines for the next 5 months",
   "shows": "a product and a city: the agent finds both mini items (single and 4-pack) and keeps West Des Moines out"},
  {"id": "fireball_linn_revenue", "request": "What revenue should we expect from Fireball in Linn County next quarter?",
-  "shows": "business words: 'revenue' becomes dollars, 'next quarter' becomes 3 months"},
+  "shows": "business words: 'revenue' becomes dollars, 'next quarter' the next three months"},
  {"id": "vodka_top_counties", "request": "American vodka sales dollars for each of the five largest counties, next 6 months",
   "shows": "a breakout: the agent looks up the five largest counties and forecasts each one"},
  {"id": "cream_liqueur_holidays", "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",

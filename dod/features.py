@@ -1,18 +1,24 @@
 """Model inputs beyond past sales, offered to model selection as groups (model.FEATURE_GROUPS); a group is kept only
 if the model does better with it on the model-selection window. Each is known before the period it describes.
 
-  season         sine and cosine of the time of year: a smooth yearly cycle a linear model can use
-  holiday_weeks  1 if the week contains Thanksgiving, Christmas, New Year's Day or July 4th (weekly forecasts)
+  calendar       month of year, business days and federal holidays in the period (monthly and quarterly forecasts)
+  population     Census population of the counties where the series' stores are (monthly and quarterly forecasts)
+  season         sine and cosine of the time of year: a smooth yearly cycle a linear model can use (weekly)
+  holiday_weeks  1 if the week contains Thanksgiving, Christmas, New Year's Day or July 4th (weekly)
   stores         stores that ordered the product in the 12 months before the period; carried forward unchanged into
-                 the forecast periods, so nothing from the future leaks in
+                 the forecast periods, so nothing from the future leaks in (weekly)
 
-Adopted for weekly forecasts after benchmark/feature_experiment.py (median error vs last year 0.857 -> 0.826).
+Which grain gets which inputs follows the benchmarks: calendar and population for months (benchmark/pooling.md: without
+them 13 of 30 forecasts beat last year instead of 20), season, holiday weeks and stores for weeks
+(benchmark/features.md: median error vs last year 0.857 -> 0.826).
 """
 import numpy as np
 import pandas as pd
 
 from . import db
 
+GROUPS = {"week": ["season", "holiday_weeks", "stores"], "month": ["calendar", "population"],
+          "quarter": ["calendar", "population"]}
 HOLIDAYS = {"thanksgiving_week": "Thanksgiving", "christmas_week": "Christmas", "new_year_week": "New Year",
             "july4_week": "Independence"}
 
@@ -55,3 +61,29 @@ def stores(store_rows, index, last_period):
     act = active_stores(rows, months)
     return pd.Series([act.get(min(pd.Timestamp(d).to_period("M").to_timestamp(), months[-1]), act.iloc[-1])
                       for d in index], index=index, name="active_stores")
+
+
+def calendar(index, grain):
+    """Month of year (of the period's first day), business days and federal holidays in each period."""
+    days = db.query("SELECT cal_date, is_business_day, holiday_name IS NOT NULL AS holiday FROM ref.calendar")
+    day = pd.to_datetime(days.cal_date)
+    start = {"week": day - pd.to_timedelta(day.dt.weekday, unit="D"),
+             "quarter": day.dt.to_period("Q").dt.start_time}.get(grain, day.dt.to_period("M").dt.start_time)
+    per = days.assign(period=start.dt.normalize()).groupby("period")[["is_business_day", "holiday"]].sum()
+    out = per.reindex(pd.DatetimeIndex(index)).astype(float).set_axis(["business_days", "holidays"], axis=1)
+    out.insert(0, "month_of_year", pd.DatetimeIndex(index).month.astype(float))
+    return out
+
+
+def population(store_rows, index):
+    """For each series: the yearly Census population of the counties its stores are in (stores with no county are
+    skipped; the warehouse carries the latest year forward). store_rows: series, store_no."""
+    counties = db.query("SELECT store_no, county_fips FROM sales.store WHERE county_fips IS NOT NULL")
+    pop = db.query("SELECT county_fips, year, population FROM ref.county_population")
+    years = pd.Series(pd.DatetimeIndex(index).year, index=index)
+    where = store_rows[["series", "store_no"]].drop_duplicates().merge(counties, on="store_no")
+    out = {}
+    for name, g in where.groupby("series"):
+        by_year = pop[pop.county_fips.isin(set(g.county_fips))].groupby("year").population.sum()
+        out[name] = years.map(by_year).astype(float).rename("population")
+    return out

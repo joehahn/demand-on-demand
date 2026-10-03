@@ -1,8 +1,0 @@
-{
-  "title": "Tito's minis by item, statewide, next 6 months",
-  "target": "sales_bottles",
-  "horizon": 6,
-  "product": {"kind": "item", "codes": ["38194", "38185"], "label": "Tito's Handmade Vodka 50 ml"},
-  "region": {"kind": "statewide", "label": "Iowa"},
-  "series_by": "item"
-}

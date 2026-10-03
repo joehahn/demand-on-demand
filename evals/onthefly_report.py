@@ -1,5 +1,5 @@
 """
-onthefly_report.py: run a few week / quarter / year requests through the on-the-fly path (dod/onthefly.py) and
+onthefly_report.py: run a few week / quarter / year requests through the forecast path (dod/forecast.py) and
 publish docs/onthefly.html, explained for a general audience.
 
     python evals/onthefly_report.py            # run the requests (about $0.15 of API calls), then build the page
@@ -15,8 +15,8 @@ import pandas as pd
 import plotly.graph_objects as go
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from dod import onthefly  # noqa: E402
-from dod.nl2sql import RULES  # noqa: E402
+from dod import agent, forecast  # noqa: E402
+from dod.agent import RULES  # noqa: E402
 from dod.viz import AQUA, BLUE, Plots, line, page, style, table  # noqa: E402
 
 HERE = Path(__file__).parent
@@ -30,7 +30,7 @@ REQUESTS = [
     "Total Iowa vodka sales dollars for the next year",
     "Weekly bottles of liquor ordered by all Hy-Vee stores in Iowa for the next 8 weeks",
 ]
-UNIT = {"week": "week", "month": "month", "quarter": "quarter", "year": "month"}
+UNIT = {"week": "week", "month": "month", "quarter": "month", "year": "month"}
 
 
 def run_all(only=None):
@@ -41,22 +41,23 @@ def run_all(only=None):
             out.append(saved[req])
             continue
         print(f"== {req}", flush=True)
-        r = onthefly.forecast(req, log=lambda *a: None)
+        r = forecast.forecast(req, log=lambda *a: None)
         if r["status"] != "ok":
             out.append({"request": req, "status": r["status"], "message": r.get("message", "")})
             continue
-        res, wide = r["res"], r["wide"]
-        out.append({"request": req, "status": "ok", "title": r["title"], "grain": r["grain"], "horizon": r["horizon"],
-                    "model_grain": r["model_grain"], "sql": r["sql"], "scope": r["reference_scope"],
-                    "assumptions": r["assumptions"], "check": r["check"], "rel_mae": res["test_rel_mae"],
-                    "test_window": [str(d.date()) for d in res["test_window"]],
+        s, plan = r["summary"], r["plan"]
+        res, wide = s["res"], s["panel"].series
+        out.append({"request": req, "status": "ok", "title": plan.title, "grain": plan.grain, "horizon": plan.horizon,
+                    "model_grain": s["grain"], "sql": plan.sql, "assumptions": plan.assumptions,
+                    "rel_mae": res["test_rel_mae"], "test_window": [str(d.date()) for d in res["test_window"]],
                     "history": {str(k.date()): (None if pd.isna(v) else float(v))
                                 for k, v in wide.sum(axis=1, min_count=1).items()},
                     "forecast": [{"period": str(m.date()), "pred": float(p), "lo": float(lo), "hi": float(hi)}
                                  for m, p, lo, hi in res["forecast"].groupby("month")[["pred", "lo", "hi"]].sum()
                                  .itertuples()],
-                    "cost": r["usage"]["est_cost_usd"], "seconds": r["usage"].get("agent_seconds", 0) + r["harness_seconds"]})
-        print(f"   {out[-1].get('check', {}).get('status')}  rel {out[-1].get('rel_mae', float('nan')):.3f}", flush=True)
+                    "dashboard": s["dashboard"], "cost": r["usage"]["est_cost_usd"],
+                    "seconds": r["usage"].get("agent_seconds", 0) + s["seconds"]})
+        print(f"   rel {out[-1]['rel_mae']:.3f}", flush=True)
     SAVED.write_text(json.dumps(out, indent=1))
 
 
@@ -84,29 +85,9 @@ def figure(r):
     return f.update_layout(legend=dict(orientation="h", y=-0.15, yanchor="top", x=0, xanchor="left"))
 
 
-# What a failed cross-check meant, found by reading the AI's query and form fill (evals/onthefly.json).
-NOTES = {
-    "Weekly bottles of liquor ordered by all Hy-Vee stores in Iowa for the next 8 weeks":
-        "Why it failed: the AI's query selects every store named Hy-Vee (207 of them), which is right. To fill in the "
-        "form it used the store search, which showed only 40 stores, so its form listed 40. The check caught that the "
-        "two disagree. Fixed since: the store search now says when more stores match, and the AI leaves the form empty "
-        "when it can only list part of a group.",
-}
-
-
-# Requests with a full dashboard (built by dod/onthefly.forecast, copied into docs/examples/).
+# Requests whose full dashboard is published (copied into docs/examples/ by make_examples.py).
 DASHBOARDS = {"show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out":
               "examples/cream_liqueur_by_week_next_12_weeks.html"}
-
-
-def check_text(c):
-    if c["status"] == "passed":
-        return f"Passed: the AI's data, summed by month, equals the reference in all {c['months']} months."
-    if c["status"] == "failed":
-        return (f"Failed in {c['bad_months']} of {c['months']} months (AI total {c['ai_total']:,.0f} vs reference "
-                f"{c['reference_total']:,.0f}): the AI's query and its own form fill describe different data, so a "
-                f"person should look before trusting it.")
-    return f"Not available: {c['why']}. The forecast still has its own backtest."
 
 
 def build():
@@ -119,15 +100,14 @@ def build():
             continue
         fc = pd.DataFrame(r["forecast"])
         total = fc.pred.sum()
-        what = (f"by {r['grain']}, {r['horizon']} {r['grain']}{'s' if r['horizon'] > 1 else ''} ahead" if r["grain"] != "year"
-                else "next year: forecast by month, 12 months ahead, reported as the year's total")
-        badge = {"passed": "&#10003; cross-check passed", "failed": "&#10007; cross-check failed",
-                 "not available": "cross-check not available"}[r["check"]["status"]]
+        what = {"year": "next year: forecast by month, 12 months ahead",
+                "quarter": f"next {r['horizon']} quarter{'s' if r['horizon'] > 1 else ''}: forecast by month, "
+                           f"{3 * r['horizon']} months ahead"}.get(
+            r["grain"], f"by {r['grain']}, {r['horizon']} {r['grain']}{'s' if r['horizon'] > 1 else ''} ahead")
         tbl = table(fc.assign(period=fc.period.str[:10]).rename(columns={"pred": "forecast", "lo": "low (10%)",
                                                                          "hi": "high (90%)"}),
                     {c: (lambda v: f"{v:,.0f}") for c in ("forecast", "low (10%)", "high (90%)")})
-        detail = (f"<details><summary>the AI's query, form fill and assumptions</summary><pre>{html.escape(r['sql'])}</pre>"
-                  f"<p>Form fill for the cross-check: <code>{html.escape(r['scope'] or '(none: the form cannot express this)')}</code></p>"
+        detail = (f"<details><summary>the AI's query and assumptions</summary><pre>{html.escape(r['sql'])}</pre>"
                   f"<ul>{''.join(f'<li>{html.escape(a)}</li>' for a in r['assumptions'])}</ul></details>")
         sections.append(
             f"<h2>&ldquo;{html.escape(r['request'])}&rdquo;</h2>"
@@ -137,34 +117,31 @@ def build():
             + f"<div class=\"tiles\"><div class=\"tile\"><div class=\"v\">{total:,.0f}</div><div class=\"k\">forecast total"
             f"</div></div><div class=\"tile\"><div class=\"v\">{round(abs(1 - r['rel_mae']) * 100)}%</div><div class=\"k\">"
             f"{html.escape(accuracy(r['rel_mae'], r['model_grain']).split('% ', 1)[-1])} (Test period)</div></div>"
-            f"<div class=\"tile\"><div class=\"v\">{badge}</div><div class=\"k\">{html.escape(check_text(r['check']))}"
-            f"</div></div><div class=\"tile\"><div class=\"v\">{r['seconds']:.0f} s &middot; ${r['cost']:.2f}</div>"
+            f"<div class=\"tile\"><div class=\"v\">{r['seconds']:.0f} s &middot; ${r['cost']:.2f}</div>"
             f"<div class=\"k\">to build from scratch</div></div></div>"
-            + (f"<p class=\"note\">{html.escape(NOTES[r['request']])}</p>" if r["request"] in NOTES else "")
             + f"{plot(figure(r))}{tbl}{detail}")
     body = f"""
 <p class="note"><a href="index.html">demand-on-demand</a> &middot; <a href="differential.html">AI-written SQL vs a
 reference</a> &middot; <a href="https://github.com/joehahn/demand-on-demand">GitHub</a></p>
-<h1>Forecasts by week, quarter or year, from AI-written SQL</h1>
-<p>The main forecasts on this site are monthly, built by slot filling: the AI fills in a request form and fixed code
-does everything else. This prototype lets the AI write the SQL instead, so it can serve requests the form does not
-cover, such as weekly or quarterly forecasts or a group of stores. The split of work stays the same idea:</p>
+<h1>Forecasts by week, quarter or year</h1>
+<p>Every forecast on this site starts the same way: the AI agent writes one SQL query that picks the order lines for
+the request, and names the time grain (week, month, quarter or year) and how far ahead. Fixed code does the rest:</p>
 <ul>
-<li><strong>The AI decides what to forecast:</strong> it writes SQL that returns daily totals (which order lines, which
-measure), and names the grain (week, month, quarter or year) and how far ahead.</li>
-<li><strong>Fixed code decides how:</strong> it buckets the days into the grain, keeps complete periods only, fills
+<li><strong>The AI decides what to forecast:</strong> which order lines, which measure, and how to label each series.</li>
+<li><strong>Fixed code decides how:</strong> it adds the lines up by week or month, keeps complete periods only, fills
 empty periods with 0, picks and tests the model (the baseline is the same period last year; weekly models refit every
-4 weeks), and draws the results. A yearly request is forecast by month and summed.</li>
-<li><strong>Fixed code also checks the AI's data:</strong> wherever the request form can describe the same data, the AI
-fills it in too, and its daily totals summed by month must equal the monthly series the tested slot-filling path builds
-independently. When the form cannot describe the request, the page says so.</li>
+4 weeks), and draws the results. Quarters and years are forecast by month: "next quarter" is the next three months (the
+data rarely ends on a quarter's last day, so a calendar quarter ahead would include months already known).</li>
+<li><strong>The AI's SQL is tested:</strong> on <a href="{REPO}/evals/sql_report.md">34 test requests, 3 runs each</a>,
+its order lines are added up and compared with an answer key built by hand-checked fixed code.</li>
 </ul>
-<p>The AI writes its SQL with three rules for this warehouse's traps, found by <a href="differential.html">testing
-AI-written SQL against the reference</a>. Same Claude agent, lookup tools and read-only login as the main path.</p>
+<p>The AI writes its SQL following three rules for this warehouse's traps, found by <a href="differential.html">testing
+AI-written SQL against a reference</a>, and the company's business definitions (what "minis" or "whiskey" means).</p>
 <details><summary>The three rules</summary><pre>{html.escape(RULES)}</pre></details>
 {"".join(sections)}
-<p class="note">Code: <a href="{REPO}/dod/onthefly.py">the on-the-fly path</a>, <a href="{REPO}/dod/model.py">the
-grain-aware harness</a> (use_grain), <a href="{REPO}/evals/onthefly_report.py">this page</a>.</p>
+<p class="note">Code: <a href="{REPO}/dod/agent.py">the agent</a>, <a href="{REPO}/dod/history.py">adding up its order
+lines</a>, <a href="{REPO}/dod/model.py">the grain-aware models</a> (use_grain), <a
+href="{REPO}/evals/onthefly_report.py">this page</a>.</p>
 <footer>Data: Iowa Liquor Sales, State of Iowa, via the Iowa Data Hub, CC BY 4.0; modified (see the data fixes page).</footer>"""
     return page("Forecasts by Any Grain", body)
 

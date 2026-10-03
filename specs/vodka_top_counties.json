@@ -1,8 +1,0 @@
-{
-  "title": "American vodka dollars, five largest counties, next 6 months",
-  "target": "sales_dollars",
-  "horizon": 6,
-  "product": {"kind": "category", "codes": ["1031100"], "label": "American vodkas"},
-  "region": {"kind": "county", "codes": ["19153","19113","19103","19163","19013"], "label": "Polk, Linn, Johnson, Scott and Black Hawk counties"},
-  "series_by": "county"
-}

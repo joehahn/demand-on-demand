@@ -1,11 +1,12 @@
-"""Score the AI-written SQL (the on-the-fly agent, dod/onthefly.ask) against the answer key (evals/answers.json).
+"""Score the agent's SQL (dod/agent.ask) against the answer key (evals/answers.json).
 
     python evals/score_sql.py                       # every request, 3 runs each, 4 at a time (about $2)
     python evals/score_sql.py --runs 1 --only cream_weekly,hyvee_weekly
     python evals/score_sql.py --rescore evals/sql_results/<file>.json   # rerun the saved SQL, score again (no AI)
 
 Each run is judged on two things:
-  data     the AI's daily totals, summed by month, equal the answer key in every month (within half a unit)
+  data     the AI's order lines, summed by month (by fixed code, as in dod/history.py), equal the answer key in every
+           month (within half a unit)
   reading  the grain and horizon are the ones expected (or one of the equivalent readings in "accept", e.g. 1 quarter
            or 3 months; "any" when the request gives none); a request that should be declined is declined
 Writes evals/sql_results/<timestamp>.json (every run, with its SQL) and evals/sql_report.md.
@@ -19,10 +20,15 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from dod import onthefly  # noqa: E402
+from dod import agent, db  # noqa: E402
 from build_answers import norm  # noqa: E402
 
 HERE = Path(__file__).parent
+
+
+def monthly(sql):
+    """The agent's order lines summed by month and series (column day = the month's first day)."""
+    return db.query(f"SELECT date_trunc('month', day)::date AS day, series, sum(value) AS value FROM ({sql}) q GROUP BY 1, 2")
 
 
 def compare(answer, rows):
@@ -73,19 +79,22 @@ def score(case, answer, row, rows):
 def one(case, answer, run_no):
     t0 = time.time()
     try:
-        r = onthefly.ask(case["request"], log=lambda *a: None)
+        r = agent.ask(case["request"], log=lambda *a: None)
     except Exception as e:   # a crash is a failed run, not a failed scorer
         r = {"status": "crash", "message": repr(e)[:300], "usage": {"est_cost_usd": 0}, "trace": []}
     row = {"id": case["id"], "run": run_no, "status": r["status"], "cost": r["usage"].get("est_cost_usd", 0),
            "seconds": round(time.time() - t0, 1), "tool_calls": len(r.get("trace", [])),
-           "sql": r.get("sql"), "grain": r.get("grain"), "horizon": r.get("horizon"),
-           "assumptions": r.get("assumptions"), "message": r.get("message", "")[:500]}
-    return score(case, answer, row, r.get("rows"))
+           "message": r.get("message", "")[:500]}
+    if r["status"] == "ok":
+        plan = r["plan"]
+        row.update(sql=plan.sql, grain=plan.grain, horizon=plan.horizon, assumptions=plan.assumptions,
+                   title=plan.title, product=plan.product, place=plan.place)
+    return score(case, answer, row, monthly(row["sql"]) if r["status"] == "ok" else None)
 
 
 def rescore(row, case, answer):
     """A saved run scored again against the current cases and answers, by rerunning its SQL (no AI call)."""
-    rows = onthefly.run_daily(row["sql"])[0] if row["status"] == "ok" else None
+    rows = monthly(row["sql"]) if row["status"] == "ok" else None
     return score(case, answer, dict(row), rows)
 
 

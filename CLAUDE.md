@@ -8,11 +8,11 @@
 
 demand-on-demand: a business user asks in plain English for a forecast
 ("monthly forecast of Tito's bottles sold in Polk County for the next 5 months")
-and a single Claude agent (Anthropic SDK, one agent with several tools) finds the
-relevant tables, resolves fuzzy business terms, writes the aggregation SQL, and
-proposes cleaning rules and features. A fixed, deterministic Python harness then
-trains, grid-searches, backtests against a seasonal-naive baseline, and renders an
-HTML dashboard of predictions vs actuals.
+and a single Claude agent (Anthropic SDK, one agent with several tools) resolves fuzzy
+business terms and writes one SQL query that picks the order lines to forecast, plus a
+plain description of the request (grain, horizon, measure). Fixed, deterministic Python
+then adds the lines up, builds the inputs, trains, grid-searches, backtests against a
+seasonal-naive baseline, and renders an HTML dashboard of predictions vs actuals.
 
 Claude Code is the build tool. The Anthropic SDK is the runtime; the app never
 needs Claude Code to run. See `PLAN.md` for the full design.
@@ -104,9 +104,10 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
 0. Setup (done)
 1. `load_data.py`: download, raw, curate, ref, clean, meta (done)
 2. `explore_data.py` -> docs/data_exploration.html; `data_fixes.py` -> docs/data_fixes.html (done)
-3. Harness `dod/` (done, being tuned): spec -> panel (SQL on clean tables) -> model (grid on tuning window,
-   seasonal naive as a candidate, rolling-origin test) -> dashboard. `python -m dod.run specs/<name>.json`
-4. Agent `python -m dod.agent "<request>" [--spec-only]`: find_values, run_select, preview_spec, ask_user, submit_spec
+3. Harness `dod/` (done): history (fixed sums around the agent's SQL) -> model (grid on tuning window, seasonal naive
+   as a candidate, rolling-origin test) -> dashboard. `python -m dod.forecast "<request>"`
+4. Agent `python -m dod.agent "<request>" [--sql-only]`: find_values, run_select, ask_user, submit_query
+   (phases 4-11 below describe the earlier slot-filling agent, retired 2026-10-03; see 14)
 5. Evals (done): `python evals/run_evals.py` 42/42 correct (21 cases, 2026-09-30), $0.016 and ~20 s per request, 4 tool calls;
    `python evals/grounding.py` 60/60 summaries grounded (2026-10-01; summary = one AI sentence + one code sentence).
 6. Accuracy and speed (done): parallel fits (LightGBM n_jobs=1), products resolved to item lists (indexed),
@@ -154,3 +155,15 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    90/102 (every miss a definition, none a warehouse trap); with the business glossary (dod/nl2sql.GLOSSARY: brands
    include flavors, spirit types include flavored categories but not liqueurs and are selected by category name, sizes
    by bottle size, event periods through their end) 101/102, data right in 102/102 (2026-10-02, $1.84).
+14. One path (2026-10-03): slot filling retired. The agent (dod/agent.py) writes SQL returning one row per order line
+   (day, store_no, item_no, series, value) plus a Plan (dod/plan.py: title, measure, product, place, breakout, grain,
+   horizon). Fixed code (dod/history.py) never runs it as is: it wraps it in sums by month/store/series, by week/series
+   and distinct items, which feed the series, store list and map, active stores, population (counties of the series'
+   stores) and data-prep notes. Inputs by grain (dod/features.GROUPS): weeks season, holiday_weeks, stores; months
+   calendar, population. Quarters and years are forecast by month ("next quarter" = next 3 months; calendar quarters
+   would include months already known). No pooling (benchmark/pooling.md). dod/forecast.py runs it end to end.
+   Removed: dod/run.py, dod/onthefly.py, dod/nl2sql.py, specs/, evals/run_evals.py, evals/differential.py, the per-request
+   cross-check. Kept as test tooling: dod/spec.py + dod/panel.py (reference_sql for the benchmark, build_sql for the
+   answer key). Results: evals/score_sql.py 101/102 (one Diageo miss, then a vendor definition added: 3/3);
+   benchmark 20/30 beat last year, median 0.91 (= the no-pooling arm). `python make_examples.py` regenerates
+   docs/examples/ and index.json.

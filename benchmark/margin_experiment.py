@@ -22,8 +22,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from dod import model, panel  # noqa: E402
-from dod.onthefly import bucket  # noqa: E402
-from feature_experiment import add_stores, holiday_weeks, region_rows, season, store_months  # noqa: E402
+from feature_experiment import add_stores, holiday_weeks, region_rows, season, store_months, to_weeks  # noqa: E402
 from run_benchmark import sample_specs  # noqa: E402
 
 HERE = Path(__file__).parent
@@ -45,7 +44,7 @@ def weekly(spec, rows, end):
     from dod import db
     raw = db.query(sql.replace("date_trunc('month', l.ordered_on)::date AS month", "l.ordered_on AS day")
                    .replace("GROUP BY 1, 2, 3\nORDER BY 1, 2, 3", "GROUP BY 1, 2, 3"), params)
-    wide = bucket(raw.groupby(["day", "series"], as_index=False).value.sum(), "week", end)
+    wide = to_weeks(raw.groupby(["day", "series"], as_index=False).value.sum(), end)
     steps = min(spec.horizon * 4, 52)
     fut = pd.date_range(wide.index[-1] + pd.offsets.Week(weekday=0), periods=steps, freq="W-MON")
     idx = wide.index.append(fut)

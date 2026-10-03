@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from dod import db, model, panel  # noqa: E402
+from dod import db, history, model, panel  # noqa: E402
 from run_benchmark import sample_specs  # noqa: E402
 
 HERE = Path(__file__).parent
@@ -69,6 +69,13 @@ def holiday_weeks(index):
     return out
 
 
+def to_weeks(daily, end):
+    """Daily totals (day, series, value) -> one column per series by week (Monday), complete weeks only."""
+    day = pd.to_datetime(daily.day)
+    weekly = daily.assign(period=day - pd.to_timedelta(day.dt.weekday, unit="D"))
+    return history.to_grain(weekly.groupby(["period", "series"], as_index=False).value.sum(), "week", end, None)
+
+
 def region_rows(rows, spec):
     """Store rows inside the forecast's region (statewide or one county)."""
     if spec.region.kind == "statewide":
@@ -112,9 +119,8 @@ def weekly_case(spec, rows, end, only=None):
     sql, params = panel.build_sql(spec)
     raw = db.query(sql.replace("date_trunc('month', l.ordered_on)::date AS month", "l.ordered_on AS day")
                    .replace("GROUP BY 1, 2, 3\nORDER BY 1, 2, 3", "GROUP BY 1, 2, 3"), params)
-    from dod.onthefly import bucket
     daily = raw.groupby(["day", "series"], as_index=False).value.sum()
-    wide = bucket(daily, "week", end)
+    wide = to_weeks(daily, end)
     steps = min(spec.horizon * 4, 52)   # the same span ahead, in weeks
     step = pd.tseries.frequencies.to_offset("W-MON")
     fut = pd.date_range(wide.index[-1] + step, periods=steps, freq=step)

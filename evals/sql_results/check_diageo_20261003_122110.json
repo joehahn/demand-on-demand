@@ -1,0 +1,80 @@
+[
+ {
+  "id": "diageo_scott",
+  "run": 1,
+  "status": "ok",
+  "cost": 0.0233,
+  "seconds": 11.9,
+  "tool_calls": 4,
+  "message": "",
+  "sql": "SELECT l.ordered_on AS day, l.store_no AS store_no, l.item_no AS item_no, 'total' AS series, l.sales_bottles AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE l.vendor_no = '260'\n  AND s.county_fips = '19163'\n  AND l.ordered_on >= '2016-01-01'",
+  "grain": "month",
+  "horizon": 6,
+  "assumptions": [
+   "Diageo means vendor_no 260 (Diageo Americas), the vendor that sold the product, not necessarily the brand owner today",
+   "Scott County identified by county_fips 19163 via store location",
+   "Includes all Diageo products: every size, flavor, pack and barrel pick, since no specific brand or spirit type was named",
+   "History starts 2016-01-01 as required; forecast horizon is 6 months ahead since no horizon was specified"
+  ],
+  "title": "Diageo Products - Scott County Monthly Bottle Sales Forecast",
+  "product": "All Diageo Americas products (every size, flavor, pack)",
+  "place": "Scott County, Iowa",
+  "reading": true,
+  "data": true,
+  "off_share": 0.0,
+  "why": "",
+  "passed": true
+ },
+ {
+  "id": "diageo_scott",
+  "run": 2,
+  "status": "ok",
+  "cost": 0.0231,
+  "seconds": 11.7,
+  "tool_calls": 4,
+  "message": "",
+  "sql": "SELECT l.ordered_on AS day, l.store_no, l.item_no, 'total' AS series, l.sales_bottles AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE l.vendor_no = '260'\n  AND s.county_fips = '19163'\n  AND l.ordered_on >= '2016-01-01'",
+  "grain": "month",
+  "horizon": 6,
+  "assumptions": [
+   "Diageo refers to vendor 'DIAGEO AMERICAS' (vendor_no 260); products are selected by the vendor that sold them, not by current brand ownership.",
+   "Scott County identified by county_fips 19163 via the store's county.",
+   "All order lines since 2016-01-01 included, one total series (no breakout).",
+   "Measure is bottles sold (sales_bottles)."
+  ],
+  "title": "Diageo Americas Bottle Sales, Scott County",
+  "product": "All Diageo Americas products",
+  "place": "Scott County, Iowa",
+  "reading": true,
+  "data": true,
+  "off_share": 0.0,
+  "why": "",
+  "passed": true
+ },
+ {
+  "id": "diageo_scott",
+  "run": 3,
+  "status": "ok",
+  "cost": 0.0235,
+  "seconds": 12.5,
+  "tool_calls": 4,
+  "message": "",
+  "sql": "SELECT l.ordered_on AS day, l.store_no, l.item_no, 'total' AS series, l.sales_bottles AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE l.vendor_no = '260'\n  AND s.county_fips = '19163'\n  AND l.ordered_on >= '2016-01-01'",
+  "grain": "month",
+  "horizon": 6,
+  "assumptions": [
+   "Diageo means vendor_no 260 (Diageo Americas), all products it sold, regardless of brand ownership changes.",
+   "Scott County identified by county_fips 19163, matched via store location.",
+   "Bottles measure is sales_bottles, summed across all order lines in-month.",
+   "History starts 2016-01-01 as required; forecast horizon is 6 months ahead, monthly grain, single total series (no breakout)."
+  ],
+  "title": "Diageo Americas bottle sales in Scott County, monthly forecast",
+  "product": "Diageo Americas (all products, vendor 260)",
+  "place": "Scott County, Iowa",
+  "reading": true,
+  "data": true,
+  "off_share": 0.0,
+  "why": "",
+  "passed": true
+ }
+]

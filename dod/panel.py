@@ -1,7 +1,10 @@
-"""Spec -> SQL -> monthly panel (one column per series) plus exogenous features.
+"""Reference SQL from a request form (dod/spec.Spec), plus the data helpers the forecast path shares.
 
-The aggregation SQL is generated here from the spec, never written by the LLM, and it reads only the clean
-warehouse: products by family (renumbered items joined), categories in today's taxonomy, one spelling per city."""
+Forecasts no longer use this form (the agent writes its own SQL, dod/agent.py), but tests do: the answer key for the
+agent's SQL (evals/build_answers.py) and the accuracy benchmark (benchmark/run_benchmark.py) build their queries here,
+from hand-checked forms, with fixed code that reads only the clean warehouse: products by family (renumbered items
+joined), categories in today's taxonomy, one spelling per city. The shared helpers (data_end, check_months, store_list,
+older_numbers, Panel) are used by dod/history.py."""
 from dataclasses import dataclass, field
 
 import pandas as pd
@@ -33,6 +36,8 @@ class Panel:
     pool: tuple = None                            # (companion series, their exog): same product in other counties
     stores: pd.DataFrame = None                   # every store whose sales are in the panel, with recent volume
     unknown_packs: list = field(default_factory=list)  # items in the product sold in packs of unknown size
+    items: list = field(default_factory=list)          # every item number in the forecast
+    older: list = field(default_factory=list)          # those that are older numbers of renumbered products
 
 
 def member_items(spec):
@@ -73,6 +78,24 @@ WHERE {PRODUCT_FILTER[spec.product.kind]}
 GROUP BY 1, 2, 3
 ORDER BY 1, 2, 3"""
     return sql, params
+
+
+def reference_sql(spec):
+    """The form as one query in the agent's shape (one row per order line: day, store_no, item_no, series, value), with
+    the codes written in, so the benchmark can run the forecast path without the AI."""
+    lit = lambda vals: "ARRAY[" + ", ".join("'" + str(v).replace("'", "''") + "'" for v in vals) + "]::text[]"
+    items = member_items(spec)
+    product = {"vendor": f"l.vendor_no = ANY({lit(spec.product.codes)})", "all": "TRUE"}.get(
+        spec.product.kind, f"l.item_no = ANY({lit(items)})")
+    region = REGION_FILTER[spec.region.kind].replace("%(region)s", lit(spec.region.codes))
+    return f"""SELECT l.ordered_on AS day, l.store_no, l.item_no, {SERIES_EXPR[spec.series_by]}::text AS series,
+       l.{spec.target} AS value
+FROM sales.invoice_line l
+JOIN sales.item i USING (item_no)
+JOIN sales.store s USING (store_no)
+WHERE {product}
+  AND {region}
+  AND l.ordered_on >= '{spec.start}'"""
 
 
 def store_list(raw, last_month):

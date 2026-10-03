@@ -3,9 +3,11 @@ chosen model beats "same month last year" on the 24-month test window it never t
 
     python benchmark/run_benchmark.py [--n 30]
 
-Specs are sampled deterministically (seed 0) from the warehouse: top products by county and statewide,
-categories statewide and by county, vendors, and the statewide total. Writes benchmark/results.csv and
-benchmark/report.md. No LLM calls; each forecast takes about 10 seconds.
+Requests are sampled deterministically (seed 0) from the warehouse: top products by county and statewide,
+categories statewide and by county, vendors, and the statewide total. Each is written as a request form
+(dod/spec.Spec), turned into a query in the agent's shape (dod/panel.reference_sql) and run through the same fixed code
+as every forecast (dod/forecast.run): no AI calls, so the benchmark measures the forecasting, not the SQL. Writes
+benchmark/results.csv and benchmark/report.md. Each forecast takes about 10 to 20 seconds.
 """
 import random
 import sys
@@ -15,10 +17,18 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from dod import db, run  # noqa: E402
+from dod import db, forecast, panel  # noqa: E402
+from dod.plan import Plan  # noqa: E402
 from dod.spec import Spec  # noqa: E402
 
 HERE = Path(__file__).parent
+
+
+def run_spec(spec, out_root):
+    """A request form through the same fixed code as every forecast, with its reference query instead of the AI's."""
+    plan = Plan(title=spec.title, sql=panel.reference_sql(spec), target=spec.target, horizon=spec.horizon,
+                product=spec.product.label, place=spec.region.label, series_by=spec.series_by)
+    return forecast.run(plan, narrate=False, out_root=out_root, log=lambda *a: None)
 
 
 def sample_specs(n, seed=0):
@@ -63,7 +73,7 @@ if __name__ == "__main__":
     out_root = HERE / "out"
     for spec in sample_specs(n):
         try:
-            s = run.run(spec, out_root=out_root, log=lambda *a: None)
+            s = run_spec(spec, out_root)
             ps = pd.DataFrame(s["per_step"])
             rows.append({"forecast": spec.title, "horizon": spec.horizon, "rel_mae": s["test_rel_mae"],
                          "model_error": (ps.wape * ps.folds).sum() / ps.folds.sum(),

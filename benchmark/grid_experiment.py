@@ -13,8 +13,8 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from dod import model, run  # noqa: E402
-from run_benchmark import sample_specs  # noqa: E402
+from dod import model  # noqa: E402
+from run_benchmark import run_spec, sample_specs  # noqa: E402
 
 HERE = Path(__file__).parent
 CANDIDATES = {"finer": {"lightgbm": {"num_leaves": [4, 7, 11, 15, 23, 31]}, "ridge": {"alpha": [0.1, 0.3, 1.0, 3.0, 10.0, 30.0]}},
@@ -33,7 +33,7 @@ for spec in sample_specs(30):
         model.FAMILY = family   # configs() reads the module's grid when it runs
         t0 = time.time()
         try:
-            s = run.run(spec, out_root=HERE / "out" / f"grid_{name}", log=lambda *a: None)
+            s = run_spec(spec, HERE / "out" / f"grid_{name}")
             row[f"{name}_rel"], row[f"{name}_s"] = s["test_rel_mae"], time.time() - t0
         except Exception as e:  # too little history etc.
             row[f"{name}_rel"], row[f"{name}_s"] = None, None

@@ -1,11 +1,9 @@
-"""The agent's tools. Every one is read-only; the only way the agent affects a forecast is the spec it submits,
-which the harness validates and runs. Results are compact text, because they go back into the model's context."""
-import json
+"""The agent's lookup tools, all read-only. The only way the agent affects a forecast is the query it submits
+(submit_query in dod/agent.py), which fixed code checks and wraps in its own sums. Results are compact text, because
+they go back into the model's context."""
 import re
-from pydantic import ValidationError
 
-from . import db, panel
-from .spec import Spec
+from . import db
 from .sqlcheck import check_sql
 
 MAX_ROWS = 100
@@ -92,7 +90,7 @@ def find_values(kind, text):
                      f"ON h.item_no = i.family_item_no WHERE {match}", params).n[0]
         if n > 60:
             out += (f"\n({n} products match; the 60 largest are shown. To include every product matching these "
-                    f"words, use product kind \"name\" with codes [\"{text}\"].)")
+                    f"words, select them by name in SQL (rule 2), not from this list.)")
     return out
 
 
@@ -107,41 +105,6 @@ def run_select(sql):
         return f"Error: {str(e).splitlines()[0]}"
 
 
-def parse_spec(spec_json):
-    try:
-        return Spec(**json.loads(spec_json)), None
-    except (json.JSONDecodeError, ValidationError, TypeError) as e:
-        return None, f"Error: invalid spec: {e}"
-
-
-def preview(spec_json):
-    """Build the monthly series for a draft spec, without training anything."""
-    spec, err = parse_spec(spec_json)
-    if err:
-        return err, None
-    try:
-        p = panel.build(spec)
-    except ValueError as e:
-        return f"Error: {e}", None
-    lines = [f"Last complete month {p.series.index[-1]:%Y-%m}; {p.series.shape[1]} series."]
-    if spec.product.kind == "name":   # show what the brand words matched, so an overreach is visible before submitting
-        heads = db.query("SELECT DISTINCT h.item_desc, h.total_bottles FROM sales.item i JOIN sales.item h "
-                         "ON h.item_no = i.family_item_no WHERE i.item_no = ANY(%s) ORDER BY 2 DESC NULLS LAST",
-                         (panel.member_items(spec),))
-        lines.append(f"Product name matches {len(heads)} products, largest: " + "; ".join(heads.item_desc.head(8)))
-    for c in p.series:
-        s = p.series[c].dropna()
-        nz = s[s > 0]
-        if nz.empty:
-            lines.append(f"- {c}: no sales")
-            continue
-        months = len(s)
-        lines.append(f"- {c} ({p.labels.get(c, c)}): {months} months of history from {s.index[0]:%Y-%m}, "
-                     f"last sale {nz.index.max():%Y-%m}, last 12 months {s.iloc[-12:].sum():,.0f}"
-                     + (" -- under 24 months, too short to forecast" if months < 24 else ""))
-    return "\n".join(lines), spec
-
-
 TOOLS = [
     {"name": "find_values",
      "description": "Fuzzy-search warehouse names to resolve business words to codes: products (one row per product, "
@@ -154,30 +117,16 @@ TOOLS = [
      "strict": True},
     {"name": "run_select",
      "description": "Run one read-only SELECT against the sales, ref or meta schemas (tables must be "
-                    f"schema-qualified). Returns at most {MAX_ROWS} rows. Use it only to check a fact the other "
-                    "tools do not give you (e.g. which counties are largest).",
+                    f"schema-qualified). Returns at most {MAX_ROWS} rows. Use it to test parts of your query (add "
+                    "things up: only 100 rows come back) and to check facts the other tools do not give you (e.g. "
+                    "which counties are largest).",
      "input_schema": {"type": "object", "properties": {"sql": {"type": "string"}},
                       "required": ["sql"], "additionalProperties": False},
-     "strict": True},
-    {"name": "preview_spec",
-     "description": "Validate a draft spec (JSON string) and summarize the monthly series it produces: months of "
-                    "history, last sale, last 12 months. Nothing is trained. Use it to confirm the spec matches the "
-                    "request before submitting.",
-     "input_schema": {"type": "object", "properties": {"spec_json": {"type": "string"}},
-                      "required": ["spec_json"], "additionalProperties": False},
      "strict": True},
     {"name": "ask_user",
      "description": "Ask the requester one short clarifying question when the request is genuinely ambiguous and a "
                     "wrong guess would change the answer (e.g. a city vs its county). Do not ask about defaults.",
      "input_schema": {"type": "object", "properties": {"question": {"type": "string"}},
                       "required": ["question"], "additionalProperties": False},
-     "strict": True},
-    {"name": "submit_spec",
-     "description": "Submit the final spec (JSON string) for training, backtesting and the dashboard, with the "
-                    "assumptions you made in plain English.",
-     "input_schema": {"type": "object", "properties": {
-         "spec_json": {"type": "string"},
-         "assumptions": {"type": "array", "items": {"type": "string"}}},
-         "required": ["spec_json", "assumptions"], "additionalProperties": False},
-     "strict": True},
+     "strict": True}
 ]

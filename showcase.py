@@ -4,8 +4,8 @@ dashboards, and the measured results (benchmark and agent evals).
 
     python showcase.py
 
-Reads docs/examples/index.json (written when the examples are generated), benchmark/results.csv and
-evals/results/*.json. No database or API calls.
+Reads docs/examples/index.json (written by make_examples.py), benchmark/results.csv and evals/sql_results/*.json
+(evals/score_sql.py). No database or API calls.
 """
 import glob
 import json
@@ -31,14 +31,14 @@ DIAGRAM = """
 
     <rect x="230" y="80" width="210" height="130" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
     <text x="335" y="108" text-anchor="middle" font-weight="600">Claude agent</text>
-    <text x="335" y="130" text-anchor="middle" fill="var(--ink2)">resolves words to codes</text>
+    <text x="335" y="130" text-anchor="middle" fill="var(--ink2)">resolves words, writes SQL</text>
     <text x="335" y="150" text-anchor="middle" fill="var(--ink2)">read-only tools, about</text>
     <text x="335" y="170" text-anchor="middle" fill="var(--ink2)">4 calls and 15 seconds</text>
-    <text x="335" y="192" text-anchor="middle" fill="var(--muted)" font-size="12">writes a spec, not code</text>
+    <text x="335" y="192" text-anchor="middle" fill="var(--muted)" font-size="12">picks the order lines</text>
 
     <rect x="490" y="80" width="220" height="130" rx="10" fill="var(--surface)" stroke="var(--line)"/>
-    <text x="600" y="108" text-anchor="middle" font-weight="600">Fixed Python harness</text>
-    <text x="600" y="130" text-anchor="middle" fill="var(--ink2)">builds the SQL, tunes 96 models</text>
+    <text x="600" y="108" text-anchor="middle" font-weight="600">Fixed Python code</text>
+    <text x="600" y="130" text-anchor="middle" fill="var(--ink2)">adds up, tunes 48 models</text>
     <text x="600" y="150" text-anchor="middle" fill="var(--ink2)">backtests vs last year</text>
     <text x="600" y="170" text-anchor="middle" fill="var(--ink2)">on months it never saw</text>
     <text x="600" y="192" text-anchor="middle" fill="var(--muted)" font-size="12">about 15 seconds</text>
@@ -84,8 +84,9 @@ def esc(s):
 def build():
     ex = json.loads((ROOT / "docs" / "examples" / "index.json").read_text())
     bench = pd.read_csv(ROOT / "benchmark" / "results.csv").dropna(subset=["rel_mae"])
-    evals = json.loads(Path(sorted(glob.glob(str(ROOT / "evals" / "results" / "2*.json")))[-1]).read_text())  # full runs only
-    n_ok, n_runs = sum(r["passed"] for r in evals), len(evals)
+    evals = json.loads(Path(sorted(glob.glob(str(ROOT / "evals" / "sql_results" / "2*.json")))[-1]).read_text())
+    n_ok, n_runs, n_data = sum(r["passed"] for r in evals), len(evals), sum(r["data"] for r in evals)
+    n_req = len({r["id"] for r in evals})
     beat = int((bench.rel_mae < 1).sum())
     end_to_end = sorted(e["agent_seconds"] + e["harness_seconds"] for e in ex)[len(ex) // 2]
     cost = sorted(e["cost"] for e in ex)[len(ex) // 2]
@@ -100,25 +101,28 @@ def build():
     tiles = [(f"{end_to_end:.0f} s", "plain English to dashboard (median)"),
              (f"${cost:.2f}", "Claude API cost per request"),
              (f"{beat} of {len(bench)}", "benchmark forecasts beat last year"),
-             (f"{n_ok}/{n_runs}", "agent eval runs correct")]
+             (f"{n_ok}/{n_runs}", "agent test runs correct")]
     tiles_html = "".join(f'<div class="tile"><div class="v">{v}</div><div class="k">{k}</div></div>' for v, k in tiles)
 
     body = f"""
 <h1>demand-on-demand</h1>
 <p class="asked">Ask for a demand forecast in plain English. Get a tested forecast and dashboard in under a minute.</p>
 <p>A business user types a question like <em>"monthly forecast of Tito's minis in Des Moines for the next 5 months"</em>.
-One Claude agent turns the words into a precise request against a company-style Postgres warehouse of 26 million
-Iowa liquor orders (2016 to 2026). A fixed Python harness then builds the data, tunes and tests the models against the
-simplest honest benchmark, the same month last year, and publishes a dashboard that says how far to trust the answer.</p>
+One Claude agent with read-only tools turns the words into SQL that picks the right orders from a company-style
+Postgres warehouse of 26 million Iowa liquor orders (2016 to 2026). Fixed Python code then adds them up, tunes and
+tests the models against the simplest honest benchmark, the same period last year, and publishes a dashboard that says
+how far to trust the answer. By week, month, quarter or year.</p>
 <div class="tiles">{tiles_html}</div>
 
 <h2 id="how">How it works</h2>
 {DIAGRAM}
 <ul>
 <li><strong>The AI decides what to forecast; code decides how.</strong> The agent resolves products, places, measures
-and horizons with read-only tools, and hands over a spec. It knows the warehouse from a
-<a href="data_dictionary.html">data dictionary</a> of every table and column, read from the database. It never writes
-the SQL, the train/test split, the metrics or the charts. Those are fixed code, the same for every request.</li>
+and horizons with read-only tools, and writes one SQL query that picks the order lines: which lines, which measure,
+how to label each series. It knows the warehouse from a <a href="data_dictionary.html">data dictionary</a> of every
+table and column, read from the database, plus three rules for its traps and the company's business definitions. It
+never touches the sums, the train/test split, the metrics or the charts. Those are fixed code, the same for every
+request.</li>
 <li><strong>Honest accuracy.</strong> Every forecast is backtested on the last 24 months, which no choice ever saw.
 Model settings are tuned on the two years before that, and "same month last year" is always a candidate: a model is
 used only as far as it beats it.</li>
@@ -131,7 +135,7 @@ in the Python process and never appear in a prompt.</li>
 </ul>
 
 <h2 id="examples">Example forecasts</h2>
-<p>Five requests typed in plain English, each run once, shown as they came out, the misses included.</p>
+<p>{len(ex)} requests typed in plain English, each run once, shown as they came out, the misses included.</p>
 <div class="cards">{cards}</div>
 
 <h2 id="results">How good is it?</h2>
@@ -141,21 +145,21 @@ last year" on <strong>{beat}</strong>, with a median error {1 - bench.rel_mae.me
 (median monthly error {bench.model_error.median():.1%} vs {bench.baseline_error.median():.1%}). Retail demand here is
 very regular year to year, so last year is a hard baseline to beat, and on the rest it was not beaten.
 <a href="{REPO}/blob/main/benchmark/report.md">Full benchmark</a>.</p>
-<p><strong>Agent accuracy.</strong> {n_ok} of {n_runs} runs across {n_runs // 2} test requests produced exactly the right
-product, place, measure and horizon, or correctly declined (a city outside Iowa, a 24-month horizon, a product too new
-to forecast). Every number in the dashboard summaries is checked against the harness's results.
-<a href="{REPO}/blob/main/evals/report.md">Eval report</a>.</p>
-<p><strong>Slot filling vs AI-written SQL.</strong> The same requests were also given to an agent that writes the SQL
-itself (NL2SQL), and the two monthly histories compared month by month: 11 of 18 matched with the data dictionary
-alone, 17 of 18 once three short rules were added to the AI's instructions. The wrong queries ran fine and matched the
-last 12 months; the errors hid in older history. <a href="differential.html">The test and what it found</a>.</p>
-<p><strong>Beyond monthly.</strong> A prototype lets the AI write the SQL so it can forecast by week, quarter or year, or
-for groups of stores the form cannot describe, while fixed code still does the bucketing, model selection, backtest and
-a cross-check of the AI's data against the tested path. <a href="onthefly.html">Weekly, quarterly and yearly examples</a>.</p>
+<p><strong>Agent accuracy.</strong> The agent's SQL is tested against an answer key: {n_req} requests (brands,
+categories, minis, cities, counties, a 207-store chain, weeks, quarters, a year, and requests it should decline), each
+with correct monthly totals built by hand-checked fixed code. Over {n_runs} runs, its order lines added up to the key in
+every month in {n_data}, and {n_ok} were right in every respect (grain and horizon too, or correctly declined). Every
+number in the dashboard summaries is checked against the models' results.
+<a href="{REPO}/blob/main/evals/sql_report.md">Test report</a>.</p>
+<p><strong>How it got there.</strong> An earlier version had the AI fill in a request form and fixed code write the
+SQL (slot filling). Comparing AI-written SQL with it month by month found three warehouse traps (renumbered products,
+recoded categories, brand names with extra words); <a href="differential.html">three short rules</a> fixed them. The
+answer key then showed every remaining miss was a business definition ("minis" by size, whiskey without whiskey
+liqueur), fixed with a short glossary. <a href="onthefly.html">Weekly, quarterly and yearly examples</a>.</p>
 
 <h2>Built with</h2>
 <p>Claude Code (building), the Claude API with Claude Sonnet 5 (the agent at runtime), Postgres, skforecast,
-LightGBM and scikit-learn, plotly. Code, specs, evals and write-up: <a href="{REPO}">github.com/joehahn/demand-on-demand</a>.</p>
+LightGBM and scikit-learn, plotly. Code, evals and write-up: <a href="{REPO}">github.com/joehahn/demand-on-demand</a>.</p>
 
 <div class="cta"><strong>Joseph M. Hahn, Ph.D., JMH DataSciences.</strong> Independent AI and machine learning
 consultant; eight years delivering AI systems in Oracle's AI Center of Excellence. If your business runs on forecasts

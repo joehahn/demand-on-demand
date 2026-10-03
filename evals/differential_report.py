@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from dod.panel import build_sql  # noqa: E402
 from dod.spec import Spec  # noqa: E402
-from dod.nl2sql import RULES as RULES_TEXT  # noqa: E402
+from dod.agent import RULES as RULES_TEXT  # noqa: E402
 from dod.viz import page  # noqa: E402
 
 HERE = Path(__file__).parent

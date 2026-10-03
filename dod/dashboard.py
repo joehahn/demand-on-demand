@@ -292,26 +292,18 @@ def agent_step(t):
         found = [name(r) for r in rows if name(r)]
         shown = ", ".join(found[:3]) + (f" and {len(found) - 3} more" if len(found) > 3 else "")
         return f"Searched {KIND_WORDS.get(kind, kind)} for \u201c{args.get('text', '')}\u201d: found {shown or 'nothing'}."
-    if t["tool"] == "preview_spec":
-        detail = next((l.split("): ", 1)[-1] for l in out.splitlines() if l.startswith("- ")), "")
-        first = out.splitlines()[0] if out else ""
-        n = first.split(";", 1)[1].strip().rstrip(".") if ";" in first else ""
-        return f"Previewed the request, without models: {n}{'; ' + detail if detail else ''}."
     if t["tool"] == "run_select":
         return f"Ran a read-only query: {args.get('sql', '')[:120]}"
     if t["tool"] == "ask_user":
         return f"Asked: \u201c{args.get('question', '')}\u201d Answer: \u201c{out}\u201d"
-    if t["tool"] == "submit_spec":
-        return "Submitted the request; the harness checked and accepted it."
-    if t["tool"] == "submit_daily":   # on-the-fly path: its own SQL, the grain and the horizon
+    if t["tool"] == "submit_query":   # its SQL for the order lines, the grain and the horizon
         import re   # the stored input is shortened (the SQL is long), so read grain and horizon from the text
-        days = out.split("Accepted: ")[-1].split(" daily")[0] if "Accepted" in out else ""
         grain = re.search(r'"grain": "(\w+)"', t["input"])
         horizon = re.search(r'"horizon": (\d+)', t["input"])
         ahead = (f", {horizon.group(1)} {grain.group(1)}{'s' if horizon.group(1) != '1' else ''} ahead"
                  if grain and horizon else "")
-        return (f"Submitted its SQL for the daily history ({int(days):,} days){ahead}; it was checked to be one "
-                f"read-only SELECT and run." if days.isdigit() else f"Submitted its SQL{ahead}.")
+        return (f"Submitted its SQL for the order lines{ahead}; fixed code checked it is one read-only SELECT with the "
+                f"right columns.")
     return f"{t['tool']}: {out[:120]}"
 
 
@@ -319,14 +311,13 @@ MEASURE_WORDS = {"sales_bottles": "bottles", "sales_dollars": "dollars", "sales_
 
 
 def spec_table(spec, res):
-    """The request the harness ran, in plain words: one row per field of the spec."""
+    """How the agent read the request, in plain words: one row per field."""
     kept = set(res.get("feature_groups", []))
     tried = ", ".join(f"{FEATURE_NAMES.get(f, f)} ({'kept' if f in kept else 'dropped'})" for f in spec.features)
-    codes = lambda x: ", ".join(x.codes) if x.codes else "all"
     rows = [("measure", MEASURE_WORDS.get(spec.target, spec.target), "what is forecast"),
             (f"{units()} ahead", str(spec.horizon), "how far ahead"),
-            ("product", f"{spec.product.label} ({spec.product.kind} {codes(spec.product)})", "which products, by code"),
-            ("place", f"{spec.region.label} ({spec.region.kind} {codes(spec.region)})", "where"),
+            ("product", spec.product, "which products (the SQL decides exactly which)"),
+            ("place", spec.place, "where (the SQL decides exactly which stores)"),
             ("breakout", "combined into one forecast" if spec.series_by == "none" else f"one forecast per {spec.series_by}",
              "one total or several"),
             ("history from", spec.start[:7], "the earliest month used"),
@@ -334,41 +325,16 @@ def spec_table(spec, res):
     return table(pd.DataFrame(rows, columns=["field", "value", "meaning"]), bold=("field",))
 
 
-def sql_words(spec, panel):
-    """What the aggregation SQL does, in one sentence."""
-    from .panel import member_items, older_numbers   # the same item list the SQL was built from
-    unit = MEASURE_WORDS.get(spec.target, spec.target)
-    extra = ""
-    if spec.product.kind in ("item", "name"):   # renumbered items: the SQL also reads the products' older numbers
-        older = older_numbers(member_items(spec))
-        if older:
-            which = ", ".join(older) if len(older) <= 3 else f"{len(older)} older item numbers"
-            extra = (f" (with {which}{', older item numbers of the same products' if len(older) <= 3 else ' of the same products'},"
-                     " so their history is complete)")
-    return (f"Adds up {unit} per month and store for {spec.product.label}{extra} in {spec.region.label}, "
-            f"from {spec.start[:7]} on.")
-
-
 SITE = "https://joehahn.github.io/demand-on-demand"
-# the harness's SQL always reads these three tables; what each one decides in this forecast
-TABLES_USED = [("sales.invoice_line", "summed by month: the series being forecast"),
-               ("sales.item", "which order lines belong to the product"),
-               ("sales.store", "which stores are in the place")]
-
-
-def agent_knowledge(ai_sql=None):
-    """How the agent knows the tables and columns: the dictionary it reads, and the tables this forecast used (the
-    harness's three, or for AI-written SQL, the tables that query reads)."""
+def agent_knowledge(sql):
+    """How the agent knows the tables and columns: the dictionary it reads, and the tables its query read."""
     from .agent import schema_rows   # imported here: the agent module imports the harness, which imports this one
     rows = schema_rows()
     notes = rows.groupby("tbl").table_note.first()
-    if ai_sql:
-        import sqlglot
-        from sqlglot import exp
-        read = sorted({f"{t.db}.{t.name}" for t in sqlglot.parse_one(ai_sql, read="postgres").find_all(exp.Table) if t.db})
-        used = [(tbl, "read by the AI's query") for tbl in read]
-    else:
-        used = [(tbl, role.replace("summed by month", f"summed by {W['unit']}")) for tbl, role in TABLES_USED]
+    import sqlglot
+    from sqlglot import exp
+    read = sorted({f"{t.db}.{t.name}" for t in sqlglot.parse_one(sql, read="postgres").find_all(exp.Table) if t.db})
+    used = [(tbl, "read by the AI's query") for tbl in read]
     t = pd.DataFrame([(tbl, role, notes.get(tbl, "")) for tbl, role in used],
                      columns=["table", "used for", "what the agent is told about it"])
     return (f"<p><strong>How it knows the tables and columns.</strong> At the start of every request the agent reads the "
@@ -382,40 +348,32 @@ def agent_knowledge(ai_sql=None):
 GITHUB = "https://github.com/joehahn/demand-on-demand/blob/main"
 
 
-def check_words(c):
-    """The cross-check of the AI's data against the slot-filling reference, in one sentence."""
-    if c["status"] == "passed":
-        return (f"Cross-check passed: the AI's daily totals, summed by month, equal the series the tested slot-filling "
-                f"path builds independently from the request form, in all {c['months']} months.")
-    if c["status"] == "failed":
-        return (f"Cross-check FAILED in {c['bad_months']} of {c['months']} months: the AI's data and the request form it "
-                f"filled in describe different things, so check before trusting this forecast.")
-    return f"Cross-check not available: {c['why']}."
+TESTED = (f'Tested: on <a href="{GITHUB}/evals/sql_report.md">34 test requests run 3 times each</a>, the agent\'s '
+          f"order lines added up to the answer key's monthly totals in 101 of 102 runs.")
 
 
-def ai_prep_rows(ai, unit, panel, wide):
-    """The on-the-fly path's own steps for this forecast."""
+def query_prep_rows(unit, panel, wide):
+    """This forecast's own steps: the AI's query, then fixed code's sums."""
     shape = {"week": "weeks (Monday to Sunday)", "quarter": "calendar quarters"}.get(W["grain"], "calendar months")
-    otf = f'<a href="{GITHUB}/dod/onthefly.py">dod/onthefly.py</a>'
-    return [("This forecast", f"The AI wrote one SQL query returning daily {unit} totals for this request (see The SQL as "
-             f"run); it was checked to be a single read-only SELECT before it ran.",
+    hist = f'<a href="{GITHUB}/dod/history.py">dod/history.py</a>'
+    return [("This forecast", f"The AI wrote one SQL query that picks the order lines for this request and the {unit} on "
+             f"each (see The SQL as run). It was checked to be a single read-only SELECT before it ran. {TESTED}",
              f'the AI (Claude), checked by <a href="{GITHUB}/dod/sqlcheck.py">dod/sqlcheck.py</a>'),
-            ("This forecast", f"Bucketed the days into {shape}, complete {units()} only. A {W['unit']} with no orders "
-             f"counts as 0, since the warehouse was checked to have orders in every month from {when(panel.start)} to "
-             f"{when(wide.index[-1])}; {units()} before the first sale are left blank.", otf + " (Python)"),
-            ("This forecast", esc(check_words(ai["check"])), otf + " (SQL + Python)")]
+            ("This forecast", f"Added the lines up by {shape} and by store, complete {units()} only. A {W['unit']} with no "
+             f"orders counts as 0, since the warehouse was checked to have orders in every month from "
+             f"{when(panel.start)} to {when(wide.index[-1])}; {units()} before the first sale are left blank.",
+             hist + " (SQL + Python)")]
 
 
-def prep_section(spec, panel, res, unit, wide, ai=None):
+def prep_section(spec, panel, res, unit, wide):
     """How this forecast's data was prepared: what was done once in the warehouse (SQL run by load_data.py) and what
-    the harness did for this request (SQL + Python), with the details that touched this forecast's own numbers."""
+    fixed code did for this request (SQL + Python), with the details that touched this forecast's own numbers."""
     from . import db
-    from .panel import member_items
     fixes = dict(db.query("SELECT fix_id, rows_affected FROM meta.data_fixes").itertuples(index=False, name=None))
     n = lambda k: f"{int(fixes.get(k, 0)):,}"
     fixed = lambda anchor: f'<a href="{SITE}/data_fixes.html#{anchor}">details</a>'
     code = lambda f, what: f'<a href="{GITHUB}/{f}">{what}</a>'
-    items = member_items(spec) if spec.product.kind in ("item", "category", "name") else []
+    items, sql = panel.items, panel.sql.lower()
     rows = []
 
     # once, in the warehouse
@@ -426,19 +384,16 @@ def prep_section(spec, panel, res, unit, wide, ai=None):
                  f"SQL run by {w} (raw, curate)"))
     rows.append(("Warehouse, once", f"Removed {n('export_duplicates')} rows the state's export repeats verbatim, and "
                  f"{n('zero_value_lines')} zero lines (likely cancelled). {fixed('duplicates')}", f"SQL in {w} (clean)"))
-    if spec.product.kind in ("item", "name"):
-        from .panel import older_numbers
-        older = older_numbers(items)
-        if older:
-            which = ", ".join(older[:4]) + (f" and {len(older) - 4} more" if len(older) > 4 else "")
-            verb = "is an older number" if len(older) == 1 else "are older numbers"
-            rows.append(("Warehouse, once", f"Joined renumbered items: {which} {verb} of this product, so its history is "
-                         f"continuous. {fixed('renumbering')}",
-                         f"Python + SQL in {w} (clean)"))
-    if spec.product.kind == "category" or spec.series_by == "category":
+    older = panel.older
+    if older:   # renumbered products in this forecast: their older numbers carry the early history
+        which = ", ".join(older[:4]) + (f" and {len(older) - 4} more" if len(older) > 4 else "")
+        verb = "is an older number" if len(older) == 1 else "are older numbers"
+        rows.append(("Warehouse, once", f"Joined renumbered items: {which} {verb} of products in this forecast, so their "
+                     f"history is continuous. {fixed('renumbering')}", f"Python + SQL in {w} (clean)"))
+    if "category" in sql or spec.series_by == "category":
         rows.append(("Warehouse, once", "Restated every order in today's category taxonomy (codes were reassigned in 2016 "
                      f"and Cocktails/RTD recoded in 2022). {fixed('categories')}", f"SQL in {w} (clean)"))
-    if unit in ("bottles", "liters") and items:
+    if unit in ("bottles", "liters") and items and len(items) <= 5000:
         u = db.query("SELECT u.item_no, i.item_desc, u.units_per_sale FROM sales.item_units u JOIN sales.item i "
                      "USING (item_no) WHERE u.item_no = ANY(%s)", (items,))
         known, unknown = u[u.units_per_sale.notna()], u[u.units_per_sale.isna()]
@@ -454,9 +409,10 @@ def prep_section(spec, panel, res, unit, wide, ai=None):
     if unit == "liters":
         rows.append(("Warehouse, once", f"Recomputed liters as bottles x volume ({n('liters_truncated')} lines from Nov "
                      f"2025 to Jan 2026 had been rounded down to whole liters). {fixed('liters')}", f"SQL in {w} (clean)"))
+    cities = list(panel.stores.city.dropna().unique()) if "city" in sql and panel.stores is not None else []
     variants = db.query("SELECT city_recorded, city FROM sales.city_crosswalk WHERE city = ANY(%s)",
-                        (spec.region.codes or [],)) if spec.region.kind == "city" else pd.DataFrame()
-    if len(variants) or spec.series_by == "city":   # only when this forecast's city was spelled more than one way
+                        (cities,)) if cities else pd.DataFrame()
+    if len(variants):   # only when a city in this forecast was spelled more than one way
         eg = (f"{variants.city_recorded.iloc[0]} counted as {variants.city.iloc[0]}" if len(variants)
               else "e.g. MT PLEASANT and MOUNT PLEASANT")
         rows.append(("Warehouse, once", f"Gave each city one spelling ({eg}). {fixed('cities')}",
@@ -465,25 +421,17 @@ def prep_section(spec, panel, res, unit, wide, ai=None):
         rows.append(("Warehouse, once", "Carried the latest Census population forward to months Census has not published "
                      f"yet, flagged. {fixed('census')}", f"SQL in {w} (clean)"))
 
-    if spec.region.kind in ("city", "county") or spec.series_by in ("city", "county"):
+    if "city" in sql or "county" in sql or spec.series_by in ("city", "county"):
         rows.append(("Warehouse, once", "Counted each store in its current city and county for its whole history (a few "
                      "stores moved or were re-recorded over the years).", f"SQL in {w} (curate)"))
 
-    # for this forecast, in the harness
-    panel_py = code("dod/panel.py", "dod/panel.py")
-    if ai:   # on-the-fly: the AI wrote the SQL; fixed code bucketed its daily totals and checked them
-        rows += ai_prep_rows(ai, unit, panel, wide)
-    else:
-        rows.append(("This forecast", f"Summed {unit} per month for this product and place, complete months only (see The "
-                     f"SQL as run). A month with no orders counts as 0, since the warehouse was checked to have orders in every "
-                     f"month from {pd.Timestamp(panel.start):%b %Y} to {wide.index[-1]:%b %Y}, so it is a real zero, not missing "
-                     f"data. Months before the first sale are left blank.", panel_py + " (SQL + Python)"))
-    if any(c.get("pool") for c in res.get("ensemble") or []) and panel.pool is not None:
-        rows.append(("This forecast", f"Also summed the same product per month in the {panel.pool[0].shape[1]} busiest "
-                     "counties, for the pooled model to learn from (it still forecasts only this place).",
-                     panel_py + " (SQL + Python)"))
+    # for this forecast: the AI's query, then fixed code
+    rows += query_prep_rows(unit, panel, wide)
     kept = res.get("feature_groups", [])
-    built = {"season": "time of year (the sine and cosine of the date, a smooth yearly cycle)",
+    built = {"calendar": f"calendar inputs (month of year, business days and federal holidays in each {W['unit']}, from the "
+                         "warehouse's calendar table)",
+             "population": "Census population of the counties this forecast's stores are in",
+             "season": "time of year (the sine and cosine of the date, a smooth yearly cycle)",
              "holiday_weeks": "holiday weeks (Thanksgiving, Christmas, New Year's, July 4th)",
              "stores": "active stores (stores that ordered the product in the 12 months before each period, carried "
                        "forward unchanged into the forecast)"}
@@ -491,9 +439,6 @@ def prep_section(spec, panel, res, unit, wide, ai=None):
         rows.append(("This forecast", "Built inputs for every " + W["unit"] + ", including the ones ahead: "
                      + "; ".join(built[g] for g in built if g in kept) + ".",
                      f'<a href="{GITHUB}/dod/features.py">dod/features.py</a> (Python)'))
-    if "calendar" in res.get("feature_groups", []):
-        rows.append(("This forecast", "Built calendar inputs for every month, including the months ahead: month of year, "
-                     "business days and federal holidays, from the warehouse's calendar table.", panel_py + " (Python)"))
     targets = {c["target"] for c in res.get("ensemble") or []}
     scaled = "each series and input scaled to mean 0, spread 1 before fitting, and predictions scaled back"
     if targets == {"yoy"}:
@@ -511,9 +456,8 @@ def prep_section(spec, panel, res, unit, wide, ai=None):
                    for key, title in sections)
     return (f"<p>{W['adj'].capitalize()} {unit} from {when(panel.start)} through {when(wide.index[-1])}. How the data was "
             f"prepared: fixed once in the warehouse, before any forecast, then shaped for this request by the harness. "
-            + (f"On this prototype path the AI wrote the query for the daily history (the first step after the "
-               f"request); every other step is fixed code that runs the same way for every request. " if ai else
-               f"The AI agent takes no part in these steps: they are fixed code that runs the same way for every request. ")
+            + f"The AI wrote the query that picks the order lines (the first step after the request); every other step "
+              f"is fixed code that runs the same way for every request. "
             + f"The code itself was written in advance with Claude Code, with a person reviewing and approving every data fix.</p><div class=\"tbl\"><table><thead><tr>{head}</tr></thead>"
             f"<tbody>{body}</tbody></table></div>")
 
@@ -544,34 +488,21 @@ def model_label(usage):
 
 def toolbox_html(usage):
     """What the agent does, in two sentences, with links to its instructions and tools."""
-    from .tools import TOOLS
-    return (f"<p><strong>The agent's toolbox.</strong> The AI agent ({esc(model_label(usage))}) does slot filling: it fills "
-            f"in a short request form (product, place, measure, months) using {len(TOOLS)} read-only lookup tools, and "
-            f"fixed code turns that form into SQL. Unlike text-to-SQL, it never writes the query that feeds the forecast "
+    from .agent import TOOLS
+    return (f"<p><strong>The agent's toolbox.</strong> The AI agent ({esc(model_label(usage))}) does text-to-SQL: it "
+            f"looks up names with {len(TOOLS) - 1} read-only tools, then writes one query that picks the order lines to "
+            f"forecast. It follows three rules for this warehouse's traps and the company's business definitions "
             f"(<a href=\"{REPO}/blob/main/dod/agent.py\">instructions</a>, "
             f"<a href=\"{REPO}/blob/main/dod/tools.py\">tools</a>).</p>")
 
 
-def exact_html(spec, res, panel, ai=None):
-    """Exactly what ran: the request form and the harness's SQL, or for the on-the-fly path the AI's SQL and the form
-    it filled in for the cross-check."""
-    if not ai:
-        return (f"<p>The exact request the harness ran. It is the agent's only input to the result: everything after it "
-                f"(the SQL, the models, the scoring and this page) is fixed code.</p>{spec_table(spec, res)}"
-                f"<details><summary>The request as run</summary><p>Save it as spec.json and run "
-                f"<code>python -m dod.run spec.json</code> to reproduce this forecast.</p>"
-                f"<pre>{esc(spec.model_dump_json(indent=2))}</pre></details>"
-                f"<details><summary>The SQL as run</summary><p>{esc(sql_words(spec, panel))} Generated by the harness from "
-                f"the request, never written by the AI, and run under a read-only database login.</p>"
-                f"<pre>{esc(panel.sql)}</pre></details>")
-    return (f"<p>What ran: the AI's SQL for the daily history, then fixed code for everything after it. The table is the "
-            f"request form the AI also filled in; fixed code used it to rebuild the history independently for the "
-            f"cross-check. {esc(check_words(ai['check']))}</p>{spec_table(spec, res)}"
+def exact_html(spec, res, panel):
+    """Exactly what ran: the agent's reading of the request and its SQL; everything after it is fixed code."""
+    return (f"<p>What ran: the AI's SQL for the order lines, then fixed code for everything after it. {TESTED}</p>"
+            f"{spec_table(spec, res)}"
             f"<details><summary>The SQL as run</summary><p>Written by the AI, checked to be one read-only SELECT, and run "
-            f"under a read-only database login. It returns daily totals; fixed code bucketed them into {units()}.</p>"
-            f"<pre>{esc(ai['sql'])}</pre></details>"
-            f"<details><summary>The request form as filled in</summary><pre>{esc(spec.model_dump_json(indent=2))}</pre>"
-            f"</details>")
+            f"under a read-only database login, inside fixed code's own sums (by {W['unit']}, store and product).</p>"
+            f"<pre>{esc(panel.sql)}</pre></details>")
 
 
 def big_buyer_note(stores, unit, n_series):
@@ -638,7 +569,7 @@ def stores_section(stores, spec, unit, last_month, plot):
     fig = fig_store_map(stores, unit) if {"lat", "lon"} <= set(stores.columns) else None
     money = "$" if unit == "dollars" else ""
     return (f"<h3>Stores included</h3><p>The forecast adds up the orders of {len(stores):,} stores in "
-            f"{esc(spec.region.label)} that bought {esc(spec.product.label)} since {spec.start[:7]}; "
+            f"{esc(spec.place)} that bought {esc(spec.product)} since {spec.start[:7]}; "
             f"{len(recent):,} of them ordered it in the 12 months to {last_month:%b %Y}. Stores that closed still "
             f"count in the months they were open.</p>"
             + (plot(fig) if fig is not None else "") +
@@ -662,7 +593,7 @@ def read_as_html(spec, unit, months, wide, assumptions_html):
     """How the request was read, as one line of short phrases, with the agent's assumptions one click away."""
     n = wide.shape[1]
     series = "combined into one forecast" if spec.series_by == "none" else f"one forecast per {spec.series_by} ({n})"
-    parts = [spec.product.label, spec.region.label, f"{unit} per {W['unit']}", months.replace(" ", "\u00a0"), series]
+    parts = [spec.product, spec.place, f"{unit} per {W['unit']}", months.replace(" ", "\u00a0"), series]
     why = (f'<details class="note"><summary>Why it was read this way</summary><ul>{assumptions_html}</ul></details>'
            if assumptions_html else "")
     return f'<p class="readas"><span>Read as</span> {" &middot; ".join(esc(x) for x in parts)}</p>{why}'
@@ -769,8 +700,9 @@ def inputs_section(res, plot):
             f"comparison in the Test period, which no choice ever saw. {verdict}</p>{plot(fig_inputs(eff))}")
 
 
-def build(spec, panel, res, usage=None, agent=None, harness_seconds=None, ai=None):
-    """The dashboard. ai is set for the on-the-fly path (dod/onthefly.py): the AI's SQL, form fill and cross-check."""
+def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
+    """The dashboard for one forecast: spec is the agent's Plan at the model's grain (dod/plan.py), panel the history
+    fixed code built from its SQL (dod/history.py), res the model's results (dod/model.py)."""
     set_grain(spec.grain)
     plot = Plots(numbered=True, toolbar=False)
     wide, fc, bt, ps = panel.series, res["forecast"], res["backtest"], res["per_step"]
@@ -854,16 +786,11 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None, ai=Non
         tr = pd.DataFrame(agent.get("trace", []))
         if not tr.empty:
             steps = "".join(f"<li>{esc(agent_step(t))}</li>" for t in agent.get("trace", []))
-            intro = ("How the AI agent (Claude) turned the request into what \u201cRead as\u201d shows at the top: the "
-                     "exact products, place, measure and months. Its tools only look things up; it never writes the SQL "
-                     f"or the models, and the harness checks the request before running it.</p>{toolbox_html(usage)}")
-            if ai:
-                intro = ("How the AI agent (Claude) turned the request into what \u201cRead as\u201d shows at the top. On "
-                         "this prototype path it writes the SQL for the daily history itself (text-to-SQL, with "
-                         f'<a href="{SITE}/differential.html">three rules for this warehouse</a>), and names the time '
-                         "grain. Fixed code checks the SQL is one read-only SELECT, buckets the days, picks and tests "
-                         "the model, and cross-checks the AI's data against the tested path.</p>")
-            trace_html = (f"<h2>What the agent did</h2><p>{intro}{agent_knowledge(ai['sql'] if ai else None)}"
+            intro = ("How the AI agent (Claude) turned the request into what \u201cRead as\u201d shows at the top. It "
+                     "writes the SQL that picks the order lines (text-to-SQL) and names the time grain; fixed code checks "
+                     "the SQL is one read-only SELECT, adds the lines up, picks and tests the model, and draws this "
+                     f"page.</p>{toolbox_html(usage)}")
+            trace_html = (f"<h2>What the agent did</h2><p>{intro}{agent_knowledge(panel.sql)}"
                           "<p><strong>What it did, step by step:</strong></p>"
                           f"<ol>{steps}</ol><details><summary>The raw tool calls</summary>"
                           + table(tr[["turn", "tool", "input", "result"]], nowrap=("turn", "tool"), mono=("result",), wide=("input",)) + "</details>")
@@ -897,7 +824,7 @@ actually happened and with the simplest serious baseline: the {base()}.</p>
 {plot(fig_accuracy(ps))}
 
 <h2>How the data was prepared</h2>
-{prep_section(spec, panel, res, unit, wide, ai)}
+{prep_section(spec, panel, res, unit, wide)}
 {features_section(spec, panel, res, unit, fc)}
 {stores_section(panel.stores, spec, unit, wide.index[-1], plot)}
 
@@ -917,7 +844,7 @@ on the same {units()}; the test window was not used for any choice.</p>
 {trace_html}
 <h2>Exactly what ran</h2>
 {cost}
-{exact_html(spec, res, panel, ai)}
+{exact_html(spec, res, panel)}
 
 <footer>
 Data: <a href="https://catalog.data.gov/dataset?q=iowa+liquor+sales">Iowa Liquor Sales</a>, State of Iowa, via the Iowa

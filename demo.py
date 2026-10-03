@@ -2,11 +2,11 @@
 demo.py: run the canned requests in demo/requests.json in front of an audience.
 
     python demo.py                 # list the requests
-    python demo.py 3               # run request 3 live (agent + harness, ~40 s) and open its dashboard
+    python demo.py 3               # run request 3 live (agent + fixed code, ~40 s) and open its dashboard
     python demo.py 3 --replay      # open the copy saved at rehearsal (no network or API needed)
     python demo.py "any request"   # an audience request, live
     python demo.py --rehearse      # run every request live and save copies to demo/saved/ for --replay
-    python demo.py --check         # agent evals on the demo requests only (spec-only, a few cents)
+    python demo.py --check         # score the agent's SQL on the demo requests against the answer key (a few cents)
 
 Live runs are interactive: if the agent needs a clarification, it asks here and you type the answer.
 """
@@ -18,7 +18,7 @@ import time
 import webbrowser
 from pathlib import Path
 
-from dod import agent
+from dod import forecast
 
 ROOT = Path(__file__).parent
 REQUESTS = json.loads((ROOT / "demo" / "requests.json").read_text())
@@ -34,7 +34,7 @@ def run(request, save_as=None):
     """Run one request live, open its dashboard, and optionally keep a copy for --replay."""
     print(f"\n“{request}”\n")
     t0 = time.time()
-    result = agent.ask(request, interactive=True)
+    result = forecast.forecast(request, interactive=True)
     if result["status"] != "ok":
         print(f"\nNo forecast ({result['status']}): {result.get('message', '')}")
         if save_as:  # a decline is part of the demo too: keep its message for replay
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if "--check" in sys.argv:
         ids = ",".join(r["id"] for r in REQUESTS)
-        sys.exit(subprocess.call([sys.executable, str(ROOT / "evals" / "run_evals.py"), "--only", ids]))
+        sys.exit(subprocess.call([sys.executable, str(ROOT / "evals" / "score_sql.py"), "--runs", "1", "--only", ids]))
     elif "--rehearse" in sys.argv:
         for r in REQUESTS:
             run(r["request"], save_as=r["id"])

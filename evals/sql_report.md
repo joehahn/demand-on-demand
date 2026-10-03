@@ -1,6 +1,6 @@
 # AI-written SQL scored against the answer key
 
-34 requests x 3 runs = 102 runs. Passed: **101 of 102** (data right in 102, reading right in 101). Requests right in every run: 33 of 34. Cost $1.84, median 14 s and 4 tool calls per request.
+34 requests x 3 runs = 102 runs. Passed: **101 of 102** (data right in 101, reading right in 102). Requests right in every run: 33 of 34. Cost $1.81, median 13 s and 4 tool calls per request.
 
 | request | passed | what went wrong |
 |---|---|---|
@@ -15,7 +15,7 @@
 | Forecast Jack Daniel's bottle sales in Iowa City for the next 4 months | 3/3 |  |
 | What revenue should we expect from Fireball in Linn County next quarter? | 3/3 |  |
 | Total liters of liquor sold statewide over the next 6 months | 3/3 |  |
-| Monthly bottle sales for all Diageo products in Scott County, next 6 months | 3/3 |  |
+| Monthly bottle sales for all Diageo products in Scott County, next 6 months | 2/3 | 121 of 128 months differ (first 2016-01-01), off by 1.94% |
 | Tito's bottles in St. Ansgar for the next 4 months | 3/3 |  |
 | Bottled in bond bourbon bottles statewide, next 3 months | 3/3 |  |
 | Forecast each Tito's 100 ml item statewide for the next 6 months | 3/3 |  |
@@ -23,7 +23,7 @@
 | Hawkeye Vodka bottles in Johnson County, next 5 months | 3/3 |  |
 | How many bottles of whiskey will Ames stores order next month? | 3/3 |  |
 | Forecast vodka | 3/3 |  |
-| How many bottles of cream liqueur will Iowa stores order for the holidays? | 2/3 | read as 3 month, expected 4 month |
+| How many bottles of cream liqueur will Iowa stores order for the holidays? | 3/3 |  |
 | Forecast Tito's minis ordered by Hy-Vee #3 BDI in Des Moines for the next 6 months | 3/3 |  |
 | Weekly forecast of Tito's minis in Des Moines for the next 8 weeks | 3/3 |  |
 | Quarterly forecast of Fireball revenue in Linn County for the next 2 quarters | 3/3 |  |
@@ -38,3 +38,6 @@
 | Black Velvet bottles in Woodbury County for the next 4 months | 3/3 |  |
 | Weekly whiskey liqueur bottles statewide for the next 6 weeks | 3/3 |  |
 | Spiced rum sales dollars in Black Hawk County for the next 4 months | 3/3 |  |
+
+After this run, one business definition was added for the Diageo miss (a vendor's products are the lines it sold, not
+the products it owns today); that request then passed 3 of 3 (sql_results/check_diageo_*.json).

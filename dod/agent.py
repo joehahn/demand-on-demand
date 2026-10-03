@@ -1,8 +1,11 @@
-"""The forecasting agent: one Claude agent with read-only tools that turns a plain-English request into a
-spec for the fixed harness, which trains, backtests and draws the dashboard.
+"""The forecasting agent: one Claude agent with read-only tools that turns a plain-English request into SQL for the
+order lines to forecast, plus a short description of the request. Fixed code does everything after that: adds the
+lines up (dod/history.py), picks and tests the model (dod/model.py) and draws the dashboard (dod/forecast.py).
 
     python -m dod.agent "monthly forecast of Tito's minis in Des Moines for the next 5 months" [--interactive]
-    python -m dod.agent "..." --spec-only       # resolve the request, skip training
+    python -m dod.agent "..." --sql-only      # the agent's part only: print its SQL and reading, run no models
+
+How well its SQL matches an answer key of 34 requests: python evals/score_sql.py (evals/sql_report.md).
 """
 import json
 import os
@@ -11,8 +14,8 @@ import time
 
 import anthropic
 
-from . import db, run, tools
-from .spec import MAX_HORIZON
+from . import db, history, tools
+from .plan import MAX_AHEAD, Plan
 
 MODEL = os.environ.get("DOD_AGENT_MODEL", "claude-sonnet-5")
 EFFORT = os.environ.get("DOD_AGENT_EFFORT", "medium")
@@ -48,44 +51,85 @@ def schema_text():
                                                  for r in g.itertuples()))
     return "\n".join(out)
 
+
+# Rules for the three warehouse traps the first test of AI-written SQL found (docs/differential.html).
+RULES = """## Rules for this warehouse (follow them exactly)
+1. Products: never filter order lines on item_no alone. Products were renumbered over the years; select the product's
+   whole family: il.item_no IN (SELECT item_no FROM sales.item WHERE family_item_no IN (...)).
+2. A brand (every size and flavor): match ALL the brand's words anywhere in the family's current name, not as a
+   prefix (barrel picks are named e.g. 'BP CROWN ROYAL ...'): il.item_no IN (SELECT i.item_no FROM sales.item i JOIN
+   sales.item h ON h.item_no = i.family_item_no WHERE h.item_desc ILIKE '%CROWN%' AND h.item_desc ILIKE '%ROYAL%').
+3. Categories: never use invoice_line.category_code (codes were reassigned in 2016). Use today's category of the
+   product: il.item_no IN (SELECT item_no FROM sales.item WHERE category_current IN (...)).
+
+"""
+
+GLOSSARY = """## Business definitions (the company's dictionary; follow them unless the user says otherwise)
+- A brand (e.g. Hawkeye Vodka, Crown Royal) means every product of that brand: all sizes, flavors, packs and barrel
+  picks.
+- A spirit type (whiskey, vodka, American vodka, rum, ...) means its own categories, flavored ones included (American
+  vodka includes American Flavored Vodka), but not liqueurs or ready-to-drink cocktails made from it: whiskey does not
+  include Whiskey Liqueur (e.g. Fireball). Select the categories by name, never by a typed list of codes, e.g. whiskey:
+  il.item_no IN (SELECT i.item_no FROM sales.item i JOIN sales.category c ON c.category_code = i.category_current
+  WHERE c.category_name ILIKE '%WHISK%' AND c.category_name NOT ILIKE '%LIQUEUR%').
+- Sizes go by bottle size, not by words in the product name: minis are 50 ml, pints 375 ml, fifths 750 ml, liters
+  1000 ml, handles 1750 ml. Use the product family's size: h.bottle_volume_ml with h the family's current item.
+- A vendor's products (e.g. all Diageo products) means the order lines that vendor sold (l.vendor_no), not the
+  products it owns today: brands change hands.
+- A period named by an event or season means through its end: "for the holidays" is through December 31.
+
+"""
+
 SYSTEM = """You are the forecasting analyst for a company that sells to Iowa liquor retailers. A business user asks for a
-demand forecast in plain English. Your job is to turn the request into a precise spec for the forecasting harness,
-quickly. The harness, not you, builds the monthly series, trains and backtests models against a seasonal-naive
-baseline, and draws the dashboard. The warehouse is already clean: renumbered products are joined into one product
-(search returns one row per product), categories use today's taxonomy for all history, each city has one spelling.
+demand forecast in plain English, by week, month, quarter or year. Your job is to write ONE SQL query that picks the
+order lines to forecast, and to say plainly how you read the request. Fixed code adds the lines up by week or month,
+trains and backtests models, and draws the dashboard.
 
 ## Workflow
-1. Resolve every business word to warehouse codes with find_values (products, places). Check sizes, dates and volumes.
-2. Call preview_spec once to confirm the series look right (enough history, the right products and places).
-3. Call submit_spec with your assumptions. Aim for 3 to 6 tool calls in total.
+1. Resolve every business word to warehouse codes with find_values (products, places).
+2. Test parts of your query with run_select (it returns at most 100 rows, so add things up when you test), then call
+   submit_query. Aim for 3 to 6 tool calls.
 Ask the user (ask_user) only when a wrong guess would change the answer, and at most once.
-If the request cannot be served as asked (a product or place not in the data, a horizon over {max_h} months, or
-under 24 months of history for everything requested), do not submit; explain why in plain words and suggest what
-you could do instead. Never substitute a different place, product or horizon for the one the user asked for.
+If the request cannot be served as asked (a product or place not in the data, more than one year ahead), do not
+submit; explain why in plain words. Never substitute a different place, product or horizon for the one asked.
 Write plain text without em dashes.
 
-## Spec (JSON string passed to preview_spec and submit_spec)
-{{
-  "title": "short title, e.g. Tito's minis, Polk County, next 5 months",
-  "target": "sales_bottles" | "sales_dollars" | "sales_liters",   // bottles unless dollars/revenue or liters/volume asked
-  "horizon": 1-{max_h},                                             // months ahead; 6 if not stated
-  "product": {{"kind": "all" | "item" | "category" | "vendor" | "name", "codes": [...], "label": "readable name"}},
-  "region":  {{"kind": "statewide" | "county" | "city" | "store", "codes": [...], "label": "readable name"}},
-  "series_by": "none" | "county" | "city" | "item" | "category"    // one series per value; "none" = one total
-}}
-Codes: item -> item_no values exactly as find_values returns them; category -> category_code; vendor -> vendor_no;
-name -> the words of ONE brand in one string (e.g. ["crown royal"], ["hawkeye vodka"]): every product whose name
-contains all the words. Use name when a brand has more products than find_values shows, so none are left out, and
-check the product count preview_spec reports;
-county -> 5-digit county_fips; city -> city names as returned; store -> store_no.
-Products: a brand means all its sizes unless a size is named ("minis" = 50 ml). A kind of spirit ("whiskey",
-"vodka") means every category of that kind. Places: a county name -> that county; a city name -> the city (ask if
-the user might mean the metro or county); "Iowa" or no place -> statewide. series_by: use it only when the user asks
-for each / by / per / broken out.
+## The query you submit
+One SELECT over the sales and ref schemas (schema-qualified tables), one row per order line (no GROUP BY), returning
+exactly these columns:
+  day       the order date: l.ordered_on
+  store_no  l.store_no
+  item_no   l.item_no
+  series    text: 'total' for one forecast; for a breakout, one readable name per series (e.g. the county name)
+  value     the line's measure: l.sales_bottles unless dollars/revenue (l.sales_dollars) or liters/volume
+            (l.sales_liters) are asked
+Include all history from 2016-01-01. Fixed code never runs your query as is: it wraps it in its own sums, so the query
+may select millions of lines.
 
-## Warehouse tables (read-only)
+## How you read the request (submit_query fields)
+grain: "week" | "month" | "quarter" | "year" (as asked; "month" if not stated). horizon: periods ahead in that grain
+(weeks up to 52, months up to 12, quarters up to 4, years 1; 6 months if not stated). measure: bottles, dollars or
+liters. product and place: short readable names. breakout: "none" for one total, else what each series is (county,
+city, item, category, store, ...). title: a short title for the dashboard.
+
+{rules}## Warehouse tables (read-only)
 {schema}
 """
+
+SUBMIT = {"name": "submit_query",
+          "description": "Submit the SQL for the order lines and how you read the request. The query is checked (one "
+                         "read-only SELECT returning day, store_no, item_no, series, value); you get an error back if "
+                         "it fails, so you can fix it.",
+          "input_schema": {"type": "object", "properties": {
+              "sql": {"type": "string"}, "title": {"type": "string"},
+              "measure": {"type": "string", "enum": ["bottles", "dollars", "liters"]},
+              "product": {"type": "string"}, "place": {"type": "string"}, "breakout": {"type": "string"},
+              "grain": {"type": "string", "enum": ["week", "month", "quarter", "year"]},
+              "horizon": {"type": "integer"}, "assumptions": {"type": "array", "items": {"type": "string"}}},
+              "required": ["sql", "title", "measure", "product", "place", "breakout", "grain", "horizon", "assumptions"],
+              "additionalProperties": False},
+          "strict": True}
+TOOLS = tools.TOOLS + [SUBMIT]
 
 
 def narrate(client, facts, usage):
@@ -129,8 +173,6 @@ def call_tool(name, args, interactive):
         return tools.find_values(args["kind"], args["text"])
     if name == "run_select":
         return tools.run_select(args["sql"])
-    if name == "preview_spec":
-        return tools.preview(args["spec_json"])[0]
     if name == "ask_user":
         if interactive:
             return input(f"\n{args['question']}\n> ")
@@ -139,49 +181,55 @@ def call_tool(name, args, interactive):
     return f"Error: unknown tool {name}"
 
 
-def ask(request, interactive=False, train=True, log=print):
+def submitted(request, a):
+    """The agent's submission as a Plan, or an error message for the agent."""
+    sql = a["sql"].strip().rstrip(";")
+    err = history.check_query(sql)
+    if not err and not 1 <= a["horizon"] <= MAX_AHEAD[a["grain"]]:
+        err = f"Error: horizon must be 1 to {MAX_AHEAD[a['grain']]} for grain {a['grain']}."
+    if err:
+        return None, err
+    plan = Plan(title=a["title"], sql=sql, target="sales_" + a["measure"], grain=a["grain"], horizon=a["horizon"],
+                product=a["product"], place=a["place"], series_by=a["breakout"].strip().lower() or "none",
+                request=request, assumptions=a["assumptions"])
+    return plan, None
+
+
+def ask(request, interactive=False, log=print):
+    """The agent's part: a checked Plan (its SQL and its reading of the request), or the reason it declined."""
     client = anthropic.Anthropic()
-    system = SYSTEM.format(max_h=MAX_HORIZON, schema=schema_text())
+    system = SYSTEM.format(schema=schema_text(), rules=RULES + GLOSSARY)
     messages = [{"role": "user", "content": request}]
     usage = {"model": MODEL, "calls": 0, "input_tokens": 0, "output_tokens": 0, "cache_write_tokens": 0,
              "cache_read_tokens": 0, "est_cost_usd": 0.0}
-    trace, t0, spec, assumptions, nudged = [], time.time(), None, [], False
+    trace, t0, nudged = [], time.time(), False
     log(f"== agent ({MODEL}): {request}")
-
     for turn in range(MAX_TURNS):
         msg = client.messages.create(
             model=MODEL, max_tokens=16000,
             system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
-            tools=tools.TOOLS, messages=messages,
-            thinking={"type": "adaptive"}, output_config={"effort": EFFORT},
-            cache_control={"type": "ephemeral"},  # also cache the growing conversation between turns
-        )
+            tools=TOOLS, messages=messages, thinking={"type": "adaptive"}, output_config={"effort": EFFORT},
+            cache_control={"type": "ephemeral"})   # also cache the growing conversation between turns
         add_usage(usage, msg)
         if msg.stop_reason == "refusal":
             return {"status": "refused", "message": "The model declined this request.", "usage": usage, "trace": trace}
-        if msg.stop_reason == "max_tokens":
-            return {"status": "error", "message": "Response hit max_tokens.", "usage": usage, "trace": trace}
         messages.append({"role": "assistant", "content": msg.content})
         calls = [b for b in msg.content if b.type == "tool_use"]
         if not calls:
             text = " ".join(b.text for b in msg.content if b.type == "text").strip()
-            if not nudged and spec is None and "?" not in text[-200:] and len(text) < 200:
+            if not nudged and "?" not in text[-200:] and len(text) < 200:
                 # stopped without submitting or explaining; one reminder, then accept its answer
                 nudged = True
-                messages.append({"role": "user", "content": "If this request can be served, call submit_spec now; "
+                messages.append({"role": "user", "content": "If this request can be served, call submit_query now; "
                                                             "otherwise explain in one short paragraph why not."})
                 continue
-            return {"status": "no_forecast", "message": text, "usage": usage, "trace": trace,
-                    "seconds": round(time.time() - t0, 1)}
-
-        results = []
+            return {"status": "no_forecast", "message": text, "usage": usage, "trace": trace}
+        results, plan = [], None
         for call in calls:
             t1 = time.time()
-            if call.name == "submit_spec":
-                candidate, err = tools.parse_spec(call.input["spec_json"])
-                out = err or "Accepted. The harness is running it."
-                if not err:
-                    spec, assumptions = candidate, call.input["assumptions"]
+            if call.name == "submit_query":
+                plan, err = submitted(request, call.input)
+                out = err or "Accepted. Fixed code is adding up the order lines."
             else:
                 out = call_tool(call.name, call.input, interactive)
             is_error = str(out).startswith("Error")
@@ -189,26 +237,25 @@ def ask(request, interactive=False, train=True, log=print):
                           "result": short(out), "seconds": round(time.time() - t1, 1), "error": is_error})
             log(f"  [{turn + 1}] {call.name}: {short(json.dumps(call.input), 160)}" + ("  -> ERROR" if is_error else ""))
             results.append({"type": "tool_result", "tool_use_id": call.id, "content": str(out), "is_error": is_error})
-        if spec is not None:
-            break
+        if plan is not None:
+            usage["agent_seconds"] = round(time.time() - t0, 1)
+            log(f"  query submitted after {len(trace)} tool calls, {usage['agent_seconds']}s, "
+                f"about ${usage['est_cost_usd']:.3f}")
+            return {"status": "ok", "plan": plan, "usage": usage, "trace": trace}
         messages.append({"role": "user", "content": results})
-    else:
-        return {"status": "error", "message": f"No spec after {MAX_TURNS} turns.", "usage": usage, "trace": trace}
-
-    usage["agent_seconds"] = round(time.time() - t0, 1)
-    log(f"  spec submitted after {len(trace)} tool calls, {usage['agent_seconds']}s, about ${usage['est_cost_usd']:.3f}")
-    agent = {"request": request, "assumptions": assumptions, "trace": trace, "usage": usage}
-    if not train:  # spec only: the evals score the agent's decisions without training models
-        return {"status": "ok", "spec": spec.model_dump(), "assumptions": assumptions, "usage": usage, "trace": trace}
-    summary = run.run(spec, usage=usage, agent=agent, narrate=lambda facts: narrate(client, facts, usage), log=log)
-    return {"status": "ok", "spec": spec.model_dump(), "summary": summary, "usage": usage, "trace": trace}
+    return {"status": "error", "message": f"No query after {MAX_TURNS} turns.", "usage": usage, "trace": trace}
 
 
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    result = ask(" ".join(args), interactive="--interactive" in sys.argv, train="--spec-only" not in sys.argv)
-    if result["status"] == "ok" and "--spec-only" in sys.argv:
-        print(json.dumps(result["spec"], indent=1))
-        print("assumptions:", *result["assumptions"], sep="\n - ")
-    if result["status"] != "ok":
-        print(f"\n{result['status']}: {result['message']}")
+    request = " ".join(args)
+    if "--sql-only" in sys.argv:
+        r = ask(request, interactive="--interactive" in sys.argv)
+        if r["status"] != "ok":
+            print(f"\n{r['status']}: {r.get('message', '')}")
+        else:
+            print(r["plan"].model_dump_json(indent=1))
+    else:
+        from .forecast import forecast
+        r = forecast(request, interactive="--interactive" in sys.argv)
+        print(f"\n{r['status']}: {r.get('message', '')}" if r["status"] != "ok" else r["summary"]["dashboard"])
