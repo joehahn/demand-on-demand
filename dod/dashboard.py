@@ -661,53 +661,42 @@ def fig_accuracy(per_step):
                  height=300, legend=True).update_layout(hovermode="x unified")
 
 
-def fig_inputs(effects, uw, tw):
-    """How much each input group helped: the forecast's error without it, relative to the error with it, in each of
-    the two choices: on the Tuning period (the tested settings) and on the Testing period (re-tuned for the forecast)."""
+def fig_inputs(effects, tw):
+    """How much each input group helped when re-tuning on the Testing period, which decides the forecast's inputs:
+    the forecast's error without the input, relative to its error with it (right of 0 = the input helps)."""
     names = [FEATURE_NAMES.get(g, g).split(" (")[0] + (" (used)" if k else " (left out)")
              for g, k in zip(effects.group, effects.kept)]
-    bars = [go.Bar(y=names, x=effects[col] * 100, name=name, orientation="h", marker_color=color,
-                   hovertemplate="%{x:+.1f}%<extra>" + name + "</extra>")
-            for col, name, color in (("latest", f"Testing, {when(tw[0])} to {when(tw[1])} (re-tuned for the forecast)",
-                                      ORANGE),
-                                     ("validation", f"Tuning, {when(uw[0])} to {when(uw[1])} (picked the tested settings)",
-                                      BLUE))]
-    fig = go.Figure(bars).update_layout(barmode="group", hovermode="closest", legend_traceorder="reversed")
+    fig = go.Figure(go.Bar(y=names, x=effects.latest * 100, orientation="h",
+                           marker_color=[AQUA if k else ORANGE for k in effects.kept],
+                           hovertemplate="%{x:+.1f}%<extra></extra>"))
     fig.update_xaxes(ticksuffix="%", zeroline=True, zerolinecolor="rgba(137,135,129,0.8)", zerolinewidth=2,
                      title="how much worse the forecast is without it (right of 0 = it helps)")
     if model.KEEP_MARGIN:
         fig.add_vline(x=model.KEEP_MARGIN * 100, line_dash="dot", line_color="rgba(137,135,129,0.8)",
                       annotation_text="keep line", annotation_position="top")
-    fig = style(fig, "Which inputs helped", height=160 + 60 * len(effects), legend=True)
-    return fig.update_layout(margin=dict(l=150, r=20, t=70, b=50),
-                             legend=dict(orientation="v", y=1.02, x=0, xanchor="left", yanchor="bottom"))
+    fig = style(fig, f"Which inputs helped, Testing period ({when(tw[0])} to {when(tw[1])})", height=120 + 50 * len(effects))
+    return fig.update_layout(margin=dict(l=150, r=20, t=50, b=50), hovermode="closest")
 
 
 def inputs_section(res, plot):
-    """The input groups offered to this forecast and how each of the two choices judged them, with the numbers."""
+    """The input groups offered to this forecast and how re-tuning on the Testing period judged them."""
     eff = res.get("effects")
     if eff is None or not len(eff) or eff.latest.isna().all():
         return ""
-    uw, tw = res["tune_window"], res["test_window"]
+    tw = res["test_window"]
     margin = f" by at least {model.KEEP_MARGIN:.0%}" if model.KEEP_MARGIN else ""
     name = lambda g: FEATURE_NAMES.get(g, g).split(" (")[0]
     words = lambda xs: " and ".join([", ".join(xs[:-1]), xs[-1]]) if len(xs) > 1 else "".join(xs)
     used = [name(g) for g, k in zip(eff.group, eff.kept) if k]
-    changed = [name(g) for g, k, kt in zip(eff.group, eff.kept, eff.kept_tested) if k != kt]
-    verdict = (f"The forecast uses {words(used) if used else 'none of them'}."
-               + (f" The two choices differ on {words(changed)}: what helped in the Tuning period did not always help "
-                  f"recently, or the other way round." if changed else " Both choices agree."))
+    tested = [name(g) for g, k in zip(eff.group, eff.kept_tested) if k]
     pct = lambda v: "" if pd.isna(v) else f"{v * 100:+.1f}%"
-    nums = pd.DataFrame({"input": [name(g) for g in eff.group],
-                         f"Tuning, {when(uw[0])} to {when(uw[1])}": eff.validation.map(pct),
-                         "in the tested settings": eff.kept_tested.map({True: "used", False: "left out"}),
-                         f"Testing (re-tuned), {when(tw[0])} to {when(tw[1])}": eff.latest.map(pct),
+    nums = pd.DataFrame({"input": [name(g) for g in eff.group], "how much worse without it": eff.latest.map(pct),
                          "in the forecast": eff.kept.map({True: "used", False: "left out"})})
-    return (f"<p>Besides its own past sales, the model was offered these inputs. Each was kept only if the forecast "
-            f"was worse without it{margin}. The choice was made twice: on the Tuning period, for the settings the Testing "
-            f"period scores (blue), and again on the Testing period when re-tuning for the forecast (orange). {verdict}</p>"
-            f"{plot(fig_inputs(eff, uw, tw))}<details><summary>The input choices as numbers</summary><p>How much worse "
-            f"the forecast was without each input (positive = the input helps).</p>{table(nums)}</details>")
+    return (f"<p>Besides its own past sales, the model was offered these inputs. When re-tuning on the Testing period, "
+            f"each was kept only if the forecast was worse without it{margin}. The forecast uses "
+            f"{words(used) if used else 'none of them'}. (The settings whose accuracy this page reports were tuned "
+            f"separately, on the Tuning period, and used {words(tested) if tested else 'none of them'}.)</p>"
+            f"{plot(fig_inputs(eff, tw))}<details><summary>The input choices as numbers</summary>{table(nums)}</details>")
 
 
 def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
@@ -809,8 +798,9 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
 {skipped_html}
 {charts}{more}
 <ul class="note">
-<li><strong>Tuning</strong> ({when(uw[0])} to {when(uw[1])}): models trained on all earlier {units()} forecast these
-{units()}; {len(res["grid"]) - 1} distinct configurations of ridge regression and LightGBM were compared, differing in
+<li><strong>Tuning</strong> ({when(uw[0])} to {when(uw[1])}): {refit} through these {units()}, each candidate model was
+trained on all {units()} before that point and forecast the next {max(ps.step)}, and its forecasts were compared with what
+actually sold. {len(res["grid"]) - 1} distinct configurations of ridge regression and LightGBM were compared, differing in
 targets, inputs and history lengths{", with or without other counties" if pooling_tried else ""}, and the settings with the
 smallest misses were picked: {esc(short_model(res["tested"], " + "))}.</li>
 <li><strong>Testing</strong> ({when(tw[0])} to {when(tw[1])}): the picked settings forecast {units()} they never saw; this
