@@ -23,7 +23,7 @@ same period last year, and publishes a dashboard that says how far to trust the 
 
 ```mermaid
 flowchart LR
-    Q["Business question<br/>plain English"] --> A["Claude agent<br/>read-only tools<br/>writes SQL for the order lines"]
+    Q["Business question<br/>plain English"] --> A["Claude agent<br/>read-only tools<br/>writes SQL selecting<br/>the sales records"]
     A --> H["Fixed Python code<br/>sums, tuning, backtest<br/>vs same period last year"]
     H --> D["Dashboard<br/>forecast, 80% range,<br/>how far to trust it"]
     A -. reads .-> W[("Clean Postgres warehouse<br/>26M orders, fixed once")]
