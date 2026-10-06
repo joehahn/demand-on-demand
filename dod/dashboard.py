@@ -386,23 +386,18 @@ def prep_section(spec, panel, res, unit, wide):
                  f"{n('zero_value_lines')} zero lines (likely cancelled). {fixed('duplicates')}", f"SQL in {w} (clean)"))
     older = panel.older
     if older:   # renumbered products in this forecast: their older numbers carry the early history
-        which = ", ".join(older[:4]) + (f" and {len(older) - 4} more" if len(older) > 4 else "")
-        verb = "is an older number" if len(older) == 1 else "are older numbers"
-        rows.append(("Warehouse, once", f"Joined renumbered items: {which} {verb} of products in this forecast, so their "
-                     f"history is continuous. {fixed('renumbering')}", f"Python + SQL in {w} (clean)"))
+        rows.append(("Warehouse, once", f"Joined renumbered products to their older item numbers, so their history is "
+                     f"continuous. {fixed('renumbering')}", f"Python + SQL in {w} (clean)"))
     if "category" in sql or spec.series_by == "category":
-        rows.append(("Warehouse, once", "Restated every order in today's category taxonomy (codes were reassigned in 2016 "
-                     f"and Cocktails/RTD recoded in 2022). {fixed('categories')}", f"SQL in {w} (clean)"))
+        rows.append(("Warehouse, once", f"Kept each product in its current category for its whole history, since the state "
+                     f"renamed and recoded categories over the years. {fixed('categories')}", f"SQL in {w} (clean)"))
     if unit in ("bottles", "liters") and items and len(items) <= 5000:
         u = db.query("SELECT u.item_no, i.item_desc, u.units_per_sale FROM sales.item_units u JOIN sales.item i "
                      "USING (item_no) WHERE u.item_no = ANY(%s)", (items,))
         known, unknown = u[u.units_per_sale.notna()], u[u.units_per_sale.isna()]
-        known = known.drop_duplicates("item_desc")   # a renumbered item and its successor share a description
         if len(known):
-            eg = "; ".join(f"{r.item_desc.title()}: {int(r.units_per_sale)} per unit" for r in known.head(3).itertuples())
-            rows.append(("Warehouse, once", f"Counted real bottles where the state counts a sleeve or pack of minis as one: "
-                         f"{eg}" + (f" and {len(known) - 3} more" if len(known) > 3 else "") + f". {fixed('units')}",
-                         f"SQL in {w} (clean)"))
+            rows.append(("Warehouse, once", f"Counted real bottles where the state counts a sleeve or pack of minis as one. "
+                         f"{fixed('units')}", f"SQL in {w} (clean)"))
         if len(unknown):
             rows.append(("Warehouse, once", f"Left {len(unknown)} item(s) priced like packs of unknown size in selling "
                          f"units, flagged rather than guessed. {fixed('units')}", f"SQL in {w} (clean)"))
@@ -454,9 +449,8 @@ def prep_section(spec, panel, res, unit, wide):
                 ("This forecast", "After the request: shaping the data for this forecast")]
     body = "".join(part(title) + "".join(f"<tr><td>{b}</td><td>{c}</td></tr>" for a, b, c in rows if a == key)
                    for key, title in sections)
-    return (f"<p>{W['adj'].capitalize()} {unit} from {when(panel.start)} through {when(wide.index[-1])}. How the data was "
-            f"prepared: fixed once in the warehouse, before any forecast, then shaped for this request by the harness. "
-            + f"The AI wrote the query that picks the order lines (the first step after the request); every other step "
+    return (f"<p>{W['adj'].capitalize()} {unit} from {when(panel.start)} through {when(wide.index[-1])}. "
+            + f"The AI wrote the query that picks the order lines; every other step "
               f"is fixed code that runs the same way for every request. "
             + f"The code itself was written in advance with Claude Code, with a person reviewing and approving every data fix.</p><div class=\"tbl\"><table><thead><tr>{head}</tr></thead>"
             f"<tbody>{body}</tbody></table></div>")
