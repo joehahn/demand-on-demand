@@ -16,7 +16,7 @@ same period last year, and publishes a dashboard that says how far to trust the 
 | Agent accuracy | on 34 test requests run 3 times each, its SQL added up to the answer key in 101 of 102 runs |
 
 **Author:** Joseph M. Hahn, Ph.D., independent AI and machine learning consultant  
-[jmh-datasciences.com](https://jmh-datasciences.com) · [LinkedIn](https://www.linkedin.com/in/hahnjoe) · jmh.datasciences@gmail.com  
+[jmh-datasciences.com](https://jmh-datasciences.com) · [LinkedIn](https://www.linkedin.com/in/hahnjoe) · joe.hahn@jmh-datasciences.com  
 **Built end-to-end with Claude Code.** · **License:** [MIT](#license-and-data)
 
 ## How it works
