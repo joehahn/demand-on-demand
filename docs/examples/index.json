@@ -37,10 +37,10 @@
   "slug": "cream_liqueur_by_week_next_12_weeks",
   "title": "Weekly Cream Liqueur Bottles Statewide",
   "grain": "week",
-  "rel_mae": 1.0033763905673194,
-  "summary": "Forecast calls for about 172,000 bottles over the coming weeks, up 4% from the same weeks last year. This forecast is about as accurate as simply repeating last year's outcome.",
-  "cost": 0.0132,
-  "agent_seconds": 6.7,
-  "harness_seconds": 20.1
+  "rel_mae": 1.0099306051779449,
+  "summary": "Forecast calls for about 165,000 bottles over the coming weeks, roughly flat (+0%) versus the same weeks last year. This forecast is 1% less accurate than simply repeating last year's outcome.",
+  "cost": 0.0152,
+  "agent_seconds": 9.3,
+  "harness_seconds": 17.8
  }
 ]

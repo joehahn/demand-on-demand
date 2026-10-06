@@ -353,8 +353,7 @@ def query_prep_rows(unit, panel, wide):
     shape = {"week": "Monday to Sunday", "quarter": "calendar quarters"}.get(W["grain"], "calendar months")
     hist = f'<a href="{GITHUB}/dod/history.py">dod/history.py</a>'
     return [("This forecast", f"The AI wrote one SQL query that selects the sales records for this request: which "
-             f"products, which stores, and the {unit} on each record (see The SQL as run). It was checked to be a single "
-             f"read-only SELECT before it ran.",
+             f"products, which stores, and the {unit} on each record (see The SQL as run).",
              f'the AI (Claude), checked by <a href="{GITHUB}/dod/sqlcheck.py">dod/sqlcheck.py</a>'),
             ("This forecast", f"Computed {W['adj']} sums of the selected records ({shape}), complete {units()} only, "
              f"and monthly sums for each store (for the store list and map). A {W['unit']} with no "

@@ -19,8 +19,10 @@ from . import db
 
 GROUPS = {"week": ["season", "holiday_weeks", "stores"], "month": ["calendar", "population"],
           "quarter": ["calendar", "population"]}
-HOLIDAYS = {"thanksgiving_week": "Thanksgiving", "christmas_week": "Christmas", "new_year_week": "New Year",
-            "july4_week": "Independence"}
+# exact names in ref.calendar: the holiday itself, not the "(observed)" day off, and not Juneteenth (whose official name,
+# "Juneteenth National Independence Day", also contains "Independence")
+HOLIDAYS = {"thanksgiving_week": "Thanksgiving Day", "christmas_week": "Christmas Day", "new_year_week": "New Year's Day",
+            "july4_week": "Independence Day"}
 
 
 def season(index):
@@ -38,7 +40,7 @@ def holiday_weeks(index):
     cal["week"] = day - pd.to_timedelta(day.dt.weekday, unit="D")
     out = pd.DataFrame(0.0, index=index, columns=list(HOLIDAYS))
     for col, name in HOLIDAYS.items():
-        weeks = set(cal[cal.holiday_name.str.contains(name, case=False)].week)
+        weeks = set(cal[cal.holiday_name == name].week)
         out[col] = [1.0 if w in weeks else 0.0 for w in index]
     return out
 
