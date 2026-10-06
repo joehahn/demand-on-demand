@@ -6,9 +6,9 @@
   "grain": "month",
   "rel_mae": 0.9186332379718598,
   "summary": "Tito's minis in Des Moines are forecast at about 24,700 bottles over the next 5 months, down 14% from the same months last year. This forecast is 8% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0328,
-  "agent_seconds": 14.5,
-  "harness_seconds": 7.8
+  "cost": 0.0207,
+  "agent_seconds": 12.5,
+  "harness_seconds": 8.7
  },
  {
   "request": "What revenue should we expect from Fireball in Linn County next quarter?",
@@ -16,10 +16,10 @@
   "title": "Fireball, Linn County, next quarter revenue",
   "grain": "month",
   "rel_mae": 0.8896450044725563,
-  "summary": "Next quarter's forecast for Fireball in Linn County totals about $592,000, up 2% from the same quarter last year. This forecast is 11% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0407,
-  "agent_seconds": 81.2,
-  "harness_seconds": 119.3
+  "summary": "Fireball's Linn County revenue is forecast at $592,000 for next quarter, up 2% from the same quarter last year. This forecast is 11% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0291,
+  "agent_seconds": 71.9,
+  "harness_seconds": 117.3
  },
  {
   "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
@@ -28,9 +28,9 @@
   "grain": "month",
   "rel_mae": 0.7460882272762667,
   "summary": "Cream liqueurs in Iowa are forecast at about 243,000 bottles through the holidays, down 8% from the same months last year. This forecast is 25% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0155,
-  "agent_seconds": 9.8,
-  "harness_seconds": 9.9
+  "cost": 0.016,
+  "agent_seconds": 9.9,
+  "harness_seconds": 21.6
  },
  {
   "request": "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
@@ -39,8 +39,8 @@
   "grain": "week",
   "rel_mae": 1.0027441529586525,
   "summary": "Forecast calls for about 161,000 bottles over the coming weeks, down 3% from the same weeks last year. This forecast is about as accurate as simply repeating last year's outcome.",
-  "cost": 0.0152,
-  "agent_seconds": 8.6,
+  "cost": 0.0148,
+  "agent_seconds": 8.4,
   "harness_seconds": 24.2
  }
 ]

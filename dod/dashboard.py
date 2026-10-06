@@ -119,9 +119,12 @@ def blend_details(res):
                       "weight on last year": (1 - b.model_share).map(lambda v: f"{v:.0%}"),
                       ERR_LABEL: b.tuning_rel_mae.map(lambda v: f"{v:.3f}"),
                       "": ["\u2190 chosen" if i == chosen else "" for i in b.index]})
-    return ("<details><summary>How the weights were chosen</summary><p>Every way of combining the best configuration, "
-            f"or the average of the best few, with {base()}, scored when re-tuning on the Testing period. The lowest error "
-            "wins; it sets the weights in the table above.</p>" + table(t) + "</details>")
+    n = max(model.TOP_K)
+    return (f"<details><summary>How the mix with last year was chosen</summary><p>Each {W['unit']}'s forecast can blend "
+            f"the models' forecast with simply repeating the {base()}. {len(t)} blends were tried (the best model or the "
+            f"average of the best {n}; 0% to 100% weight on the models) and scored on the Testing period, as their misses "
+            f"divided by last year's: 1.000 = as good as last year, smaller is better. The best blend, marked below, is "
+            f"used.</p>" + table(t) + "</details>")
 
 
 def forecast_parts(res):
@@ -692,10 +695,13 @@ def inputs_section(res, plot):
     pct = lambda v: "" if pd.isna(v) else f"{v * 100:+.1f}%"
     nums = pd.DataFrame({"input": [name(g) for g in eff.group], "how much worse without it": eff.latest.map(pct),
                          "in the forecast": eff.kept.map({True: "used", False: "left out"})})
-    return (f"<p>Besides its own past sales, the model was offered these inputs. When re-tuning on the Testing period, "
-            f"each was kept only if the forecast was worse without it{margin}. The forecast uses "
-            f"{words(used) if used else 'none of them'}. (The settings whose accuracy this page reports were tuned "
-            f"separately, on the Tuning period, and used {words(tested) if tested else 'none of them'}.)</p>"
+    uw = res["tune_window"]
+    offered = [name(g) for g in eff.group]
+    return (f"<p><strong>Inputs.</strong> Besides its own past sales, the model can learn from {words(offered)}. Each was "
+            f"tried with and without on the Testing period and kept only if it made the forecast better{margin}. This "
+            f"forecast uses {words(used) if used else 'none of them'}. <em>Note:</em> the accuracy figures at the top come "
+            f"from an earlier round of tuning ({when(uw[0])} to {when(uw[1])}), so they are measured on {units()} that "
+            f"tuning never saw; that round used {words(tested) if tested else 'none of them'}.</p>"
             f"{plot(fig_inputs(eff, tw))}<details><summary>The input choices as numbers</summary>{table(nums)}</details>")
 
 
