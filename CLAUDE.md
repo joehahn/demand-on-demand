@@ -167,3 +167,7 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    answer key). Results: evals/score_sql.py 101/102 (one Diageo miss, then a vendor definition added: 3/3);
    benchmark 20/30 beat last year, median 0.91 (= the no-pooling arm). `python make_examples.py` regenerates
    docs/examples/ and index.json.
+15. Agent told where the data ends (2026-10-06): SYSTEM includes the last order date (panel.data_end), so "for the
+   holidays" counts from September; glossary adds "a vendor's products = the lines it sold". evals/score_sql.py:
+   102/102 (34/34 every run, $1.79). Dashboards say "sales records" (not order lines) and read the Tested sentence from
+   the latest full evals/sql_results/2*.json (runs with --only are saved as only_*.json).

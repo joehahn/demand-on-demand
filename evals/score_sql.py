@@ -130,7 +130,8 @@ if __name__ == "__main__":
         jobs = [(c, answers.get(c["id"]), n) for n in range(1, runs + 1) for c in cases]
         with ThreadPoolExecutor(4) as pool:
             rows = list(pool.map(lambda j: one(*j), jobs))
-        path = out / f"{time.strftime('%Y%m%d_%H%M%S')}.json"
+        # a run of only some requests is named apart, so the dashboards and landing page read only full runs
+        path = out / f"{'only_' if '--only' in sys.argv else ''}{time.strftime('%Y%m%d_%H%M%S')}.json"
     out.mkdir(exist_ok=True)
     path.write_text(json.dumps(rows, indent=1, default=str))
     (HERE / "sql_report.md").write_text(report(rows, cases))

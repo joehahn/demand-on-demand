@@ -296,13 +296,13 @@ def agent_step(t):
         return f"Ran a read-only query: {args.get('sql', '')[:120]}"
     if t["tool"] == "ask_user":
         return f"Asked: \u201c{args.get('question', '')}\u201d Answer: \u201c{out}\u201d"
-    if t["tool"] == "submit_query":   # its SQL for the order lines, the grain and the horizon
+    if t["tool"] == "submit_query":   # its SQL for the sales records, the grain and the horizon
         import re   # the stored input is shortened (the SQL is long), so read grain and horizon from the text
         grain = re.search(r'"grain": "(\w+)"', t["input"])
         horizon = re.search(r'"horizon": (\d+)', t["input"])
         ahead = (f", {horizon.group(1)} {grain.group(1)}{'s' if horizon.group(1) != '1' else ''} ahead"
                  if grain and horizon else "")
-        return (f"Submitted its SQL for the order lines{ahead}; fixed code checked it is one read-only SELECT with the "
+        return (f"Submitted its SQL selecting the sales records{ahead}; fixed code checked it is one read-only SELECT with the "
                 f"right columns.")
     return f"{t['tool']}: {out[:120]}"
 
@@ -348,18 +348,25 @@ def agent_knowledge(sql):
 GITHUB = "https://github.com/joehahn/demand-on-demand/blob/main"
 
 
-TESTED = (f'Tested: on <a href="{GITHUB}/evals/sql_report.md">34 test requests run 3 times each</a>, the agent\'s '
-          f"order lines added up to the answer key's monthly totals in 101 of 102 runs.")
+def tested():
+    """The agent's latest full test against the answer key (evals/score_sql.py), in one sentence."""
+    from pathlib import Path
+    runs = json.loads(sorted((Path(__file__).parent.parent / "evals" / "sql_results").glob("2*.json"))[-1].read_text())
+    n = len({r["id"] for r in runs})
+    return (f'Tested: on <a href="{GITHUB}/evals/sql_report.md">{n} test requests run {len(runs) // n} times each</a>, '
+            f"the records the agent's SQL selected added up to the answer key's monthly totals in "
+            f"{sum(bool(r['data']) for r in runs)} of {len(runs)} runs.")
 
 
 def query_prep_rows(unit, panel, wide):
     """This forecast's own steps: the AI's query, then fixed code's sums."""
     shape = {"week": "weeks (Monday to Sunday)", "quarter": "calendar quarters"}.get(W["grain"], "calendar months")
     hist = f'<a href="{GITHUB}/dod/history.py">dod/history.py</a>'
-    return [("This forecast", f"The AI wrote one SQL query that picks the order lines for this request and the {unit} on "
-             f"each (see The SQL as run). It was checked to be a single read-only SELECT before it ran. {TESTED}",
+    return [("This forecast", f"The AI wrote one SQL query that selects the sales records for this request: which "
+             f"products, which stores, and the {unit} on each record (see The SQL as run). It was checked to be a single "
+             f"read-only SELECT before it ran. {tested()}",
              f'the AI (Claude), checked by <a href="{GITHUB}/dod/sqlcheck.py">dod/sqlcheck.py</a>'),
-            ("This forecast", f"Added the lines up by {shape} and by store, complete {units()} only. A {W['unit']} with no "
+            ("This forecast", f"Added the records up by {shape} and by store, complete {units()} only. A {W['unit']} with no "
              f"orders counts as 0, since the warehouse was checked to have orders in every month from "
              f"{when(panel.start)} to {when(wide.index[-1])}; {units()} before the first sale are left blank.",
              hist + " (SQL + Python)")]
@@ -450,8 +457,8 @@ def prep_section(spec, panel, res, unit, wide):
     body = "".join(part(title) + "".join(f"<tr><td>{b}</td><td>{c}</td></tr>" for a, b, c in rows if a == key)
                    for key, title in sections)
     return (f"<p>{W['adj'].capitalize()} {unit} from {when(panel.start)} through {when(wide.index[-1])}. "
-            + f"The AI wrote the query that picks the order lines; every other step "
-              f"is fixed code that runs the same way for every request. "
+            + f"The AI wrote the SQL query that selects the sales records for this request; fixed code adds them up, "
+              f"and every other step is fixed code that runs the same way for every request. "
             + f"The code itself was written in advance with Claude Code, with a person reviewing and approving every data fix.</p><div class=\"tbl\"><table><thead><tr>{head}</tr></thead>"
             f"<tbody>{body}</tbody></table></div>")
 
@@ -484,15 +491,16 @@ def toolbox_html(usage):
     """What the agent does, in two sentences, with links to its instructions and tools."""
     from .agent import TOOLS
     return (f"<p><strong>The agent's toolbox.</strong> The AI agent ({esc(model_label(usage))}) does text-to-SQL: it "
-            f"looks up names with {len(TOOLS) - 1} read-only tools, then writes one query that picks the order lines to "
-            f"forecast. It follows three rules for this warehouse's traps and the company's business definitions "
+            f"looks up names with {len(TOOLS) - 1} read-only tools, then writes one SQL query that selects the sales "
+            f"records to forecast. It follows three rules for this warehouse's traps and the company's business definitions "
             f"(<a href=\"{REPO}/blob/main/dod/agent.py\">instructions</a>, "
             f"<a href=\"{REPO}/blob/main/dod/tools.py\">tools</a>).</p>")
 
 
 def exact_html(spec, res, panel):
     """Exactly what ran: the agent's reading of the request and its SQL; everything after it is fixed code."""
-    return (f"<p>What ran: the AI's SQL for the order lines, then fixed code for everything after it. {TESTED}</p>"
+    return (f"<p>What ran: the AI's SQL selecting the sales records, then fixed code for everything after it. "
+            f"{tested()}</p>"
             f"{spec_table(spec, res)}"
             f"<details><summary>The SQL as run</summary><p>Written by the AI, checked to be one read-only SELECT, and run "
             f"under a read-only database login, inside fixed code's own sums (by {W['unit']}, store and product).</p>"
@@ -781,8 +789,8 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
         if not tr.empty:
             steps = "".join(f"<li>{esc(agent_step(t))}</li>" for t in agent.get("trace", []))
             intro = ("How the AI agent (Claude) turned the request into what \u201cRead as\u201d shows at the top. It "
-                     "writes the SQL that picks the order lines (text-to-SQL) and names the time grain; fixed code checks "
-                     "the SQL is one read-only SELECT, adds the lines up, picks and tests the model, and draws this "
+                     "writes the SQL that selects the sales records (text-to-SQL) and names the time grain; fixed code "
+                     "checks the SQL is one read-only SELECT, adds the records up, picks and tests the model, and draws this "
                      f"page.</p>{toolbox_html(usage)}")
             trace_html = (f"<h2>What the agent did</h2><p>{intro}{agent_knowledge(panel.sql)}"
                           "<p><strong>What it did, step by step:</strong></p>"

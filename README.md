@@ -13,7 +13,7 @@ same period last year, and publishes a dashboard that says how far to trust the 
 | Plain English to dashboard | about 30 seconds (median of the four examples) |
 | Claude API cost per request | about $0.02 |
 | Forecast accuracy | beats "same month last year" on 20 of 30 sampled forecasts; median error 9% lower |
-| Agent accuracy | on 34 test requests run 3 times each, its SQL added up to the answer key in 101 of 102 runs |
+| Agent accuracy | on 34 test requests run 3 times each, its SQL added up to the answer key in 102 of 102 runs |
 
 **Author:** Joseph M. Hahn, Ph.D., independent AI and machine learning consultant  
 [jmh-datasciences.com](https://jmh-datasciences.com) · [LinkedIn](https://www.linkedin.com/in/hahnjoe) · joe.hahn@jmh-datasciences.com  
@@ -97,8 +97,8 @@ against the answer key with `python demo.py --check`.
   misses included.
 - [evals/sql_report.md](evals/sql_report.md): the agent's SQL scored against an answer key (`evals/answer_cases.json`,
   `evals/build_answers.py`): 34 requests (brands, categories, minis, cities, counties, a 207-store chain, weeks,
-  quarters, a year, and requests it should decline), 3 runs each. Its order lines, summed by month, matched the key in
-  every month in 101 of 102 runs, and all 102 read the grain and horizon right.
+  quarters, a year, and requests it should decline), 3 runs each. The sales records its SQL selected, summed by month,
+  matched the key in every month in all 102 runs, and all 102 read the grain and horizon right.
 - [evals/grounding.md](evals/grounding.md): each dashboard's summary opens with one sentence written by Claude from the
   forecast's computed numbers (the accuracy sentence and every other number come from fixed code). This check traces
   every number in such sentences back to the computed results: 60 of 60 matched.
@@ -106,7 +106,7 @@ against the answer key with `python demo.py --check`.
   filling). [Comparing AI-written SQL with it](https://joehahn.github.io/demand-on-demand/differential.html) month by
   month found three warehouse traps (renumbered products, recoded categories, brand names with extra words), fixed with
   three short rules; the answer key then showed every remaining miss was a business definition, fixed with a short
-  glossary (baseline 90 of 102, then 101 of 102). Measured before slot filling was retired: pooling with other counties
+  glossary (baseline 90 of 102, then 102 of 102 once the agent was also told where the data ends). Measured before slot filling was retired: pooling with other counties
   added little and unevenly ([benchmark/pooling.md](benchmark/pooling.md)), so it was dropped.
 
 ## Run it yourself
