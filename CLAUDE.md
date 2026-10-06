@@ -171,3 +171,10 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    holidays" counts from September; glossary adds "a vendor's products = the lines it sold". evals/score_sql.py:
    102/102 (34/34 every run, $1.79). Dashboards say "sales records" (not order lines) and read the Tested sentence from
    the latest full evals/sql_results/2*.json (runs with --only are saved as only_*.json).
+16. Choose twice (2026-10-06): model.run calls choose() on the validation window (the tested choice, scored on the
+   Test period: the accuracy figures) and again on the latest two years (the forecast's choice), so decisions use the
+   most recent data and the reported accuracy stays honest (it measures the procedure). Dashboards name the periods
+   Validation / Test / Forecast; Figure 4 shows each input's effect in both choices. Fixed a leak: active stores in
+   backtests counted orders after the starting point; now shifted back by the forecast horizon (features.stores lag).
+   Holiday weeks match exact names (Juneteenth was flagged as July 4th week).
+

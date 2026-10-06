@@ -97,7 +97,7 @@ def build(sql, grain, steps):
     sold = months[months.value > 0]
     if grain == "week":
         common = features.season(pd.DatetimeIndex(idx, freq="W-MON")).join(features.holiday_weeks(idx))
-        common["active_stores"] = features.stores(sold, idx, wide.index[-1]).values
+        common["active_stores"] = features.stores(sold, idx, steps * step).values   # shifted by the horizon
         exog = {c: common.copy() for c in wide}
     else:
         cal = features.calendar(idx, grain)

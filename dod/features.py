@@ -5,8 +5,8 @@ if the model does better with it on the model-selection window. Each is known be
   population     Census population of the counties where the series' stores are (monthly and quarterly forecasts)
   season         sine and cosine of the time of year: a smooth yearly cycle a linear model can use (weekly)
   holiday_weeks  1 if the week contains Thanksgiving, Christmas, New Year's Day or July 4th (weekly)
-  stores         stores that ordered the product in the 12 months before the period; carried forward unchanged into
-                 the forecast periods, so nothing from the future leaks in (weekly)
+  stores         stores that ordered the product in the 12 months before the period, counted one forecast horizon
+                 earlier, so every value is known when the forecast is made, in backtests too (weekly)
 
 Which grain gets which inputs follows the benchmarks: calendar and population for months (benchmark/pooling.md: without
 them 13 of 30 forecasts beat last year instead of 20), season, holiday weeks and stores for weeks
@@ -55,14 +55,16 @@ def active_stores(store_rows, months):
     return pd.Series(out, index=months)
 
 
-def stores(store_rows, index, last_period):
-    """Active stores on any grain: each period takes its month's value (counted from the 12 months before that
-    month), and periods past the last complete one keep the last value. store_rows: month, store_no (orders > 0)."""
+def stores(store_rows, index, lag):
+    """Active stores on any grain, shifted back by the forecast horizon (lag): each period takes the count for the month
+    `lag` before it (stores with orders in the 12 months before that month). So every value a forecast uses was known
+    when the forecast was made, in backtests too: without the shift, a backtest's later periods would count orders
+    placed after its starting point. store_rows: month, store_no (orders > 0)."""
     rows = store_rows.assign(month=pd.to_datetime(store_rows.month))
-    months = pd.date_range(rows.month.min(), pd.Timestamp(last_period).to_period("M").to_timestamp(), freq="MS")
+    months = pd.date_range(rows.month.min(), rows.month.max() + pd.offsets.MonthBegin(1), freq="MS")
     act = active_stores(rows, months)
-    return pd.Series([act.get(min(pd.Timestamp(d).to_period("M").to_timestamp(), months[-1]), act.iloc[-1])
-                      for d in index], index=index, name="active_stores")
+    when = [(pd.Timestamp(d) - lag).to_period("M").to_timestamp() for d in index]
+    return pd.Series([act.get(m, 0.0) for m in when], index=index, name="active_stores")
 
 
 def calendar(index, grain):

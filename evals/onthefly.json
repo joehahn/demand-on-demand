@@ -2,18 +2,17 @@
  {
   "request": "Weekly forecast of Tito's minis in Des Moines for the next 8 weeks",
   "status": "ok",
-  "title": "Tito's Vodka Minis (50ml) - Des Moines Weekly Forecast",
+  "title": "Tito's Vodka Minis (50ml) - Des Moines - 8 Week Forecast",
   "grain": "week",
   "horizon": 8,
   "model_grain": "week",
-  "sql": "SELECT\n  l.ordered_on AS day,\n  l.store_no AS store_no,\n  l.item_no AS item_no,\n  'total' AS series,\n  l.sales_bottles AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE s.city = 'DES MOINES'\n  AND l.item_no IN (\n    SELECT i.item_no\n    FROM sales.item i\n    JOIN sales.item h ON h.item_no = i.family_item_no\n    WHERE h.item_desc ILIKE '%TITOS%'\n      AND h.item_desc ILIKE '%VODKA%'\n      AND h.bottle_volume_ml = 50\n  )\n  AND l.ordered_on >= '2016-01-01'",
+  "sql": "SELECT\n  l.ordered_on AS day,\n  l.store_no AS store_no,\n  l.item_no AS item_no,\n  'total' AS series,\n  l.sales_bottles AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE l.item_no IN (\n  SELECT item_no FROM sales.item WHERE family_item_no IN ('38194','38185')\n)\nAND s.city = 'DES MOINES'\nAND l.ordered_on >= '2016-01-01'",
   "assumptions": [
-   "Tito's minis means all Tito's Handmade Vodka products whose current family bottle size is 50 ml (includes both the single mini item and the mini 4-pack item, since a 4-pack of 50ml minis is still a 50ml bottle size, counted by individual bottles).",
-   "Des Moines means the city of Des Moines, Polk County, not West Des Moines.",
-   "Measure is bottles sold (sales_bottles), which already accounts for mini packs counting each mini bottle.",
-   "Forecast horizon is the 8 weeks following the end of available data (after 2026-08-31)."
+   "Minis defined as 50 ml bottles per company sizing rules: includes both the single mini (item family 38194) and the mini 4-pack (item family 38185), since both are 50 ml bottles.",
+   "Des Moines means the city of Des Moines (store city = 'DES MOINES'), not West Des Moines or all of Polk County.",
+   "History pulled from 2016-01-01 through the latest available data (2026-08-31); forecast covers the 8 weeks starting the week after 2026-08-31."
   ],
-  "rel_mae": 0.7059208708293053,
+  "rel_mae": 0.7072747770190709,
   "test_window": [
    "2024-09-02",
    "2026-08-24"
@@ -574,71 +573,70 @@
   "forecast": [
    {
     "period": "2026-08-31",
-    "pred": 2167.554300869991,
-    "lo": 1240.6216543233638,
-    "hi": 5604.644939109967
+    "pred": 2162.9638431189246,
+    "lo": 1251.2303402482853,
+    "hi": 5814.3412439113645
    },
    {
     "period": "2026-09-07",
-    "pred": 1726.353879908957,
-    "lo": 1114.6507588354366,
-    "hi": 3076.8457531075283
+    "pred": 1737.8508071807494,
+    "lo": 1145.4340871855331,
+    "hi": 3108.4246391072384
    },
    {
     "period": "2026-09-14",
-    "pred": 1619.631520512709,
-    "lo": 931.7560442823092,
-    "hi": 2085.919135836266
+    "pred": 1620.2902377014452,
+    "lo": 926.0765457695081,
+    "hi": 2065.8125694546075
    },
    {
     "period": "2026-09-21",
-    "pred": 1598.224771830444,
-    "lo": 711.5004918375375,
-    "hi": 3084.0684644780504
+    "pred": 1600.2421591937018,
+    "lo": 707.4975076497028,
+    "hi": 3094.4753108925574
    },
    {
     "period": "2026-09-28",
-    "pred": 1483.0287462249712,
-    "lo": 875.8216267699931,
-    "hi": 3934.937252939783
+    "pred": 1504.8475586820214,
+    "lo": 899.5000392476618,
+    "hi": 4158.329888092264
    },
    {
     "period": "2026-10-05",
-    "pred": 1428.751696716577,
-    "lo": 961.6682190378962,
-    "hi": 2517.231540381182
+    "pred": 1445.5257226793926,
+    "lo": 992.4652259284672,
+    "hi": 2566.092113276099
    },
    {
     "period": "2026-10-12",
-    "pred": 1345.3918780274876,
-    "lo": 760.3806411375143,
-    "hi": 1699.0375587389092
+    "pred": 1357.7105992849806,
+    "lo": 765.2758906985559,
+    "hi": 1701.8148761583695
    },
    {
     "period": "2026-10-19",
-    "pred": 1387.6443789666162,
-    "lo": 633.1867348185965,
-    "hi": 2706.164114197112
+    "pred": 1391.3031281774422,
+    "lo": 629.9780470602122,
+    "hi": 2720.80491792907
    }
   ],
-  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/tito_s_vodka_minis_50ml_des_moines_weekly_forecast/dashboard.html",
-  "cost": 0.0268,
-  "seconds": 27.4
+  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/tito_s_vodka_minis_50ml_des_moines_8_week_forecast/dashboard.html",
+  "cost": 0.0237,
+  "seconds": 31.900000000000002
  },
  {
   "request": "Quarterly forecast of Fireball revenue in Linn County for the next 2 quarters",
   "status": "ok",
-  "title": "Fireball Revenue Forecast, Linn County (Next 2 Quarters)",
+  "title": "Fireball Revenue Forecast - Linn County",
   "grain": "quarter",
   "horizon": 2,
   "model_grain": "month",
-  "sql": "SELECT\n  l.ordered_on AS day,\n  l.store_no AS store_no,\n  l.item_no AS item_no,\n  'total' AS series,\n  l.sales_dollars AS value\nFROM sales.invoice_line l\nJOIN sales.item i ON i.item_no = l.item_no\nJOIN sales.item h ON h.item_no = i.family_item_no\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE h.item_desc ILIKE '%FIREBALL%'\n  AND s.county_name = 'LINN'\n  AND l.ordered_on >= '2016-01-01'",
+  "sql": "SELECT l.ordered_on AS day, l.store_no, l.item_no, 'total' AS series, l.sales_dollars AS value\nFROM sales.invoice_line l\nJOIN sales.item i ON i.item_no = l.item_no\nJOIN sales.item h ON h.item_no = i.family_item_no\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE h.item_desc ILIKE '%FIREBALL%'\n  AND s.county_name = 'LINN'\n  AND l.ordered_on >= '2016-01-01'",
   "assumptions": [
-   "Fireball means all products of the Fireball brand (all sizes, flavors, special packaging) sold by Sazerac Company, matched by product family description containing FIREBALL, not limited to Fireball Cinnamon Whiskey.",
-   "Linn County is identified by store county_name = LINN (Cedar Rapids area).",
-   "Revenue means sales_dollars as recorded on the order line.",
-   "History starts 2016-01-01 as per warehouse coverage.",
-   "No breakout requested; a single total series is forecast."
+   "Fireball means the whole brand family: all Fireball-named products (Cinnamon Whiskey, Blazin Apple, Torch'd Vanilla, minis, packs, bundles, etc.) regardless of current item numbering, matched via the product family's current description.",
+   "Linn County is the Iowa county (217 stores) identified by store address, not a city named Linn.",
+   "Revenue means sales_dollars.",
+   "Forecast horizon is the next 2 full quarters after the data ends (Aug 31, 2026), i.e. Q4 2026 and Q1 2027."
   ],
   "rel_mae": 1.0760798047892322,
   "test_window": [
@@ -778,61 +776,59 @@
   "forecast": [
    {
     "period": "2026-09-01",
-    "pred": 195315.9139674094,
-    "lo": 175846.09781575226,
-    "hi": 228044.58096568607
+    "pred": 191682.20694724307,
+    "lo": 172574.6122152058,
+    "hi": 223801.98148705796
    },
    {
     "period": "2026-10-01",
-    "pred": 186194.151397829,
-    "lo": 166840.41320380947,
-    "hi": 217985.63216997244
+    "pred": 198259.49882091253,
+    "lo": 177651.64188313438,
+    "hi": 232111.06181223714
    },
    {
     "period": "2026-11-01",
-    "pred": 169321.65209992797,
-    "lo": 155337.76788386615,
-    "hi": 202569.0465355285
+    "pred": 188805.27783817533,
+    "lo": 173212.28596781343,
+    "hi": 225878.40738751565
    },
    {
     "period": "2026-12-01",
-    "pred": 176003.64722321794,
-    "lo": 162432.86788712058,
-    "hi": 211176.45990332463
+    "pred": 199864.01829453558,
+    "lo": 184453.48259091485,
+    "hi": 239805.12058346457
    },
    {
     "period": "2027-01-01",
-    "pred": 167343.36059277973,
-    "lo": 153415.53992953745,
-    "hi": 201059.79966919156
+    "pred": 155483.45501113383,
+    "lo": 142542.72243695002,
+    "hi": 186810.35330995466
    },
    {
     "period": "2027-02-01",
-    "pred": 162043.4798091687,
-    "lo": 149825.7792774184,
-    "hi": 195267.73458100884
+    "pred": 151752.64122237999,
+    "lo": 140310.84592434863,
+    "hi": 182866.9348688111
    }
   ],
-  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/fireball_revenue_forecast_linn_county_next_2_quarters/dashboard.html",
-  "cost": 0.0302,
-  "seconds": 134.3
+  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/fireball_revenue_forecast_linn_county/dashboard.html",
+  "cost": 0.0295,
+  "seconds": 122.1
  },
  {
   "request": "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
   "status": "ok",
-  "title": "Iowa Cream Liqueur Bottles - 12 Week Forecast",
+  "title": "Cream Liqueurs - Weekly Bottle Forecast, Iowa",
   "grain": "week",
   "horizon": 12,
   "model_grain": "week",
-  "sql": "SELECT\n  l.ordered_on AS day,\n  l.store_no AS store_no,\n  l.item_no AS item_no,\n  'total' AS series,\n  l.sales_bottles AS value\nFROM sales.invoice_line l\nWHERE l.ordered_on >= '2016-01-01'\n  AND l.item_no IN (\n    SELECT item_no FROM sales.item WHERE category_current = '1081200'\n  )",
+  "sql": "SELECT l.ordered_on AS day, l.store_no, l.item_no, 'total' AS series, l.sales_bottles AS value\nFROM sales.invoice_line l\nWHERE l.ordered_on >= '2016-01-01'\nAND l.item_no IN (\n  SELECT item_no FROM sales.item WHERE category_current IN (\n    SELECT category_code FROM sales.category WHERE category_name ILIKE '%CREAM LIQUEUR%'\n  )\n)",
   "assumptions": [
-   "Cream liqueur = category 'Cream Liqueurs' (category_current = 1081200) using today's category taxonomy",
-   "All of Iowa means no store/county/city filter",
-   "Forecast horizon starts the first full week after 2026-08-31 (last data date), 12 weeks ahead",
-   "Measure is bottles sold (sales_bottles)",
-   "Single total series, no breakout requested"
+   "Cream liqueur = the Cream Liqueurs category (category_current), covering all sizes and flavors, not just one brand",
+   "No geographic breakout requested: single statewide total series",
+   "Forecast horizon counted from the first week after the data ends (2026-08-31)"
   ],
-  "rel_mae": 1.0099306051779449,
+  "rel_mae": 1.0027441529586525,
   "test_window": [
    "2024-09-02",
    "2026-08-24"
@@ -1398,95 +1394,94 @@
   "forecast": [
    {
     "period": "2026-08-31",
-    "pred": 10737.258609648543,
-    "lo": 8045.695257683591,
-    "hi": 12379.497082728518
+    "pred": 11584.372028116539,
+    "lo": 8752.997472445113,
+    "hi": 13635.027116025176
    },
    {
     "period": "2026-09-07",
-    "pred": 9560.429405583393,
-    "lo": 7013.06030554467,
-    "hi": 10908.590016043643
+    "pred": 10379.059452339561,
+    "lo": 7940.617553428777,
+    "hi": 11516.123533473306
    },
    {
     "period": "2026-09-14",
-    "pred": 9750.211994434838,
-    "lo": 7245.2648874314555,
-    "hi": 10614.32080998305
+    "pred": 9556.504380928398,
+    "lo": 7219.804341456129,
+    "hi": 10234.23280445823
    },
    {
     "period": "2026-09-21",
-    "pred": 10354.450580730681,
-    "lo": 6648.664933166264,
-    "hi": 10876.21553656347
+    "pred": 10302.618836914955,
+    "lo": 6514.861027441338,
+    "hi": 10465.875707701125
    },
    {
     "period": "2026-09-28",
-    "pred": 10712.789554537292,
-    "lo": 7555.8000558524545,
-    "hi": 11373.239879342387
+    "pred": 11923.251950754513,
+    "lo": 8300.73073669912,
+    "hi": 12459.18387419147
    },
    {
     "period": "2026-10-05",
-    "pred": 14358.176125108279,
-    "lo": 10224.720247279525,
-    "hi": 15966.441325633044
+    "pred": 15124.854442946706,
+    "lo": 11151.721491289141,
+    "hi": 15999.361082461272
    },
    {
     "period": "2026-10-12",
-    "pred": 13694.217536854649,
-    "lo": 10506.3358743288,
-    "hi": 14067.118752610939
+    "pred": 13946.451781609538,
+    "lo": 10504.893650993286,
+    "hi": 13990.831654214362
    },
    {
     "period": "2026-10-19",
-    "pred": 15030.922449431284,
-    "lo": 9331.69347557109,
-    "hi": 16106.02786593079
+    "pred": 14807.418750027879,
+    "lo": 9208.928465378202,
+    "hi": 15146.480019245719
    },
    {
     "period": "2026-10-26",
-    "pred": 16518.389350299956,
-    "lo": 11464.67640882385,
-    "hi": 17869.87865592005
+    "pred": 16580.888137267597,
+    "lo": 11307.247452927744,
+    "hi": 17135.175425598074
    },
    {
     "period": "2026-11-02",
-    "pred": 19410.93175105792,
-    "lo": 14008.329318536522,
-    "hi": 22375.55724565068
+    "pred": 17558.657779139423,
+    "lo": 12777.172946114957,
+    "hi": 19478.87674190565
    },
    {
     "period": "2026-11-09",
-    "pred": 16944.969529509086,
-    "lo": 12710.43536648869,
-    "hi": 17058.6022739922
+    "pred": 14456.574767470629,
+    "lo": 10846.457033256676,
+    "hi": 14150.32188212957
    },
    {
     "period": "2026-11-16",
-    "pred": 18231.23113474554,
-    "lo": 11791.135982018948,
-    "hi": 19565.958050538087
+    "pred": 14484.678862643306,
+    "lo": 9205.54898530509,
+    "hi": 14966.572191243917
    }
   ],
-  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/iowa_cream_liqueur_bottles_12_week_forecast/dashboard.html",
-  "cost": 0.0131,
-  "seconds": 25.1
+  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/cream_liqueurs_weekly_bottle_forecast_iowa/dashboard.html",
+  "cost": 0.0129,
+  "seconds": 31.7
  },
  {
   "request": "Total Iowa vodka sales dollars for the next year",
   "status": "ok",
-  "title": "Iowa Vodka Sales Dollars Forecast - Next Year",
-  "grain": "month",
-  "horizon": 12,
+  "title": "Iowa Vodka Sales Forecast - Next Year",
+  "grain": "year",
+  "horizon": 1,
   "model_grain": "month",
-  "sql": "SELECT\n  l.ordered_on AS day,\n  l.store_no AS store_no,\n  l.item_no AS item_no,\n  'total' AS series,\n  l.sales_dollars AS value\nFROM sales.invoice_line l\nJOIN sales.item i ON i.item_no = l.item_no\nJOIN sales.category c ON c.category_code = i.category_current\nWHERE c.category_name ILIKE '%VODKA%'\n  AND l.ordered_on >= '2016-01-01'",
+  "sql": "SELECT\n  l.ordered_on AS day,\n  l.store_no AS store_no,\n  l.item_no AS item_no,\n  'total' AS series,\n  l.sales_dollars AS value\nFROM sales.invoice_line l\nWHERE l.ordered_on >= '2016-01-01'\n  AND l.item_no IN (\n    SELECT i.item_no\n    FROM sales.item i\n    JOIN sales.category c ON c.category_code = i.category_current\n    WHERE c.category_name ILIKE '%VODKA%'\n  )",
   "assumptions": [
-   "Vodka means all vodka categories by current taxonomy: American Vodkas, American Flavored Vodka, Imported Vodkas, Imported Flavored Vodka, Vodka 80 Proof, Other Proof Vodka (no liqueur or RTD vodka products are categorized as vodka in this data, so none to exclude)",
-   "Place is the entire state of Iowa (no geographic filter)",
-   "Grain defaulted to month since not specified, with 'next year' read as 12 months ahead (horizon=12)",
-   "Measure is total sales dollars, summed across all stores and products in the vodka categories",
-   "History included from 2016-01-01 onward as required"
+   "Vodka means all vodka categories by current taxonomy: American Vodkas, Vodka 80 Proof, Other Proof Vodka, American Flavored Vodka, Imported Vodkas, Imported Flavored Vodka; no liqueur or RTD vodka cocktails included since none exist as vodka-named liqueur categories.",
+   "Place is statewide Iowa, no breakout requested.",
+   "Forecast horizon is 1 year (12 months) starting the first full period after the data ends (August 31, 2026), i.e. the next year of data.",
+   "Measure is total sales dollars (l.sales_dollars)."
   ],
   "rel_mae": 0.7108095580594386,
   "test_window": [
@@ -1626,80 +1621,80 @@
   "forecast": [
    {
     "period": "2026-09-01",
-    "pred": 6992693.054198826,
-    "lo": 6636023.778646115,
-    "hi": 7299286.489597369
+    "pred": 6884017.80626442,
+    "lo": 6532891.619998033,
+    "hi": 7185846.393935665
    },
    {
     "period": "2026-10-01",
-    "pred": 7863164.4614624465,
-    "lo": 7446997.171027671,
-    "hi": 8164343.4361081
+    "pred": 7820782.6772617735,
+    "lo": 7406858.492942993,
+    "hi": 8120338.322982823
    },
    {
     "period": "2026-11-01",
-    "pred": 7683319.226795065,
-    "lo": 7269953.2574877255,
-    "hi": 7976226.074536576
+    "pred": 7677441.543716939,
+    "lo": 7264391.79635628,
+    "hi": 7970124.319859754
    },
    {
     "period": "2026-12-01",
-    "pred": 7163676.61993859,
-    "lo": 6783470.550659514,
-    "hi": 7119195.353981616
+    "pred": 7094928.638633093,
+    "lo": 6718371.3102352405,
+    "hi": 7050874.248064651
    },
    {
     "period": "2027-01-01",
-    "pred": 6079343.873429012,
-    "lo": 5756116.464103914,
-    "hi": 6155132.88298668
+    "pred": 6034779.682415947,
+    "lo": 5713921.668260742,
+    "hi": 6110013.12611504
    },
    {
     "period": "2027-02-01",
-    "pred": 6298365.925080406,
-    "lo": 5963208.471326453,
-    "hi": 6394830.638021163
+    "pred": 6249495.455217731,
+    "lo": 5916938.565235043,
+    "hi": 6345211.676263502
    },
    {
     "period": "2027-03-01",
-    "pred": 6746409.628691873,
-    "lo": 6377515.4440827975,
-    "hi": 6848448.512604888
+    "pred": 6685892.418461839,
+    "lo": 6320307.319448112,
+    "hi": 6787015.984608921
    },
    {
     "period": "2027-04-01",
-    "pred": 7174359.175566003,
-    "lo": 6781713.299418675,
-    "hi": 7279111.4988570465
+    "pred": 7099113.563037032,
+    "lo": 6710585.807928069,
+    "hi": 7202767.2303314945
    },
    {
     "period": "2027-05-01",
-    "pred": 8309697.923344946,
-    "lo": 7854867.066799092,
-    "hi": 8664589.925101047
+    "pred": 8244957.316511812,
+    "lo": 7793670.033502667,
+    "hi": 8597084.365345934
    },
    {
     "period": "2027-06-01",
-    "pred": 7751729.0066449875,
-    "lo": 7184321.440082292,
-    "hi": 8072787.0598201435
+    "pred": 7657371.566553864,
+    "lo": 7096870.733369399,
+    "hi": 7974521.560508647
    },
    {
     "period": "2027-07-01",
-    "pred": 7436965.700403245,
-    "lo": 6897316.1204304965,
-    "hi": 7741517.401743382
+    "pred": 7316401.7128628325,
+    "lo": 6785500.634343102,
+    "hi": 7616016.1899363855
    },
    {
     "period": "2027-08-01",
-    "pred": 8475363.801534278,
-    "lo": 7858868.155096101,
-    "hi": 8813080.187797343
+    "pred": 8397142.135676427,
+    "lo": 7786336.311833213,
+    "hi": 8731741.63646536
    }
   ],
-  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/iowa_vodka_sales_dollars_forecast_next_year/dashboard.html",
-  "cost": 0.0188,
-  "seconds": 23.4
+  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/iowa_vodka_sales_forecast_next_year/dashboard.html",
+  "cost": 0.0166,
+  "seconds": 24.700000000000003
  },
  {
   "request": "Weekly bottles of liquor ordered by all Hy-Vee stores in Iowa for the next 8 weeks",
@@ -1708,14 +1703,13 @@
   "grain": "week",
   "horizon": 8,
   "model_grain": "week",
-  "sql": "SELECT l.ordered_on AS day, l.store_no AS store_no, l.item_no AS item_no, 'total' AS series, l.sales_bottles AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE s.store_name ILIKE '%HY-VEE%'\n  AND l.ordered_on >= '2016-01-01'",
+  "sql": "SELECT l.ordered_on AS day, l.store_no, l.item_no, 'total' AS series, l.sales_bottles AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE s.store_name ILIKE '%HY-VEE%'\n  AND l.ordered_on >= '2016-01-01'",
   "assumptions": [
-   "Hy-Vee stores identified by store_name containing 'HY-VEE' (207 stores), covering all Hy-Vee banners (Food Store, Wine and Spirits, Dollar Fresh, Fast and Fresh, Drugstore, C-Store, etc.) in Iowa.",
-   "All products and categories included (no product filter), since the request is for all liquor ordered.",
-   "Forecast horizon is 8 weeks starting the first full week after the latest data date (2026-08-31).",
-   "Measure is total bottles ordered (sales_bottles), which already accounts for mini sleeves/packs."
+   "Hy-Vee stores identified by store_name containing 'HY-VEE' (207 stores), covering all Hy-Vee banners (Food Store, Wine and Spirits, Dollar Fresh, Fast and Fresh, Drugstore, etc.) across Iowa.",
+   "No product restriction: all liquor categories included since the request says 'liquor ordered' generally.",
+   "Forecast horizon is 8 weeks starting the first full week after 2026-08-31 (data's last date)."
   ],
-  "rel_mae": 0.9209356167075335,
+  "rel_mae": 0.8849158231950898,
   "test_window": [
    "2024-09-02",
    "2026-08-24"
@@ -2281,55 +2275,55 @@
   "forecast": [
    {
     "period": "2026-08-31",
-    "pred": 181009.87193340994,
-    "lo": 165937.16027928927,
-    "hi": 196504.2283715664
+    "pred": 186277.33789540225,
+    "lo": 172726.39971487,
+    "hi": 207346.896382432
    },
    {
     "period": "2026-09-07",
-    "pred": 165803.98099246333,
-    "lo": 146648.41024959544,
-    "hi": 176927.18231598558
+    "pred": 170938.31314117406,
+    "lo": 151160.92204005018,
+    "hi": 183521.93847122596
    },
    {
     "period": "2026-09-14",
-    "pred": 171193.6368273525,
-    "lo": 147365.333882838,
-    "hi": 185143.92283544934
+    "pred": 176979.575505641,
+    "lo": 158624.09210175785,
+    "hi": 188918.5804265962
    },
    {
     "period": "2026-09-21",
-    "pred": 179573.1384884164,
-    "lo": 160302.37959980388,
-    "hi": 205058.09002165246
+    "pred": 184331.3684345295,
+    "lo": 163477.75368220368,
+    "hi": 215146.50015217616
    },
    {
     "period": "2026-09-28",
-    "pred": 194858.81108551394,
-    "lo": 174863.0590054969,
-    "hi": 208438.7862980363
+    "pred": 196178.39831269247,
+    "lo": 180841.34954277877,
+    "hi": 211258.51801538476
    },
    {
     "period": "2026-10-05",
-    "pred": 234288.75779892612,
-    "lo": 204673.54845379546,
-    "hi": 252000.08838794622
+    "pred": 226464.37963694127,
+    "lo": 198977.56106643163,
+    "hi": 248730.78915365913
    },
    {
     "period": "2026-10-12",
-    "pred": 186920.10707939265,
-    "lo": 161228.71330079282,
-    "hi": 197265.36965855575
+    "pred": 192148.46011113535,
+    "lo": 168443.26999699732,
+    "hi": 204709.02357105297
    },
    {
     "period": "2026-10-19",
-    "pred": 191345.4994444132,
-    "lo": 165692.86547297557,
-    "hi": 217669.97876258552
+    "pred": 190769.44446311338,
+    "lo": 168750.70534898725,
+    "hi": 222770.1595471271
    }
   ],
   "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/weekly_bottles_ordered_by_hy_vee_stores_iowa_8_week_forecast/dashboard.html",
-  "cost": 0.0221,
-  "seconds": 31.200000000000003
+  "cost": 0.0219,
+  "seconds": 39.8
  }
 ]

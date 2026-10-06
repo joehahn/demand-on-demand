@@ -1,12 +1,14 @@
-"""Training, tuning and honest evaluation. The harness owns every cutoff: the model never sees a month
-it is scored on, and hyperparameters are chosen on data before the test window.
+"""Training, tuning and honest evaluation. Fixed code owns every cutoff: a model never sees a period it is scored on.
+The choice of model and inputs is made on the validation window and tested on the Test period it never saw; the
+same choice is then made again on the latest two years for the forecast itself (see run).
 
 Pooling: a model may also train on companion series (the same product in other counties) to learn shared
 seasonality from more data; it still predicts and is scored on the requested series only. Whether pooling
 helps is decided by the grid search, like every other choice.
 
-    |<------------- tuning window ------------->|<------ test window (last 24 months) ------>|
-      grid search validates on its last 24 months   rolling-origin backtest, refit at each origin
+    |<--------- validation window (2 years) --------->|<------- Test period (last 2 years) ------->|
+      choice for the test is made here                 that choice is tested here; the choice for
+                                                       the forecast is made again here
 """
 import contextlib
 import itertools
@@ -262,15 +264,16 @@ def _grid_score(cfg, wide, exog, origins, steps, features, pool):
     return score(backtest(cfg, wide, exog, origins, steps, features, pool))
 
 
-def run(wide, exog, future_index, steps, feature_groups, log=print, pool=None):
-    t0 = time.time()
-    tune_origins, test_origins = windows(wide, steps)
-    cols = FEATURE_GROUPS
+def choose(wide, exog, origins, steps, feature_groups, pool, log):
+    """Model selection on one window of origins: models trained on data before each origin are scored on what came
+    after it. Picks the best configuration, which input groups to keep, and how many of the top configurations to
+    average and blend with last year. Returns everything the forecast and the dashboard need about the choice."""
+    t0, cols = time.time(), FEATURE_GROUPS
     features = [c for g in feature_groups for c in cols[g]]
 
-    # 1. grid search on the tuning window only, configurations in parallel
+    # 1. grid search, configurations in parallel
     cands = configs((False, True) if pool is not None and len(pool[0].columns) else (False,))
-    scores = Parallel(n_jobs=N_JOBS)(delayed(in_grain)(GRAIN, _grid_score, cfg, wide, exog, tune_origins, steps,
+    scores = Parallel(n_jobs=N_JOBS)(delayed(in_grain)(GRAIN, _grid_score, cfg, wide, exog, origins, steps,
                                                        features, pool)
                                      for cfg in cands)
     grid = [{**{k: str(v) for k, v in cfg.items()}, "rel_mae": sc, "_cfg": cfg} for cfg, sc in zip(cands, scores)]
@@ -278,68 +281,73 @@ def run(wide, exog, future_index, steps, feature_groups, log=print, pool=None):
     grid = pd.DataFrame(grid).sort_values("rel_mae", kind="stable").reset_index(drop=True)
     best = grid.iloc[0]["_cfg"]  # the baseline wins ties: a model must beat it to be used
     log(f"  grid search: {len(grid) - 1} configs in {time.time() - t0:.0f}s, chose {best['model']}"
-        f"{' pooled' if best.get('pool') else ''} (tuning rel MAE {grid.rel_mae.iloc[0]:.3f})")
+        f"{' pooled' if best.get('pool') else ''} (rel MAE {grid.rel_mae.iloc[0]:.3f})")
 
-    # 2. feature selection, also on the tuning window: drop a feature group unless the model is clearly better with it
-    #    (its error without the group must be at least KEEP_MARGIN higher); otherwise the simpler model wins
-    chosen_groups, selection = list(feature_groups), []
+    # 2. inputs: drop a group unless the model is better with it (its error without the group must be at least
+    #    KEEP_MARGIN higher); otherwise the simpler model wins
+    chosen_groups, effects = list(feature_groups), []
     if best["model"] != "seasonal_naive":
-        base = score(backtest(best, wide, exog, tune_origins, steps, features, pool, N_JOBS))
+        base = score(backtest(best, wide, exog, origins, steps, features, pool, N_JOBS))
         for g in feature_groups:
             trial = [c for c in features if c not in cols[g]]
-            trial_score = score(backtest(best, wide, exog, tune_origins, steps, trial, pool, N_JOBS))
-            selection.append({"group": g, "with": base, "without": trial_score})
+            trial_score = score(backtest(best, wide, exog, origins, steps, trial, pool, N_JOBS))
+            # how much the group helps: the error without it, relative to the error with it (positive = it helps)
+            effects.append({"group": g, "effect": trial_score / base - 1})
             if trial_score < base * (1 + KEEP_MARGIN):
                 chosen_groups.remove(g)
                 features, base = trial, trial_score
-                log(f"  dropped feature group '{g}': tuning rel MAE {trial_score:.3f} without it")
+                log(f"  dropped feature group '{g}': rel MAE {trial_score:.3f} without it")
 
-    # 3. ensemble of the top configurations and its blend with the baseline, both chosen on the tuning window
+    # 3. the single best or the top few averaged, blended with the baseline
     ranked = [c for c in grid._cfg if c["model"] != "seasonal_naive"]
     weight, blend, top = 0.0, [], []
     if best["model"] != "seasonal_naive":
         for k in TOP_K:
-            tune_bt = ensemble_backtest(ranked[:k], wide, exog, tune_origins, steps, features, pool, 1.0)
+            sel_bt = ensemble_backtest(ranked[:k], wide, exog, origins, steps, features, pool, 1.0)
             for w in BLEND_WEIGHTS:
-                b = tune_bt.copy()
+                b = sel_bt.copy()
                 b["pred"] = w * b.pred + (1 - w) * b.naive.fillna(b.pred)
                 blend.append({"models_averaged": k, "model_share": w, "tuning_rel_mae": score(b)})
         # ties go to fewer models and more model share: the simplest choice that is as good
         pick = min(blend, key=lambda r: (round(r["tuning_rel_mae"], 6), r["models_averaged"], -r["model_share"]))
         top, weight = ranked[:pick["models_averaged"]], pick["model_share"]
         log(f"  {len(top)} model(s) averaged, blended {weight:.0%} model / {1 - weight:.0%} last year "
-            f"(tuning rel MAE {pick['tuning_rel_mae']:.3f})")
+            f"(rel MAE {pick['tuning_rel_mae']:.3f})")
+    return {"best": best, "grid": grid.drop(columns="_cfg"), "feature_groups": chosen_groups, "features": features,
+            "effects": pd.DataFrame(effects, columns=["group", "effect"]), "ensemble": top, "model_share": weight,
+            "blend": pd.DataFrame(blend)}
 
-    # 4. honest test: rolling origin over the last months, refit at every origin
-    if top:
-        bt = ensemble_backtest(top, wide, exog, test_origins, steps, features, pool, weight)
+
+def run(wide, exog, future_index, steps, feature_groups, log=print, pool=None):
+    """Choose, test, choose again, forecast:
+      1. choose on the validation window (the two years before the Test period)
+      2. test that choice on the Test period, which it never saw: the accuracy figures, a replay of real use
+      3. choose again, the same way, on the latest two years (the Test period), so the forecast's choice uses the
+         most recent data; its accuracy is the one measured for the procedure in step 2
+      4. forecast with the step-3 choice, trained on all history"""
+    t0 = time.time()
+    tune_origins, test_origins = windows(wide, steps)
+    step = pd.tseries.frequencies.to_offset(FREQ)
+
+    log("  choice for the test (validation window):")
+    tested = choose(wide, exog, tune_origins, steps, feature_groups, pool, log)
+    if tested["ensemble"]:
+        bt = ensemble_backtest(tested["ensemble"], wide, exog, test_origins, steps, tested["features"], pool,
+                               tested["model_share"])
     else:
-        bt = backtest(best, wide, exog, test_origins, steps, features, pool, N_JOBS)
+        bt = backtest(tested["best"], wide, exog, test_origins, steps, tested["features"], pool, N_JOBS)
     steps_table = per_step(bt)
     log(f"  backtest: {len(test_origins)} origins, test rel MAE {score(bt):.3f}")
 
-    # 5. report only: each input group's effect in the Test period (selection above never saw these months), scored
-    #    exactly like the final forecast (same models, same blend with last year), so the numbers compare directly
-    def test_score(feats):
-        if top:
-            return score(ensemble_backtest(top, wide, exog, test_origins, steps, feats, pool, weight))
-        return score(backtest(best, wide, exog, test_origins, steps, feats, pool, N_JOBS))
-    ablation = [{"features": "chosen: " + (", ".join(chosen_groups) or "none"), "rel_mae": score(bt)}]
-    effects = []
-    for g in (feature_groups if best["model"] != "seasonal_naive" else []):
-        if g in chosen_groups:
-            other = test_score([c for c in features if c not in cols[g]])
-            ablation.append({"features": f"without {g}", "rel_mae": other})
-            with_g, without_g = score(bt), other
-        else:
-            other = test_score(features + cols[g])
-            ablation.append({"features": f"with {g} added back", "rel_mae": other})
-            with_g, without_g = other, score(bt)
-        sel = next(s for s in selection if s["group"] == g)
-        # how much the group helps: the error without it, relative to the error with it (positive = it helps)
-        effects.append({"group": g, "kept": g in chosen_groups,
-                        "selection": sel["without"] / sel["with"] - 1, "test": without_g / with_g - 1})
-    ablation.append({"features": "seasonal naive baseline", "rel_mae": 1.0})
+    log("  choice for the forecast (latest two years):")
+    final = choose(wide, exog, test_origins, steps, feature_groups, pool, log)
+    best, top, weight, features = final["best"], final["ensemble"], final["model_share"], final["features"]
+    # each input's effect in both choices, for the dashboard: validation window vs latest two years
+    effects = pd.DataFrame({"group": list(feature_groups)})
+    effects = (effects.merge(tested["effects"].rename(columns={"effect": "validation"}), on="group", how="left")
+               .merge(final["effects"].rename(columns={"effect": "latest"}), on="group", how="left"))
+    effects["kept"] = effects.group.isin(final["feature_groups"])
+    effects["kept_tested"] = effects.group.isin(tested["feature_groups"])
 
     # 6. final forecast on all history; intervals from the backtest's relative errors at each step
     fc = ensemble_forecast(top, wide, exog, future_index[0], steps, features, pool, weight) if top else \
@@ -359,10 +367,10 @@ def run(wide, exog, future_index, steps, feature_groups, log=print, pool=None):
     fc["lo"] = (fc.pred * (1 + fc.step.map(lo))).clip(lower=0)
     fc["hi"] = fc.pred * (1 + fc.step.map(hi))
     log(f"  done in {time.time() - t0:.0f}s")
-    return {"best": best, "grid": grid.drop(columns="_cfg"), "backtest": bt, "per_step": steps_table,
-            "test_rel_mae": score(bt), "ablation": pd.DataFrame(ablation), "effects": pd.DataFrame(effects), "forecast": fc,
-            "test_window": (test_origins[0], wide.index[-1]), "features": features, "feature_groups": chosen_groups,
-            "skipped": skipped, "unvalidated": unvalidated, "pooled": bool(best.get("pool")),
-            "ensemble": top, "model_share": weight, "blend": pd.DataFrame(blend),
+    return {**final, "backtest": bt, "per_step": steps_table, "test_rel_mae": score(bt), "effects": effects,
+            "forecast": fc, "tested": tested, "skipped": skipped, "unvalidated": unvalidated,
+            "pooled": bool(best.get("pool")),
             "companions": list(pool[0].columns) if pool is not None and best.get("pool") else [],
-            "tune_window": (tune_origins[0], test_origins[0] - pd.offsets.MonthBegin(1))}
+            "test_window": (test_origins[0], wide.index[-1]),
+            # the validation window: from its first origin to the period before the Test period starts
+            "tune_window": (tune_origins[0], test_origins[0] - step)}

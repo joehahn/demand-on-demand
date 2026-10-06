@@ -106,7 +106,7 @@ def grid_words(grid):
 
 
 def blend_details(res):
-    """The last step of model selection, collapsed: every way of combining the top configurations with last year,
+    """The last step of the forecast's choice, collapsed: every way of combining the top configurations with last year,
     and the one chosen (lowest error)."""
     b = res.get("blend")
     if b is None or not len(b):
@@ -120,7 +120,7 @@ def blend_details(res):
                       ERR_LABEL: b.tuning_rel_mae.map(lambda v: f"{v:.3f}"),
                       "": ["\u2190 chosen" if i == chosen else "" for i in b.index]})
     return ("<details><summary>How the weights were chosen</summary><p>Every way of combining the best configuration, "
-            f"or the average of the best few, with {base()}, scored in model selection. The lowest error "
+            f"or the average of the best few, with {base()}, scored on the latest two years. The lowest error "
             "wins; it sets the weights in the table above.</p>" + table(t) + "</details>")
 
 
@@ -151,18 +151,21 @@ def model_explanation(res, unit, spec, panel):
     pct = round(abs(1 - rel) * 100)
     test = (f"{pct}% {'more' if rel < 1 else 'less'} accurate than last year alone" if pct
             else "about as accurate as last year alone")
+    tested = f"The same procedure run on the validation period ({when(uw[0])} to {when(uw[1])}) chose " \
+             f"{short_model(res['tested'])}, which was then {test} in the Test period ({when(tw[0])} to {when(tw[1])}), " \
+             f"{units()} it never saw: that is where this page's accuracy figures come from."
     if [p[0] for p in parts] == [base()]:
         return (f"<p><strong>How this forecast is made.</strong> No model beat simply repeating the {base()} "
-                f"in model selection ({when(uw[0])} to {when(uw[1])}), so that is the forecast.</p>")
+                f"on the latest two years ({when(tw[0])} to {when(tw[1])}), so that is the forecast. {tested}</p>")
     b = res["blend"]
     best_alone = b[(b.models_averaged == 1) & (b.model_share == 1.0)].tuning_rel_mae.iloc[0]
     chosen = b[(b.models_averaged == len(res["ensemble"])) & (b.model_share == res["model_share"])].tuning_rel_mae.iloc[0]
     lead = (f"Each {W['unit']}'s forecast is this weighted mix." if len(parts) > 1
             else f"Each {W['unit']}'s forecast comes from this model.")
-    return (f"<p><strong>How this forecast is made.</strong> {lead} The weights won "
-            f"model selection ({when(uw[0])} to {when(uw[1])}): their total misses were {chosen:.2f} times those of last "
-            f"year alone, against {best_alone:.2f} for the best single model (smaller is better; 1.00 = as good as last year). In the Test period ({when(tw[0])} "
-            f"to {when(tw[1])}) the mix was {test}.</p>{tbl}")
+    return (f"<p><strong>How this forecast is made.</strong> {lead} It was chosen on the latest two years "
+            f"({when(tw[0])} to {when(tw[1])}), with models trained on earlier {units()} only: its total misses there "
+            f"were {chosen:.2f} times those of last year alone, against {best_alone:.2f} for the best single model "
+            f"(smaller is better; 1.00 = as good as last year). {tested}</p>{tbl}")
 
 
 FEATURE_NAMES = {"calendar": "calendar (month of year, business days, holidays)", "population": "county population",
@@ -227,7 +230,7 @@ def features_section(spec, panel, res, unit, fc):
                      f"all {max(all_lags)} {units()} back, not only the ones shown.")
     dropped = [g for g in spec.features if g not in chosen]
     if dropped:
-        notes.append("Tried in model selection and left out, because the model did better without them: "
+        notes.append("Tried and left out, because the model did better without them on the latest two years: "
                      + " and ".join(FEATURE_NAMES.get(g, g) for g in dropped) + ".")
     if any(c.get("pool") for c in ens) and panel.pool is not None:
         n = sum(bool(c.get("pool")) for c in ens)
@@ -321,7 +324,7 @@ def spec_table(spec, res):
             ("breakout", "combined into one forecast" if spec.series_by == "none" else f"one forecast per {spec.series_by}",
              "one total or several"),
             ("history from", spec.start[:7], "the earliest month used"),
-            ("extra inputs tried", tried or "none", "kept or dropped in model selection")]
+            ("extra inputs tried", tried or "none", "kept or dropped on the latest two years")]
     return table(pd.DataFrame(rows, columns=["field", "value", "meaning"]), bold=("field",))
 
 
@@ -624,7 +627,7 @@ def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
     # the three periods: model chosen (selection), model tested (rolling backtest), model applied (forecast)
     (tune_start, _), (test_start, _) = windows
     first_fc, end = f.month.min(), back(f.month.max(), -1)
-    for x0, x1, name, shade in [(max(tune_start, hist.index[0]), test_start, "Model selection", 0.05),
+    for x0, x1, name, shade in [(max(tune_start, hist.index[0]), test_start, "Validation", 0.05),
                                 (test_start, first_fc, "Test", 0.10), (first_fc, end, "Forecast", 0.05)]:
         fig.add_vrect(x0=x0, x1=x1, fillcolor=f"rgba(137,135,129,{shade})", line_width=0, layer="below",
                       annotation_text=name, annotation_position="top left", annotation_font_size=11,
@@ -658,38 +661,53 @@ def fig_accuracy(per_step):
                  height=300, legend=True).update_layout(hovermode="x unified")
 
 
-def fig_inputs(effects):
-    """How much each input group helped: the forecast's error without it, relative to the error with it. One bar for
-    model selection (where the keep-or-drop choice was made) and one for the Test period (checked afterward)."""
-    names = [FEATURE_NAMES.get(g, g).split(" (")[0] + (" (kept)" if k else " (dropped)")
+def fig_inputs(effects, uw, tw):
+    """How much each input group helped: the forecast's error without it, relative to the error with it, in each of
+    the two choices: on the validation period (the tested choice) and on the latest two years (the forecast's)."""
+    names = [FEATURE_NAMES.get(g, g).split(" (")[0] + (" (used)" if k else " (left out)")
              for g, k in zip(effects.group, effects.kept)]
     bars = [go.Bar(y=names, x=effects[col] * 100, name=name, orientation="h", marker_color=color,
                    hovertemplate="%{x:+.1f}%<extra>" + name + "</extra>")
-            for col, name, color in (("test", "Test period (checked afterward)", ORANGE),
-                                     ("selection", "model selection (decided)", BLUE))]
+            for col, name, color in (("latest", f"latest two years, {when(tw[0])} to {when(tw[1])} (decides the forecast)",
+                                      ORANGE),
+                                     ("validation", f"validation, {when(uw[0])} to {when(uw[1])} (decided the tested choice)",
+                                      BLUE))]
     fig = go.Figure(bars).update_layout(barmode="group", hovermode="closest", legend_traceorder="reversed")
     fig.update_xaxes(ticksuffix="%", zeroline=True, zerolinecolor="rgba(137,135,129,0.8)", zerolinewidth=2,
                      title="how much worse the forecast is without it (right of 0 = it helps)")
     if model.KEEP_MARGIN:
         fig.add_vline(x=model.KEEP_MARGIN * 100, line_dash="dot", line_color="rgba(137,135,129,0.8)",
                       annotation_text="keep line", annotation_position="top")
-    fig = style(fig, "Which inputs helped", height=140 + 60 * len(effects), legend=True)
-    return fig.update_layout(margin=dict(l=150, r=20, t=50, b=50))
+    fig = style(fig, "Which inputs helped", height=160 + 60 * len(effects), legend=True)
+    return fig.update_layout(margin=dict(l=150, r=20, t=70, b=50),
+                             legend=dict(orientation="v", y=1.02, x=0, xanchor="left", yanchor="bottom"))
 
 
 def inputs_section(res, plot):
-    """The input groups offered to this forecast, how model selection judged them, and the Test period's verdict."""
+    """The input groups offered to this forecast and how each of the two choices judged them, with the numbers."""
     eff = res.get("effects")
-    if eff is None or not len(eff):
+    if eff is None or not len(eff) or eff.latest.isna().all():
         return ""
+    uw, tw = res["tune_window"], res["test_window"]
     margin = f" by at least {model.KEEP_MARGIN:.0%}" if model.KEEP_MARGIN else ""
-    disagree = [FEATURE_NAMES.get(g, g).split(" (")[0] for g, k, t in zip(eff.group, eff.kept, eff.test) if k != (t > 0)]
-    verdict = ("The Test period agreed with every choice." if not disagree else
-               f"The Test period disagreed on: {', '.join(disagree)}. Model selection judges on earlier {units()}, and "
-               f"small differences there can be noise.")
+    name = lambda g: FEATURE_NAMES.get(g, g).split(" (")[0]
+    words = lambda xs: " and ".join([", ".join(xs[:-1]), xs[-1]]) if len(xs) > 1 else "".join(xs)
+    used = [name(g) for g, k in zip(eff.group, eff.kept) if k]
+    changed = [name(g) for g, k, kt in zip(eff.group, eff.kept, eff.kept_tested) if k != kt]
+    verdict = (f"The forecast uses {words(used) if used else 'none of them'}."
+               + (f" The two choices differ on {words(changed)}: what helped two years ago did not always help "
+                  f"recently, or the other way round." if changed else " Both choices agree."))
+    pct = lambda v: "" if pd.isna(v) else f"{v * 100:+.1f}%"
+    nums = pd.DataFrame({"input": [name(g) for g in eff.group],
+                         f"validation, {when(uw[0])} to {when(uw[1])}": eff.validation.map(pct),
+                         "in the tested choice": eff.kept_tested.map({True: "used", False: "left out"}),
+                         f"latest two years, {when(tw[0])} to {when(tw[1])}": eff.latest.map(pct),
+                         "in the forecast": eff.kept.map({True: "used", False: "left out"})})
     return (f"<p>Besides its own past sales, the model was offered these inputs. Each was kept only if the forecast "
-            f"was worse without it{margin} in model selection (blue). The orange bars show, after the fact, the same "
-            f"comparison in the Test period, which no choice ever saw. {verdict}</p>{plot(fig_inputs(eff))}")
+            f"was worse without it{margin}. The choice was made twice: on the validation period, for the choice the Test "
+            f"period scores (blue), and again on the latest two years, for the forecast itself (orange). {verdict}</p>"
+            f"{plot(fig_inputs(eff, uw, tw))}<details><summary>The input choices as numbers</summary><p>How much worse "
+            f"the forecast was without each input (positive = the input helps).</p>{table(nums)}</details>")
 
 
 def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
@@ -746,11 +764,6 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
 
     grid = grid_words(res["grid"].head(10))
     space_html, space_count = search_space(res, 0 if panel.pool is None else panel.pool[0].shape[1])
-    # an after-the-fact check: how each feature choice would have scored in the Test period (never used to choose)
-    names = {"seasonal naive baseline": f"{base()} (baseline)"}
-    abl = pd.DataFrame({"inputs besides past sales": [names.get(f, f.replace("chosen: none", "chosen: none (past sales only)"))
-                                                      for f in res["ablation"].features],
-                        "error vs last year, Test period\n(smaller is better)": res["ablation"].rel_mae.map("{:.3f}".format)})
     tw, uw = res["test_window"], res["tune_window"]
     cost = ""
     if usage:
@@ -796,14 +809,16 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
 {skipped_html}
 {charts}{more}
 <ul class="note">
-<li><strong>Model selection</strong> ({when(uw[0])} to {when(uw[1])}): {len(res["grid"]) - 1} distinct configurations of ridge
-regression and LightGBM compared, differing in targets, inputs and history lengths{", with or without other counties" if pooling_tried else ""}.</li>
-<li><strong>Selected model:</strong> {esc(short_model(res, " + "))}</li>
-<li><strong>Test</strong> ({when(tw[0])} to {when(tw[1])}): a replay of real use. {refit.capitalize()} the model was retrained on
-all {units()} before that point and forecast the next {max(ps.step)}, {bt.origin.nunique()} times in all, each scored
+<li><strong>Validation</strong> ({when(uw[0])} to {when(uw[1])}): {len(res["grid"]) - 1} distinct configurations of ridge
+regression and LightGBM compared, differing in targets, inputs and history lengths{", with or without other counties" if pooling_tried else ""};
+the best mix, {esc(short_model(res["tested"], " + "))}, goes on to the Test.</li>
+<li><strong>Test</strong> ({when(tw[0])} to {when(tw[1])}): a replay of real use, scoring the validation's choice on
+{units()} it never saw. {refit.capitalize()} it was retrained on all {units()} before that point and forecast the next {max(ps.step)}, {bt.origin.nunique()} times in all, each scored
 against what actually sold. Dotted orange is those forecasts, 1 to {max(ps.step)} {units()} ahead (pick above the
 chart).</li>
-<li><strong>Forecast</strong> ({months}): retrained on {when(panel.start)} to {when(wide.index[-1])}, then applied.{units_note}</li>
+<li><strong>Forecast</strong> ({months}): the same comparison is run again on the latest two years (the Test period), so the
+forecast's choice uses the most recent data: <strong>{esc(short_model(res, " + "))}</strong>, retrained on
+{when(panel.start)} to {when(wide.index[-1])}, then applied.{units_note}</li>
 <li><strong>Green band (80% range):</strong> inferred by comparing the model's forecasts with actual sales in the Test
 period; it spans the middle 80% of those misses.</li>
 {big_buyer_note(panel.stores, unit, wide.shape[1])}
@@ -825,13 +840,11 @@ actually happened and with the simplest serious baseline: the {base()}.</p>
 <p>What was compared: every combination of these settings ({space_count} configurations):</p>
 {space_html}
 <details><summary>The 10 best configurations</summary>
-<p>With the baseline (a model had to beat it in model selection to be used). Feature groups were then kept or dropped
-on the same {units()}; the test window was not used for any choice.</p>
+<p>The forecast's choice, on the latest two years, with the baseline (a model had to beat it to be used). Inputs were then
+kept or dropped on the same {units()}.</p>
 {table(grid)}</details>
 {blend_details(res)}
 {inputs_section(res, plot)}
-<details><summary>The input choices as numbers</summary><p>Error vs last year in the Test period with each input choice, scored like the final forecast (same models, same blend with last year).</p>
-{table(abl)}</details>
 
 {trace_html}
 <h2>Exactly what ran</h2>
