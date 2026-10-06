@@ -345,7 +345,7 @@ def agent_knowledge(sql):
                      columns=["table", "used for", "what the agent is told about it"])
     return (f"<p><strong>How it knows the tables and columns.</strong> At the start of every request the agent reads the "
             f"warehouse's <a href=\"{SITE}/data_dictionary.html\">data dictionary</a> from the database: "
-            f"{rows.tbl.nunique()} tables and {len(rows)} columns, each described in a sentence. Its search tools then "
+            f"{rows.tbl.nunique()} tables and {len(rows)} columns. Its search tools then "
             f"find the actual names below. This forecast's data came from "
             f"{({1: 'one', 2: 'two', 3: 'three', 4: 'four'}).get(len(used), len(used))} of the tables:</p>"
             + table(t, bold=("table",), nowrap=("table",)))
@@ -487,9 +487,11 @@ def model_label(usage):
 def toolbox_html(usage):
     """What the agent does, in two sentences, with links to its instructions and tools."""
     from .agent import TOOLS
-    return (f"<p><strong>The agent's toolbox.</strong> The AI agent ({esc(model_label(usage))}) does text-to-SQL: it "
-            f"looks up names with {len(TOOLS) - 1} read-only tools, then writes one SQL query that selects the sales "
-            f"records to forecast. It follows three rules for this warehouse's traps and the company's business definitions "
+    return (f"<p><strong>The agent's toolbox.</strong> The AI agent ({esc(model_label(usage))}) does text-to-SQL. To turn "
+            f"words like \u201ccream liqueur\u201d or \u201cDes Moines\u201d into the warehouse's own codes it has "
+            f"{len(TOOLS) - 1} tools: search the names of products, categories, vendors, stores and places; run a small "
+            f"test query; and ask the requester a question. None of them can change the data. It then writes one SQL "
+            f"query that selects the sales records to forecast "
             f"(<a href=\"{REPO}/blob/main/dod/agent.py\">instructions</a>, "
             f"<a href=\"{REPO}/blob/main/dod/tools.py\">tools</a>).</p>")
 
@@ -784,9 +786,10 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
         if not tr.empty:
             steps = "".join(f"<li>{esc(agent_step(t))}</li>" for t in agent.get("trace", []))
             intro = ("How the AI agent (Claude) turned the request into what \u201cRead as\u201d shows at the top. It "
-                     "writes the SQL that selects the sales records (text-to-SQL) and names the time grain; fixed code "
-                     "checks the SQL is one read-only SELECT, adds the records up, picks and tests the model, and draws this "
-                     f"page.</p>{toolbox_html(usage)}")
+                     "writes the SQL that selects the sales records (which products, which stores, which measure) and "
+                     "names the time grain. Fixed code then checks that the SQL can only read data, never change it; "
+                     f"sums the selected records into {W['adj']} totals for each series; picks and tests the model; and "
+                     f"generates this page.</p>{toolbox_html(usage)}")
             trace_html = (f"<h2>What the agent did</h2><p>{intro}{agent_knowledge(panel.sql)}"
                           "<p><strong>What it did, step by step:</strong></p>"
                           f"<ol>{steps}</ol><details><summary>The raw tool calls</summary>"

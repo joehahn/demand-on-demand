@@ -32,9 +32,10 @@ flowchart LR
 
 **The AI decides what to forecast; code decides how.** The agent has four tools: search names, run one checked
 read-only SELECT, ask one clarifying question, and submit its query. It resolves "Tito's minis" to the right products,
-"Des Moines" to the city and "revenue" to dollars, and writes one SQL query that picks the order lines: which lines,
-which measure, how to label each series. It follows three rules for the warehouse's traps and a short glossary of the
-company's business definitions ("minis" are 50 ml bottles; whiskey does not include whiskey liqueur). Fixed code never
+"Des Moines" to the city and "revenue" to dollars, and writes one SQL query that selects the sales records: which
+records, which measure, how to label each series. It follows three rules for the warehouse's traps and a short glossary of the
+company's business definitions ("minis" are 50 ml bottles; whiskey does not include whiskey liqueur); both are part of
+its instructions in [dod/agent.py](dod/agent.py), and its tools are in [dod/tools.py](dod/tools.py). Fixed code never
 runs that query as is: it wraps it in its own sums, by week or month, by store and by product. The train/test split,
 the metrics and the charts are fixed code too, the same for every request. A second short Claude call writes the
 dashboard summary, using only numbers the models computed.
