@@ -174,7 +174,7 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
 16. Choose twice (2026-10-06): model.run calls choose() on the validation window (the tested choice, scored on the
    Test period: the accuracy figures) and again on the latest two years (the forecast's choice), so decisions use the
    most recent data and the reported accuracy stays honest (it measures the procedure). Dashboards name the periods
-   Validation / Test / Forecast; Figure 4 shows each input's effect in both choices. Fixed a leak: active stores in
+   Tuning / Testing / Forecast (2026-10-06); Figure 4 shows each input's effect in both choices. Fixed a leak: active stores in
    backtests counted orders after the starting point; now shifted back by the forecast horizon (features.stores lag).
    Holiday weeks match exact names (Juneteenth was flagged as July 4th week).
 

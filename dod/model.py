@@ -1,6 +1,6 @@
 """Training, tuning and honest evaluation. Fixed code owns every cutoff: a model never sees a period it is scored on.
-The choice of model and inputs is made on the validation window and tested on the Test period it never saw; the
-same choice is then made again on the latest two years for the forecast itself (see run).
+The model and inputs are tuned on the Tuning period and tested on the Testing period they never saw; tuning is
+then repeated on the Testing period for the forecast itself (see run). Dashboards use these names.
 
 Pooling: a model may also train on companion series (the same product in other counties) to learn shared
 seasonality from more data; it still predicts and is scored on the requested series only. Whether pooling
