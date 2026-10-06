@@ -348,25 +348,16 @@ def agent_knowledge(sql):
 GITHUB = "https://github.com/joehahn/demand-on-demand/blob/main"
 
 
-def tested():
-    """The agent's latest full test against the answer key (evals/score_sql.py), in one sentence."""
-    from pathlib import Path
-    runs = json.loads(sorted((Path(__file__).parent.parent / "evals" / "sql_results").glob("2*.json"))[-1].read_text())
-    n = len({r["id"] for r in runs})
-    return (f'Tested: on <a href="{GITHUB}/evals/sql_report.md">{n} test requests run {len(runs) // n} times each</a>, '
-            f"the records the agent's SQL selected added up to the answer key's monthly totals in "
-            f"{sum(bool(r['data']) for r in runs)} of {len(runs)} runs.")
-
-
 def query_prep_rows(unit, panel, wide):
     """This forecast's own steps: the AI's query, then fixed code's sums."""
-    shape = {"week": "weeks (Monday to Sunday)", "quarter": "calendar quarters"}.get(W["grain"], "calendar months")
+    shape = {"week": "Monday to Sunday", "quarter": "calendar quarters"}.get(W["grain"], "calendar months")
     hist = f'<a href="{GITHUB}/dod/history.py">dod/history.py</a>'
     return [("This forecast", f"The AI wrote one SQL query that selects the sales records for this request: which "
              f"products, which stores, and the {unit} on each record (see The SQL as run). It was checked to be a single "
-             f"read-only SELECT before it ran. {tested()}",
+             f"read-only SELECT before it ran.",
              f'the AI (Claude), checked by <a href="{GITHUB}/dod/sqlcheck.py">dod/sqlcheck.py</a>'),
-            ("This forecast", f"Added the records up by {shape} and by store, complete {units()} only. A {W['unit']} with no "
+            ("This forecast", f"Computed {W['adj']} sums of the selected records ({shape}), complete {units()} only, "
+             f"and monthly sums for each store (for the store list and map). A {W['unit']} with no "
              f"orders counts as 0, since the warehouse was checked to have orders in every month from "
              f"{when(panel.start)} to {when(wide.index[-1])}; {units()} before the first sale are left blank.",
              hist + " (SQL + Python)")]
@@ -385,19 +376,19 @@ def prep_section(spec, panel, res, unit, wide):
 
     # once, in the warehouse
     w = code("load_data.py", "load_data.py")
-    rows.append(("Warehouse, once", "Loaded every order line the state published since 2016 into Postgres: text turned into real dates "
-                 "and numbers, each line given its own id, and each store, product and vendor kept once in its own table (order "
-                 "lines refer to them by number), so a correction made there applies to every line.",
+    rows.append(("Warehouse, once", "Loaded every sales record the state published since 2016 into Postgres: text turned into real dates "
+                 "and numbers, each record given its own id, and each store, product and vendor kept once in its own table (sales "
+                 "records refer to them by number), so a correction made there applies to every record.",
                  f"SQL run by {w} (raw, curate)"))
     rows.append(("Warehouse, once", f"Removed {n('export_duplicates')} rows the state's export repeats verbatim, and "
-                 f"{n('zero_value_lines')} zero lines (likely cancelled). {fixed('duplicates')}", f"SQL in {w} (clean)"))
+                 f"{n('zero_value_lines')} zero records (likely cancelled). {fixed('duplicates')}", f"SQL in {w} (clean)"))
     older = panel.older
     if older:   # renumbered products in this forecast: their older numbers carry the early history
-        rows.append(("Warehouse, once", f"Joined renumbered products to their older item numbers, so their history is "
-                     f"continuous. {fixed('renumbering')}", f"Python + SQL in {w} (clean)"))
+        rows.append(("Warehouse, once", f"Linked each product's old product IDs to its current one, so sales recorded under "
+                     f"an old ID count toward the same product. {fixed('renumbering')}", f"Python + SQL in {w} (clean)"))
     if "category" in sql or spec.series_by == "category":
-        rows.append(("Warehouse, once", f"Kept each product in its current category for its whole history, since the state "
-                     f"renamed and recoded categories over the years. {fixed('categories')}", f"SQL in {w} (clean)"))
+        rows.append(("Warehouse, once", f"Some product categories changed over time, so each product is counted in its "
+                     f"current category for all of its history. {fixed('categories')}", f"SQL in {w} (clean)"))
     if unit in ("bottles", "liters") and items and len(items) <= 5000:
         u = db.query("SELECT u.item_no, i.item_desc, u.units_per_sale FROM sales.item_units u JOIN sales.item i "
                      "USING (item_no) WHERE u.item_no = ANY(%s)", (items,))
@@ -430,15 +421,16 @@ def prep_section(spec, panel, res, unit, wide):
     # for this forecast: the AI's query, then fixed code
     rows += query_prep_rows(unit, panel, wide)
     kept = res.get("feature_groups", [])
-    built = {"calendar": f"calendar inputs (month of year, business days and federal holidays in each {W['unit']}, from the "
+    built = {"calendar": f"calendar (month of year, business days and federal holidays in each {W['unit']}, from the "
                          "warehouse's calendar table)",
              "population": "Census population of the counties this forecast's stores are in",
-             "season": "time of year (the sine and cosine of the date, a smooth yearly cycle)",
+             "season": "time of year (the sine and cosine of the date, so the feature repeats smoothly each year)",
              "holiday_weeks": "holiday weeks (Thanksgiving, Christmas, New Year's, July 4th)",
-             "stores": "active stores (stores that ordered the product in the 12 months before each period, carried "
-                       "forward unchanged into the forecast)"}
+             "stores": f"active stores (how many stores ordered the product in the 12 months before each {W['unit']}; "
+                       f"the {units()} being forecast reuse the latest count, since future counts are not known yet)"}
     if any(g in kept for g in built):
-        rows.append(("This forecast", "Built inputs for every " + W["unit"] + ", including the ones ahead: "
+        rows.append(("This forecast", "Derived new features for every " + W["unit"] + ", including the "
+                     + units() + " being forecast: "
                      + "; ".join(built[g] for g in built if g in kept) + ".",
                      f'<a href="{GITHUB}/dod/features.py">dod/features.py</a> (Python)'))
     targets = {c["target"] for c in res.get("ensemble") or []}
@@ -499,8 +491,7 @@ def toolbox_html(usage):
 
 def exact_html(spec, res, panel):
     """Exactly what ran: the agent's reading of the request and its SQL; everything after it is fixed code."""
-    return (f"<p>What ran: the AI's SQL selecting the sales records, then fixed code for everything after it. "
-            f"{tested()}</p>"
+    return (f"<p>What ran: the AI's SQL selecting the sales records, then fixed code for everything after it.</p>"
             f"{spec_table(spec, res)}"
             f"<details><summary>The SQL as run</summary><p>Written by the AI, checked to be one read-only SELECT, and run "
             f"under a read-only database login, inside fixed code's own sums (by {W['unit']}, store and product).</p>"

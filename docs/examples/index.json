@@ -6,9 +6,9 @@
   "grain": "month",
   "rel_mae": 0.9186332379718598,
   "summary": "Tito's minis in Des Moines are forecast at about 34,800 bottles over the next 5 months, up 21% from the same months last year. This forecast is 8% more accurate than simply repeating last year's outcome.",
-  "cost": 0.021,
-  "agent_seconds": 13.4,
-  "harness_seconds": 6.6
+  "cost": 0.0314,
+  "agent_seconds": 12.4,
+  "harness_seconds": 7.5
  },
  {
   "request": "What revenue should we expect from Fireball in Linn County next quarter?",
@@ -16,10 +16,10 @@
   "title": "Fireball, Linn County, next quarter revenue",
   "grain": "month",
   "rel_mae": 0.8896450044725563,
-  "summary": "Next quarter revenue for Fireball in Linn County is forecast at $576,000, essentially flat (-0%) versus the same months last year. This forecast is 11% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0287,
-  "agent_seconds": 56.9,
-  "harness_seconds": 59.3
+  "summary": "Next quarter's forecast for Fireball in Linn County totals about $576,000, roughly flat versus the same months last year. This forecast is 11% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0333,
+  "agent_seconds": 73.3,
+  "harness_seconds": 99.7
  },
  {
   "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
@@ -28,8 +28,8 @@
   "grain": "month",
   "rel_mae": 0.7460882272762667,
   "summary": "Cream liqueurs in Iowa are forecast at about 243,000 bottles through the holidays, down 8% from the same months last year. This forecast is 25% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0152,
-  "agent_seconds": 10.8,
+  "cost": 0.0163,
+  "agent_seconds": 11.2,
   "harness_seconds": 8.1
  },
  {
@@ -38,9 +38,9 @@
   "title": "Weekly Cream Liqueur Bottles Statewide",
   "grain": "week",
   "rel_mae": 1.0033763905673194,
-  "summary": "Forecast calls for about 172,000 bottles over the period, up 4% from the same weeks last year. This forecast is about as accurate as simply repeating last year's outcome.",
-  "cost": 0.0179,
-  "agent_seconds": 11.3,
-  "harness_seconds": 20.3
+  "summary": "Forecast calls for about 172,000 bottles over the coming weeks, up 4% from the same weeks last year. This forecast is about as accurate as simply repeating last year's outcome.",
+  "cost": 0.0132,
+  "agent_seconds": 6.7,
+  "harness_seconds": 20.1
  }
 ]
