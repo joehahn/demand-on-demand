@@ -692,9 +692,6 @@ def inputs_section(res, plot):
     words = lambda xs: " and ".join([", ".join(xs[:-1]), xs[-1]]) if len(xs) > 1 else "".join(xs)
     used = [name(g) for g, k in zip(eff.group, eff.kept) if k]
     tested = [name(g) for g, k in zip(eff.group, eff.kept_tested) if k]
-    pct = lambda v: "" if pd.isna(v) else f"{v * 100:+.1f}%"
-    nums = pd.DataFrame({"input": [name(g) for g in eff.group], "how much worse without it": eff.latest.map(pct),
-                         "in the forecast": eff.kept.map({True: "used", False: "left out"})})
     uw = res["tune_window"]
     offered = [name(g) for g in eff.group]
     return (f"<p><strong>Inputs.</strong> Besides its own past sales, the model can learn from {words(offered)}. Each was "
@@ -702,7 +699,7 @@ def inputs_section(res, plot):
             f"forecast uses {words(used) if used else 'none of them'}. <em>Note:</em> the accuracy figures at the top come "
             f"from an earlier round of tuning ({when(uw[0])} to {when(uw[1])}), so they are measured on {units()} that "
             f"tuning never saw; that round used {words(tested) if tested else 'none of them'}.</p>"
-            f"{plot(fig_inputs(eff, tw))}<details><summary>The input choices as numbers</summary>{table(nums)}</details>")
+            f"{plot(fig_inputs(eff, tw))}")
 
 
 def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
