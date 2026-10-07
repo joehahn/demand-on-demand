@@ -490,7 +490,8 @@ def toolbox_html(usage):
     return (f"<p><strong>The agent's toolbox.</strong> The AI agent ({esc(model_label(usage))}) does text-to-SQL. To turn "
             f"words like \u201ccream liqueur\u201d or \u201cDes Moines\u201d into the warehouse's own codes it has "
             f"{len(TOOLS) - 1} tools: search the names of products, categories, vendors, stores and places; run a small "
-            f"test query; and ask the requester a question. None of them can change the data. It then writes one SQL "
+            f"test query; and, in a live session, ask the requester one clarifying question when a request is "
+            f"ambiguous. None of them can change the data. It then writes one SQL "
             f"query that selects the sales records to forecast "
             f"(<a href=\"{REPO}/blob/main/dod/agent.py\">instructions</a>, "
             f"<a href=\"{REPO}/blob/main/dod/tools.py\">tools</a>).</p>")
