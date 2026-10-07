@@ -95,6 +95,7 @@ class TooLittleData(ValueError):
 KEEP_MARGIN = 0.0
 
 ROLLING = False   # under test (benchmark/rolling_experiment.py): also give every model its recent averages
+LGBM_MONTH = False   # under test (benchmark/menu_experiment.py): LightGBM sees the month number, not sine and cosine
 
 
 def configs(pool_options=(False,)):
@@ -104,6 +105,8 @@ def configs(pool_options=(False,)):
         out += [{"model": family, **dict(zip(g, vals))} for vals in itertools.product(*g.values())]
     if ROLLING:   # carried inside each configuration, so parallel workers see it too
         out = [{**c, "rolling": True} for c in out]
+    if LGBM_MONTH:
+        out = [{**c, "month_number": True} if c["model"] == "lightgbm" else c for c in out]
     return out
 
 
@@ -156,8 +159,11 @@ def fit_predict(cfg, wide, exog, end, steps, features, pool=None):
     if not targets:
         return pd.DataFrame()
     future = pd.date_range(end, periods=steps, freq=FREQ)
+    if cfg.get("month_number") and "season_sin" in features:   # time of year as the month number (LightGBM only)
+        features = [f for f in features if f not in ("season_sin", "season_cos")] + ["month_of_year"]
     if cfg["target"] == "yoy" and features:  # a change target gets change features: vs the same month last year
-        features = [f for f in features if f != "month_of_year"]  # seasonality is already differenced out
+        # seasonality is already differenced out
+        features = [f for f in features if f not in ("month_of_year", "season_sin", "season_cos")]
         exog = {c: yoy_exog(exog[c][features]) for c in train}
     ex_train = {c: exog[c].loc[train[c].index, features] for c in train} if features else None
     ex_future = {c: exog[c].loc[future, features] for c in targets} if features else None
