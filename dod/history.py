@@ -42,6 +42,27 @@ def weekly_rows(sql):
                     f"FROM ({sql}) q GROUP BY 1, 2")
 
 
+def all_sums(sql, last_month):
+    """All of fixed code's sums in one pass over the AI's records (GROUPING SETS: the database reads them once):
+    by month, store and series; by week and series; and by item number (the last 12 complete months, first and last
+    day sold). Returns (months, weeks, products)."""
+    since, until = last_month - pd.DateOffset(months=11), last_month + pd.offsets.MonthBegin(1)
+    # the dates are written in (fixed code makes them), not passed as parameters: the AI's SQL may contain % signs
+    rows = db.query(f"""
+SELECT date_trunc('month', day)::date AS month, date_trunc('week', day)::date AS period, store_no, series, item_no,
+       sum(value) AS value, count(*) AS records,
+       sum(value) FILTER (WHERE day >= '{since:%Y-%m-%d}' AND day < '{until:%Y-%m-%d}') AS last_12_months,
+       min(day) AS first_day, max(day) AS last_day, GROUPING(store_no) AS no_store, GROUPING(item_no) AS no_item
+FROM ({sql}) q
+GROUP BY GROUPING SETS ((date_trunc('month', day)::date, store_no, series),
+                        (date_trunc('week', day)::date, series),
+                        (item_no))""", timeout="180s")
+    months = rows[(rows.no_store == 0)][["month", "store_no", "series", "value", "records"]]
+    weeks = rows[(rows.no_store == 1) & (rows.no_item == 1)][["period", "series", "value"]]
+    products = rows[rows.no_item == 0][["item_no", "last_12_months", "first_day", "last_day"]]
+    return months.reset_index(drop=True), weeks.reset_index(drop=True), products.reset_index(drop=True)
+
+
 def product_rows(sql, last_month):
     """The AI's order lines summed by item number: the last 12 complete months, and the first and last month sold."""
     since, until = last_month - pd.DateOffset(months=11), last_month + pd.offsets.MonthBegin(1)
@@ -96,13 +117,13 @@ def build(sql, grain, steps):
     the periods ahead, and the store and product details the dashboard shows. Returns (Panel, input groups offered)."""
     end, last_month = data_end()
     check_months("2016-01-01", last_month)   # a period with no orders must be a real zero, not missing data
-    months = monthly_rows(sql)
+    months, weeks, products = all_sums(sql, last_month)
     if months.empty or not (months.value > 0).any():
         raise ValueError("The query found no sales for this request.")
     months["month"] = pd.to_datetime(months.month)
     months = months[months.month <= last_month]   # complete months only, as forecast
     if grain == "week":
-        rows = weekly_rows(sql)
+        rows = weeks
     else:
         start = months.month.dt.to_period("Q").dt.start_time if grain == "quarter" else months.month
         rows = months.assign(period=start)[["period", "series", "value"]]
@@ -121,7 +142,6 @@ def build(sql, grain, steps):
     everywhere = features.population(sold.assign(series="all"), idx)["all"]   # for a series whose stores have no county
     exog = {c: common.join(pops.get(c, everywhere)) for c in wide}
 
-    products = product_rows(sql, last_month)
     items = list(products.item_no)
     store_rows = months.groupby(["month", "store_no"], as_index=False).value.sum()
     p = Panel(series=wide, exog=exog, future_index=future, sql=sql, data_end=end, start="2016-01-01",

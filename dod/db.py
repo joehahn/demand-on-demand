@@ -13,9 +13,12 @@ def connect():
     return psycopg.connect(os.environ["DOD_AGENT_DSN"], autocommit=True)
 
 
-def query(sql, params=None):
-    """Run one SELECT and return a DataFrame; Postgres numeric comes back as float."""
+def query(sql, params=None, timeout=None):
+    """Run one SELECT and return a DataFrame; Postgres numeric comes back as float. The login's time limit is 60 s;
+    fixed code may allow its own big sums longer (timeout, e.g. "180s"), never the agent's exploratory queries."""
     with connect() as conn:
+        if timeout:
+            conn.execute(f"SET statement_timeout = '{int(timeout.rstrip('s'))}s'")
         cur = conn.execute(sql, params)
         df = pd.DataFrame(cur.fetchall(), columns=[d.name for d in cur.description])
     for col in df.columns:

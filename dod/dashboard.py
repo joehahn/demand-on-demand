@@ -428,17 +428,20 @@ def prep_section(spec, panel, res, unit, wide):
     # for this forecast: the AI's query, then fixed code
     rows += query_prep_rows(unit, panel, wide)
     kept = res.get("feature_groups", [])
-    built = {"season": "time of year (the sine and cosine of the date, so the feature repeats smoothly each year; "
-                       "LightGBM models see the month number instead)",
-             "calendar": f"calendar (business days in each {W['unit']}, and whether Thanksgiving, Christmas, New Year's "
-                         f"Day or July 4th falls in it)",
-             "population": "Census population of the counties this forecast's stores are in",
-             "stores": f"active stores (how many stores ordered the product in the 12 months before each {W['unit']}, "
-                       f"counted one forecast horizon earlier, so the count is always known when the forecast is made)"}
-    if any(g in kept for g in built):
+    month_note = " (for a week, the month it starts in)" if W["grain"] == "week" else ""
+    built = {"season": "time of year: where the period falls in the year. Ridge regression sees the sine and cosine of the "
+                       "date, a smooth wave that repeats every year so that December sits next to January; LightGBM sees "
+                       f"the month number, 1 to 12{month_note}",
+             "calendar": f"calendar: business days in each {W['unit']} (weekdays minus federal holidays), and four flags "
+                         f"for whether Thanksgiving, Christmas, New Year's Day or July 4th falls in it",
+             "population": "county population: Census population of the counties this forecast's stores are in",
+             "stores": f"active stores: how many stores ordered the product in the 12 months before each {W['unit']}, "
+                       f"counted one forecast horizon earlier, so the count is always known when the forecast is made"}
+    offered = [g for g in built if g in spec.features]   # all of them are built; Figure 4 shows which were used
+    if offered:
         rows.append(("This forecast", "Derived new features for every " + W["unit"] + ", including the "
-                     + units() + " being forecast: "
-                     + "; ".join(built[g] for g in built if g in kept) + ".",
+                     + units() + " being forecast (Figure 4 shows which ones the forecast uses): "
+                     + "; ".join(built[g] for g in offered) + ".",
                      f'<a href="{GITHUB}/dod/features.py">dod/features.py</a> (Python)'))
     targets = {c["target"] for c in res.get("ensemble") or []}
     scaled = "each series and input scaled to mean 0, spread 1 before fitting, and predictions scaled back"
@@ -716,7 +719,8 @@ def inputs_section(res, plot):
     tested = [name(g) for g, k in zip(eff.group, eff.kept_tested) if k]
     uw = res["tune_window"]
     offered = [name(g) for g in eff.group]
-    return (f"<p><strong>Inputs.</strong> Besides its own past sales, the model can learn from {words(offered)}. Each was "
+    return (f"<p><strong>Inputs.</strong> Besides its own past sales, the model can learn from {words(offered)} (described "
+            f"under How the data was prepared). Each was "
             f"tried with and without on the Testing period and kept only if it made the forecast better{margin}. This "
             f"forecast uses {words(used) if used else 'none of them'}. <em>Note:</em> the accuracy figures at the top come "
             f"from an earlier round of tuning ({when(uw[0])} to {when(uw[1])}), so they are measured on {units()} that "

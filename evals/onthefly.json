@@ -2,16 +2,17 @@
  {
   "request": "Weekly forecast of Tito's minis in Des Moines for the next 8 weeks",
   "status": "ok",
-  "title": "Tito's Handmade Vodka Minis (50ml) - Des Moines, Weekly Bottle Forecast",
+  "title": "Tito's Vodka Minis (50ml) - Des Moines - Weekly Forecast",
   "grain": "week",
   "horizon": 8,
   "model_grain": "week",
-  "sql": "SELECT l.ordered_on AS day,\n       l.store_no AS store_no,\n       l.item_no AS item_no,\n       'total' AS series,\n       l.sales_bottles AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE l.item_no IN (\n    SELECT item_no FROM sales.item WHERE family_item_no IN ('38194','38185')\n)\nAND s.city = 'DES MOINES'\nAND l.ordered_on >= '2016-01-01'",
+  "sql": "SELECT l.ordered_on AS day, l.store_no, l.item_no, 'total' AS series, l.sales_bottles AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE l.ordered_on >= '2016-01-01'\nAND s.city = 'DES MOINES'\nAND l.item_no IN (\n  SELECT i.item_no FROM sales.item i\n  JOIN sales.item h ON h.item_no = i.family_item_no\n  WHERE h.item_desc ILIKE '%TITOS%' AND h.bottle_volume_ml = 50\n)",
   "assumptions": [
-   "Tito's minis = 50 ml bottle size products in the Tito's Handmade Vodka family, including the 4-pack of minis (same 50 ml bottle volume), covering all historical item numbers via family_item_no.",
-   "Des Moines means stores located in the city of Des Moines, Iowa (store.city = 'DES MOINES'), excluding West Des Moines.",
-   "Forecast measure is bottles sold (sales_bottles).",
-   "Horizon is the 8 weeks following the last available data week (data through 2026-08-31)."
+   "'Des Moines' means the city of Des Moines, not West Des Moines",
+   "'Minis' means 50 ml bottles, matched on the product family's current bottle size, so it includes both the single mini and the mini 4-pack SKUs",
+   "Product family includes all item numbers that renumbered into today's Tito's mini SKUs",
+   "Measure is bottles sold since none was specified beyond 'forecast demand'",
+   "History starts 2016-01-01 as required; forecast horizon is the 8 weeks following the last available week (ending 2026-08-31)"
   ],
   "rel_mae": 0.7072747770190709,
   "test_window": [
@@ -621,24 +622,23 @@
     "hi": 2755.7702472418946
    }
   ],
-  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/tito_s_handmade_vodka_minis_50ml_des_moines_weekly_bottle_fo/dashboard.html",
-  "cost": 0.0218,
-  "seconds": 32.3
+  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/tito_s_vodka_minis_50ml_des_moines_weekly_forecast/dashboard.html",
+  "cost": 0.0223,
+  "seconds": 32.7
  },
  {
   "request": "Quarterly forecast of Fireball revenue in Linn County for the next 2 quarters",
   "status": "ok",
-  "title": "Fireball Revenue Forecast, Linn County, Next 2 Quarters",
+  "title": "Fireball Revenue Forecast - Linn County, Next 2 Quarters",
   "grain": "quarter",
   "horizon": 2,
   "model_grain": "month",
-  "sql": "SELECT l.ordered_on AS day,\n       l.store_no AS store_no,\n       l.item_no AS item_no,\n       'total' AS series,\n       l.sales_dollars AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE s.county_name = 'LINN'\n  AND l.ordered_on >= '2016-01-01'\n  AND l.item_no IN (\n    SELECT i.item_no\n    FROM sales.item i\n    WHERE i.family_item_no IN (\n      SELECT item_no FROM sales.item WHERE item_desc ILIKE '%FIREBALL%' AND family_item_no = item_no\n    )\n  )",
+  "sql": "SELECT\n  l.ordered_on AS day,\n  l.store_no,\n  l.item_no,\n  'total' AS series,\n  l.sales_dollars AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE s.county_name = 'LINN'\n  AND l.item_no IN (\n    SELECT i.item_no\n    FROM sales.item i\n    JOIN sales.item h ON h.item_no = i.family_item_no\n    WHERE h.item_desc ILIKE '%FIREBALL%'\n  )\n  AND l.ordered_on >= '2016-01-01'",
   "assumptions": [
-   "Fireball is read as the entire brand: all sizes, flavors (including Blazin Apple, Torch'd Vanilla), minis, and special packaging, matched by family item descriptions containing FIREBALL.",
-   "Linn County is matched by store county_name = LINN (217 stores).",
-   "Revenue means sales_dollars.",
-   "History starts 2016-01-01 through the most recent data (2026-08-31); forecast covers the next 2 full quarters after that (Q4 2026 and Q1 2027).",
-   "One single total series, no breakout requested."
+   "Fireball means the full brand family: every size, flavor, pack, and special edition whose current family name contains 'FIREBALL' (e.g. Cinnamon Whiskey, Blazin Apple, Torch'd Vanilla, minis, gift sets).",
+   "Linn County is matched by store county_name = 'LINN'.",
+   "Revenue means sales_dollars from invoice lines.",
+   "History starts 2016-01-01 through the latest available data (2026-08-31); forecast covers the next 2 full quarters after that (Q4 2026 and Q1 2027)."
   ],
   "rel_mae": 0.9460941075046096,
   "test_window": [
@@ -654,7 +654,7 @@
    "2016-06-01": 71305.39,
    "2016-07-01": 67718.63,
    "2016-08-01": 71712.37,
-   "2016-09-01": 75719.04000000001,
+   "2016-09-01": 75719.04,
    "2016-10-01": 85774.58,
    "2016-11-01": 102293.27,
    "2016-12-01": 113141.2,
@@ -675,20 +675,20 @@
    "2018-03-01": 80605.20999999999,
    "2018-04-01": 82167.01,
    "2018-05-01": 102022.54,
-   "2018-06-01": 78389.54,
+   "2018-06-01": 78389.54000000001,
    "2018-07-01": 97818.43,
    "2018-08-01": 100035.52,
    "2018-09-01": 83258.72,
    "2018-10-01": 129645.64,
    "2018-11-01": 124899.74,
    "2018-12-01": 113252.91,
-   "2019-01-01": 98865.93,
+   "2019-01-01": 98865.93000000001,
    "2019-02-01": 103782.36,
    "2019-03-01": 95907.51,
    "2019-04-01": 104625.4,
    "2019-05-01": 109932.37,
    "2019-06-01": 111719.67,
-   "2019-07-01": 114005.07,
+   "2019-07-01": 114005.06999999999,
    "2019-08-01": 124356.61,
    "2019-09-01": 122354.83,
    "2019-10-01": 177512.37,
@@ -707,7 +707,7 @@
    "2020-11-01": 156865.2,
    "2020-12-01": 165785.99,
    "2021-01-01": 139150.34,
-   "2021-02-01": 119182.93000000001,
+   "2021-02-01": 119182.93,
    "2021-03-01": 174660.69,
    "2021-04-01": 132586.29,
    "2021-05-01": 157367.9,
@@ -724,7 +724,7 @@
    "2022-04-01": 135423.75,
    "2022-05-01": 168411.83,
    "2022-06-01": 157596.13,
-   "2022-07-01": 138210.08000000002,
+   "2022-07-01": 138210.08,
    "2022-08-01": 178494.65,
    "2022-09-01": 196702.72,
    "2022-10-01": 197705.47,
@@ -784,9 +784,9 @@
    },
    {
     "period": "2026-10-01",
-    "pred": 203456.61006856628,
-    "lo": 187477.98364190047,
-    "hi": 227602.9925429432
+    "pred": 203456.61006856625,
+    "lo": 187477.98364190044,
+    "hi": 227602.99254294316
    },
    {
     "period": "2026-11-01",
@@ -814,22 +814,22 @@
    }
   ],
   "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/fireball_revenue_forecast_linn_county_next_2_quarters/dashboard.html",
-  "cost": 0.0361,
-  "seconds": 189.2
+  "cost": 0.034,
+  "seconds": 153.60000000000002
  },
  {
   "request": "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
   "status": "ok",
-  "title": "Cream Liqueurs - Statewide Weekly Bottle Forecast",
+  "title": "Cream Liqueurs Weekly Bottle Forecast - Iowa",
   "grain": "week",
   "horizon": 12,
   "model_grain": "week",
-  "sql": "SELECT l.ordered_on AS day, l.store_no, l.item_no, 'total' AS series, l.sales_bottles AS value\nFROM sales.invoice_line l\nWHERE l.ordered_on >= '2016-01-01'\nAND l.item_no IN (\n  SELECT i.item_no FROM sales.item i\n  JOIN sales.category c ON c.category_code = i.category_current\n  WHERE c.category_name ILIKE '%CREAM LIQUEUR%'\n)",
+  "sql": "SELECT l.ordered_on AS day, l.store_no, l.item_no, 'total' AS series, l.sales_bottles AS value\nFROM sales.invoice_line l\nWHERE l.ordered_on >= '2016-01-01'\nAND l.item_no IN (\n  SELECT item_no FROM sales.item WHERE category_current IN (\n    SELECT category_code FROM sales.category WHERE category_name ILIKE '%CREAM LIQUEUR%'\n  )\n)",
   "assumptions": [
-   "Category = Cream Liqueurs (category_current name match), includes all vendors and sizes",
-   "Measure is bottles sold (sales_bottles)",
-   "Place is all Iowa stores, no geographic breakout",
-   "Forecast horizon is 12 weeks starting the first full week after 2026-08-31"
+   "Cream liqueur = category 'CREAM LIQUEURS' using today's category taxonomy (category_current), not point-in-time category_code",
+   "All of Iowa means no store/county filter",
+   "Forecast starts the first full week after the data ends (2026-08-31), 12 weeks ahead",
+   "Measure is bottles sold (sales_bottles)"
   ],
   "rel_mae": 0.8229315229222476,
   "test_window": [
@@ -1468,24 +1468,23 @@
     "hi": 15737.06175348234
    }
   ],
-  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/cream_liqueurs_statewide_weekly_bottle_forecast/dashboard.html",
-  "cost": 0.0161,
-  "seconds": 41.0
+  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/cream_liqueurs_weekly_bottle_forecast_iowa/dashboard.html",
+  "cost": 0.013,
+  "seconds": 32.0
  },
  {
   "request": "Total Iowa vodka sales dollars for the next year",
   "status": "ok",
-  "title": "Iowa Vodka Sales Dollars - Next Year Forecast",
-  "grain": "year",
-  "horizon": 1,
+  "title": "Iowa Vodka Sales Dollars Forecast - Next Year",
+  "grain": "month",
+  "horizon": 12,
   "model_grain": "month",
-  "sql": "SELECT l.ordered_on AS day,\n       l.store_no AS store_no,\n       l.item_no AS item_no,\n       'total' AS series,\n       l.sales_dollars AS value\nFROM sales.invoice_line l\nWHERE l.ordered_on >= '2016-01-01'\n  AND l.item_no IN (\n    SELECT i.item_no\n    FROM sales.item i\n    JOIN sales.category c ON c.category_code = i.category_current\n    WHERE c.category_name ILIKE '%VODKA%'\n  )",
+  "sql": "SELECT l.ordered_on AS day, l.store_no, l.item_no, 'total' AS series, l.sales_dollars AS value\nFROM sales.invoice_line l\nJOIN sales.item i ON i.item_no = l.item_no\nJOIN sales.category c ON c.category_code = i.category_current\nWHERE c.category_name ILIKE '%VODKA%'\n  AND l.ordered_on >= '2016-01-01'",
   "assumptions": [
-   "Vodka means all vodka categories (American, imported, flavored, various proofs) by current category taxonomy, no liqueurs or cocktails exist under vodka category names so none excluded",
-   "Place is all of Iowa statewide, no geographic filter",
-   "Next year means 1 year ahead of the last available data (data through Aug 2026, so forecasting the next 12-month year period)",
-   "Measure is total sales dollars",
-   "No breakout requested, single total series"
+   "Vodka = all current categories with 'VODKA' in the name (Imported Vodkas, Other Proof Vodka, Imported Flavored Vodka, American Flavored Vodka, American Vodkas, Vodka 80 Proof); no liqueur-type vodka categories exist to exclude",
+   "Measure is total sales dollars statewide (all Iowa stores)",
+   "Next year = 12 months starting the first full month after the data ends (September 2026 through August 2027)",
+   "Category is based on each product's current category (category_current), not the category recorded on the order date, per warehouse rules"
   ],
   "rel_mae": 0.6890838651813013,
   "test_window": [
@@ -1696,23 +1695,23 @@
     "hi": 8729869.060481053
    }
   ],
-  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/iowa_vodka_sales_dollars_next_year_forecast/dashboard.html",
-  "cost": 0.0177,
-  "seconds": 26.8
+  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/iowa_vodka_sales_dollars_forecast_next_year/dashboard.html",
+  "cost": 0.0181,
+  "seconds": 60.1
  },
  {
   "request": "Weekly bottles of liquor ordered by all Hy-Vee stores in Iowa for the next 8 weeks",
   "status": "ok",
-  "title": "Weekly Bottles Ordered by Hy-Vee Stores (Iowa) - 8 Week Forecast",
+  "title": "Weekly Bottles Ordered by Hy-Vee Stores (Iowa), Next 8 Weeks",
   "grain": "week",
   "horizon": 8,
   "model_grain": "week",
-  "sql": "SELECT\n  l.ordered_on AS day,\n  l.store_no AS store_no,\n  l.item_no AS item_no,\n  'total' AS series,\n  l.sales_bottles AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE l.ordered_on >= '2016-01-01'\n  AND (s.store_name ILIKE '%HY-VEE%' OR s.store_name ILIKE '%HY VEE%')",
+  "sql": "SELECT l.ordered_on AS day,\n       l.store_no AS store_no,\n       l.item_no AS item_no,\n       'total' AS series,\n       l.sales_bottles AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE s.store_name ILIKE '%HY-VEE%'\n  AND l.ordered_on >= '2016-01-01'",
   "assumptions": [
-   "Hy-Vee stores identified by store_name containing HY-VEE or HY VEE, covering 207 store locations across Iowa",
-   "All product categories included (no product filter), since the request is for all liquor ordered",
-   "Forecast horizon of 8 weeks starts the first full week after the data ends (2026-08-31)",
-   "Measure is bottles ordered (sales_bottles), which already accounts for mini packs correctly"
+   "Hy-Vee stores identified by store_name containing 'HY-VEE' (207 stores), covering all Hy-Vee banners (Food Store, Wine and Spirits, Fast and Fresh, Dollar Fresh, etc.) across Iowa",
+   "No product restriction: all liquor categories included",
+   "Forecast horizon is the 8 weeks following the end of data (2026-08-31)",
+   "Measure is total bottles ordered (sales_bottles), which accounts for mini-sleeve packs"
   ],
   "rel_mae": 0.8483473224661713,
   "test_window": [
@@ -2327,8 +2326,8 @@
     "hi": 211040.51959053785
    }
   ],
-  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/weekly_bottles_ordered_by_hy_vee_stores_iowa_8_week_forecast/dashboard.html",
-  "cost": 0.022,
-  "seconds": 45.4
+  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/weekly_bottles_ordered_by_hy_vee_stores_iowa_next_8_weeks/dashboard.html",
+  "cost": 0.0222,
+  "seconds": 52.199999999999996
  }
 ]
