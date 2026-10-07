@@ -502,7 +502,9 @@ def exact_html(spec, res, panel):
     return (f"<p>What ran: the AI's SQL selecting the sales records, then fixed code for everything after it.</p>"
             f"{spec_table(spec, res)}"
             f"<details><summary>The SQL as run</summary><p>Written by the AI, checked to be one read-only SELECT, and run "
-            f"under a read-only database login, inside fixed code's own sums (by {W['unit']}, store and product).</p>"
+            f"under a read-only database login, inside fixed code's own sums (by {W['unit']}, store and product). It "
+            f"selected {panel.records:,} sales records ({pd.Timestamp(panel.start):%b %Y} through "
+            f"{panel.records_through:%b %Y}).</p>"
             f"<pre>{esc(panel.sql)}</pre></details>")
 
 

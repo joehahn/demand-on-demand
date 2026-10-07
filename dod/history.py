@@ -32,8 +32,8 @@ def check_query(sql):
 
 def monthly_rows(sql):
     """The AI's order lines summed by month, store and series."""
-    return db.query(f"SELECT date_trunc('month', day)::date AS month, store_no, series, sum(value) AS value "
-                    f"FROM ({sql}) q GROUP BY 1, 2, 3")
+    return db.query(f"SELECT date_trunc('month', day)::date AS month, store_no, series, sum(value) AS value, "
+                    f"count(*) AS records FROM ({sql}) q GROUP BY 1, 2, 3")
 
 
 def weekly_rows(sql):
@@ -82,7 +82,7 @@ def build(sql, grain, steps):
     if months.empty or not (months.value > 0).any():
         raise ValueError("The query found no sales for this request.")
     months["month"] = pd.to_datetime(months.month)
-    months = months[months.month <= last_month]
+    months = months[months.month <= last_month]   # complete months only, as forecast
     if grain == "week":
         rows = weekly_rows(sql)
     else:
@@ -109,4 +109,5 @@ def build(sql, grain, steps):
     p = Panel(series=wide, exog=exog, future_index=future, sql=sql, data_end=end, start="2016-01-01",
               labels={c: c for c in wide}, stores=store_list(store_rows, last_month), unknown_packs=unknown_packs(items))
     p.items, p.older = items, older_numbers(items)
+    p.records, p.records_through = int(months.records.sum()), last_month
     return p, groups

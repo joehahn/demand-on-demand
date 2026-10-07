@@ -38,6 +38,8 @@ class Panel:
     unknown_packs: list = field(default_factory=list)  # items in the product sold in packs of unknown size
     items: list = field(default_factory=list)          # every item number in the forecast
     older: list = field(default_factory=list)          # those that are older numbers of renumbered products
+    records: int = 0                                   # sales records the query selected, in complete months
+    records_through: pd.Timestamp = None               # the last of those months
 
 
 def member_items(spec):
