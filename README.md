@@ -12,7 +12,7 @@ same period last year, and publishes a dashboard that says how far to trust the 
 |---|---|
 | Plain English to dashboard | about 30 seconds (median of the four examples) |
 | Claude API cost per request | about $0.02 |
-| Forecast accuracy | beats "same month last year" on 20 of 30 sampled forecasts; median error 9% lower |
+| Forecast accuracy | beats "same month last year" on 18 of 30 sampled forecasts; median error 8% lower, mean 9% lower |
 | Agent accuracy | on 34 test requests run 3 times each, its SQL added up to the answer key in 102 of 102 runs |
 
 **Author:** Joseph M. Hahn, Ph.D., independent AI and machine learning consultant  
@@ -43,8 +43,9 @@ dashboard summary, using only numbers the models computed.
 **Honest accuracy.** Every forecast is backtested on the last 24 months, which no choice ever saw. Settings are
 tuned on the two years before: 48 configurations (LightGBM and ridge; level, month-over-month or year-over-year
 targets; lags and history lengths), then the single best or the average of the top three, blended with "same month
-last year" only as far as that helps. Inputs such as the calendar, county population, holiday weeks and active stores
-are kept only if they help. The baseline is always a candidate, so a
+last year" only as far as that helps. Every forecast, weekly or monthly, is offered the same four inputs (time of year,
+business days and holidays, county population, active stores), each kept only if it helps; ridge regression sees time
+of year as a smooth yearly wave (sine and cosine), LightGBM as the month number ([benchmark/menu.md](benchmark/menu.md)). The baseline is always a candidate, so a
 model is used only when it beats it.
 
 **Clean data, fixed once.** The public data has real problems, documented on the
@@ -75,10 +76,10 @@ included, the 48 model configurations compared, every tool call the agent made, 
 
 | request | backtest vs same period last year |
 |---|---|
-| [Monthly forecast of Tito's minis in Des Moines for the next 5 months](https://joehahn.github.io/demand-on-demand/examples/tito_s_minis_des_moines_next_5_months.html) | 8% more accurate |
-| [What revenue should we expect from Fireball in Linn County next quarter?](https://joehahn.github.io/demand-on-demand/examples/fireball_linn_county_next_quarter.html) | 11% more accurate |
-| [How many bottles of cream liqueur will Iowa stores order for the holidays?](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_holidays.html) | 25% more accurate |
-| [show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_by_week_next_12_weeks.html) | as accurate (vs the same week last year) |
+| [Monthly forecast of Tito's minis in Des Moines for the next 5 months](https://joehahn.github.io/demand-on-demand/examples/tito_s_minis_des_moines_next_5_months.html) | 16% more accurate |
+| [What revenue should we expect from Fireball in Linn County next quarter?](https://joehahn.github.io/demand-on-demand/examples/fireball_linn_county_next_quarter.html) | 12% more accurate |
+| [How many bottles of cream liqueur will Iowa stores order for the holidays?](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_holidays.html) | 30% more accurate |
+| [show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_by_week_next_12_weeks.html) | 18% more accurate |
 
 More by week, quarter and year: [forecasts by any grain](https://joehahn.github.io/demand-on-demand/onthefly.html).
 
@@ -93,8 +94,8 @@ against the answer key with `python demo.py --check`.
 
 - [benchmark/report.md](benchmark/report.md): 30 forecasts sampled from the warehouse (products, categories, vendors;
   counties and statewide; bottles, dollars, liters; 3 to 12 months), run through the same fixed code as every forecast.
-  The model beat "same month last year" on 20, with a median error 9% lower. Iowa liquor demand is very regular year
-  to year, so last year is a hard baseline, and on the other 10 it was not beaten. The report lists every forecast, the
+  The model beat "same month last year" on 18, with a median error 8% lower and a mean error 9% lower. Iowa liquor
+  demand is very regular year to year, so last year is a hard baseline, and on the other 12 it was not beaten. The report lists every forecast, the
   misses included.
 - [evals/sql_report.md](evals/sql_report.md): the agent's SQL scored against an answer key (`evals/answer_cases.json`,
   `evals/build_answers.py`): 34 requests (brands, categories, minis, cities, counties, a 207-store chain, weeks,

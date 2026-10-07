@@ -12,7 +12,8 @@ Arms, each offered to model selection group by group (a group is kept only if it
 Each forecast runs through the same fixed code as the dashboards (dod/history.py, dod/model.py: tuned on the Tuning
 period, scored on the Testing period). Weekly forecasts look the same span ahead in weeks (capped at 52). Scored as
 error relative to the same period last year on the Testing period. No AI calls. Writes benchmark/menu.csv and
-benchmark/menu.md.
+benchmark/menu.md. Arm C was adopted (2026-10-06); arm A's menus were then retired from dod/, so this script reproduces
+as of commit 57deabe.
 """
 import sys
 import time

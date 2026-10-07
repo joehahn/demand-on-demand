@@ -1,28 +1,29 @@
-"""Model inputs beyond past sales, offered to model selection as groups (model.FEATURE_GROUPS); a group is kept only
-if the model does better with it on the model-selection window. Each is known before the period it describes.
+"""Model inputs beyond past sales: the same menu for every forecast, weekly or monthly. Each group is offered to
+model selection (model.FEATURE_GROUPS) and kept only if the forecast is better with it. Each is known before the
+period it describes.
 
-  calendar       month of year, business days and federal holidays in the period (monthly and quarterly forecasts)
-  population     Census population of the counties where the series' stores are (monthly and quarterly forecasts)
-  season         sine and cosine of the time of year: a smooth yearly cycle a linear model can use (weekly)
-  holiday_weeks  1 if the week contains Thanksgiving, Christmas, New Year's Day or July 4th (weekly)
-  stores         stores that ordered the product in the 12 months before the period, counted one forecast horizon
-                 earlier, so every value is known when the forecast is made, in backtests too (weekly)
+  season       time of year: the sine and cosine of the date, so the input repeats smoothly each year. Ridge
+               regression sees these; LightGBM sees the month number instead (model.LGBM_MONTH)
+  calendar     business days in the period, and four flags: Thanksgiving, Christmas, New Year's Day or July 4th falls in
+               the period
+  population   Census population of the counties where the series' stores are
+  stores       stores that ordered the product in the 12 months before the period, counted one forecast horizon
+               earlier, so every value is known when the forecast is made, in backtests too
 
-Which grain gets which inputs follows the benchmarks: calendar and population for months (benchmark/pooling.md: without
-them 13 of 30 forecasts beat last year instead of 20), season, holiday weeks and stores for weeks
-(benchmark/features.md: median error vs last year 0.857 -> 0.826).
+One menu, and ridge with sine and cosine while LightGBM gets the month number, after benchmark/menu.md (vs the earlier
+per-grain menus: monthly better on 21 of 30 forecasts, mean error vs last year 0.952 -> 0.913; weekly better on 16,
+worse on 10, median 0.833 both).
 """
 import numpy as np
 import pandas as pd
 
 from . import db
 
-GROUPS = {"week": ["season", "holiday_weeks", "stores"], "month": ["calendar", "population"],
-          "quarter": ["calendar", "population"]}
+GROUPS = ["season", "calendar", "population", "stores"]   # offered to every forecast
 # exact names in ref.calendar: the holiday itself, not the "(observed)" day off, and not Juneteenth (whose official name,
 # "Juneteenth National Independence Day", also contains "Independence")
-HOLIDAYS = {"thanksgiving_week": "Thanksgiving Day", "christmas_week": "Christmas Day", "new_year_week": "New Year's Day",
-            "july4_week": "Independence Day"}
+HOLIDAYS = {"thanksgiving": "Thanksgiving Day", "christmas": "Christmas Day", "new_year": "New Year's Day",
+            "july4": "Independence Day"}
 
 
 def season(index):
@@ -33,15 +34,16 @@ def season(index):
     return pd.DataFrame({"season_sin": np.sin(t), "season_cos": np.cos(t)}, index=index)
 
 
-def holiday_weeks(index):
-    """For weeks (by their Monday): 1 if the week contains one of the four big holidays."""
+def holidays(index, grain):
+    """1 if the holiday (its actual day) falls in the period: a week (by its Monday) or a month."""
     cal = db.query("SELECT cal_date, holiday_name FROM ref.calendar WHERE holiday_name IS NOT NULL")
     day = pd.to_datetime(cal.cal_date)
-    cal["week"] = day - pd.to_timedelta(day.dt.weekday, unit="D")
+    cal["period"] = (day - pd.to_timedelta(day.dt.weekday, unit="D")) if grain == "week" else \
+        day.dt.to_period("M").dt.start_time
     out = pd.DataFrame(0.0, index=index, columns=list(HOLIDAYS))
     for col, name in HOLIDAYS.items():
-        weeks = set(cal[cal.holiday_name == name].week)
-        out[col] = [1.0 if w in weeks else 0.0 for w in index]
+        periods = set(cal[cal.holiday_name == name].period)
+        out[col] = [1.0 if p in periods else 0.0 for p in index]
     return out
 
 

@@ -177,4 +177,9 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    Tuning / Testing / Forecast (2026-10-06); Figure 4 shows each input's effect in both choices. Fixed a leak: active stores in
    backtests counted orders after the starting point; now shifted back by the forecast horizon (features.stores lag).
    Holiday weeks match exact names (Juneteenth was flagged as July 4th week).
+17. One input menu (2026-10-06): every forecast is offered season (sine, cosine), calendar (business days + Thanksgiving,
+   Christmas, New Year's Day, July 4th flags for the period), population (counties of the series' stores) and stores
+   (lagged by the horizon); model.LGBM_MONTH: LightGBM sees month_of_year instead of sine and cosine; change-from-last-
+   year targets drop time of year. benchmark/menu.md (arm C). Benchmark now 18/30, median 0.92, mean 0.913 (was 20/30,
+   0.91, 0.952). Examples: Tito's 0.837, Fireball 0.877, cream holidays 0.70, cream weekly 0.823.
 

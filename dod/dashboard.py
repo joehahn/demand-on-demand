@@ -171,8 +171,8 @@ def model_explanation(res, unit, spec, panel):
             f"(smaller is better; 1.00 = as good as last year). {tested}</p>{tbl}")
 
 
-FEATURE_NAMES = {"calendar": "calendar (month of year, business days, holidays)", "population": "county population",
-                 "season": "time of year (season)", "holiday_weeks": "holiday weeks", "stores": "active stores"}
+FEATURE_NAMES = {"season": "time of year (season)", "calendar": "calendar (business days, holidays)",
+                 "population": "county population", "stores": "active stores"}
 FEATURE_COLUMNS = model.FEATURE_GROUPS
 
 
@@ -231,6 +231,8 @@ def features_section(spec, panel, res, unit, fc):
     if wider:
         notes.append(f"The {' and '.join(wider)} model{'s' if len(wider) > 1 else ''} use{'' if len(wider) > 1 else 's'} "
                      f"all {max(all_lags)} {units()} back, not only the ones shown.")
+    if "season" in chosen and any(c["model"] == "lightgbm" and c.get("month_number") for c in ens):
+        notes.append("LightGBM sees the month number (1 to 12) in place of the sine and cosine.")
     dropped = [g for g in spec.features if g not in chosen]
     if dropped:
         notes.append("Tried and left out, because the model did better without them when re-tuned on the Testing period: "
@@ -426,13 +428,13 @@ def prep_section(spec, panel, res, unit, wide):
     # for this forecast: the AI's query, then fixed code
     rows += query_prep_rows(unit, panel, wide)
     kept = res.get("feature_groups", [])
-    built = {"calendar": f"calendar (month of year, business days and federal holidays in each {W['unit']}, from the "
-                         "warehouse's calendar table)",
+    built = {"season": "time of year (the sine and cosine of the date, so the feature repeats smoothly each year; "
+                       "LightGBM models see the month number instead)",
+             "calendar": f"calendar (business days in each {W['unit']}, and whether Thanksgiving, Christmas, New Year's "
+                         f"Day or July 4th falls in it)",
              "population": "Census population of the counties this forecast's stores are in",
-             "season": "time of year (the sine and cosine of the date, so the feature repeats smoothly each year)",
-             "holiday_weeks": "holiday weeks (Thanksgiving, Christmas, New Year's, July 4th)",
-             "stores": f"active stores (how many stores ordered the product in the 12 months before each {W['unit']}; "
-                       f"the {units()} being forecast reuse the latest count, since future counts are not known yet)"}
+             "stores": f"active stores (how many stores ordered the product in the 12 months before each {W['unit']}, "
+                       f"counted one forecast horizon earlier, so the count is always known when the forecast is made)"}
     if any(g in kept for g in built):
         rows.append(("This forecast", "Derived new features for every " + W["unit"] + ", including the "
                      + units() + " being forecast: "

@@ -111,16 +111,15 @@ def build(sql, grain, steps):
     future = pd.date_range(wide.index[-1] + step, periods=steps, freq=step)
     idx = wide.index.append(future)
 
-    groups = features.GROUPS[grain]
+    # the same inputs for every forecast (dod/features.py); month_of_year is LightGBM's time of year
+    groups = list(features.GROUPS)
     sold = months[months.value > 0]
-    if grain == "week":
-        common = features.season(pd.DatetimeIndex(idx, freq="W-MON")).join(features.holiday_weeks(idx))
-        common["active_stores"] = features.stores(sold, idx, steps * step).values   # shifted by the horizon
-        exog = {c: common.copy() for c in wide}
-    else:
-        cal = features.calendar(idx, grain)
-        pops = features.population(sold, idx)
-        exog = {c: cal.join(pops[c]) if c in pops else cal.copy() for c in wide}
+    common = (features.season(pd.DatetimeIndex(idx, freq=FREQ[grain])).join(features.calendar(idx, grain))
+              .join(features.holidays(idx, grain)))
+    common["active_stores"] = features.stores(sold, idx, steps * step).values   # shifted by the horizon
+    pops = features.population(sold, idx)
+    everywhere = features.population(sold.assign(series="all"), idx)["all"]   # for a series whose stores have no county
+    exog = {c: common.join(pops.get(c, everywhere)) for c in wide}
 
     products = product_rows(sql, last_month)
     items = list(products.item_no)

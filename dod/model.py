@@ -76,13 +76,11 @@ def in_grain(grain, fn, *args):
         return fn(*args)
 
 
-# Input groups model selection can try, and their columns in the exog frames. A group is kept only if the model does
-# better with it on the model-selection window. Monthly forecasts are offered "calendar" and "population"; weekly ones
-# "season", "holiday_weeks" and "stores" (dod/features.py; adopted after benchmark/feature_experiment.py).
-FEATURE_GROUPS = {"calendar": ["month_of_year", "business_days", "holidays"], "population": ["population"],
-                  "season": ["season_sin", "season_cos"],
-                  "holiday_weeks": ["thanksgiving_week", "christmas_week", "new_year_week", "july4_week"],
-                  "stores": ["active_stores"]}
+# Input groups model selection can try, and their columns in the exog frames; the same menu for every forecast
+# (dod/features.py, benchmark/menu.md). A group is kept only if the model does better with it.
+FEATURE_GROUPS = {"season": ["season_sin", "season_cos"],
+                  "calendar": ["business_days", "thanksgiving", "christmas", "new_year", "july4"],
+                  "population": ["population"], "stores": ["active_stores"]}
 
 
 class TooLittleData(ValueError):
@@ -95,7 +93,7 @@ class TooLittleData(ValueError):
 KEEP_MARGIN = 0.0
 
 ROLLING = False   # under test (benchmark/rolling_experiment.py): also give every model its recent averages
-LGBM_MONTH = False   # under test (benchmark/menu_experiment.py): LightGBM sees the month number, not sine and cosine
+LGBM_MONTH = True   # LightGBM sees time of year as the month number, ridge as sine and cosine (benchmark/menu.md)
 
 
 def configs(pool_options=(False,)):
