@@ -562,6 +562,21 @@ def fig_store_map(stores, unit):
     return fig
 
 
+def products_section(products, unit, last_month):
+    """Which products were added up: every product the AI's query selected, so a reader can check what it counted."""
+    if products is None or products.empty:
+        return ""
+    recent = products[products.last_12_months > 0]
+    money = "$" if unit == "dollars" else ""
+    t = products.rename(columns={"product_id": "product ID", "ml": "size (ml)", "first_sold": "first sold",
+                                 "last_sold": "last sold", "last_12_months": f"{unit}, last 12 months"})
+    return (f"<h3>Products included</h3><p>The AI's query selected {len(products):,} products; {len(recent):,} of them "
+            f"sold in the 12 months to {last_month:%b %Y}. Products renumbered over the years appear once, under their "
+            f"current product ID.</p><details><summary>Show the products</summary>"
+            f"{table(t, {f'{unit}, last 12 months': lambda v: f'{money}{v:,.0f}', 'size (ml)': lambda v: f'{v:,.0f}'})}"
+            f"</details>")
+
+
 def stores_section(stores, spec, unit, last_month, plot):
     """Which stores were added up: every store whose orders of this product in this region are in the series."""
     if stores is None or stores.empty:
@@ -742,9 +757,12 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
                          for v, k in tiles)
 
     # forecast table: one row per series and period
-    ft = fc.assign(series=fc.series.map(lambda c: labels.get(c, c)), month=fc.month.map(stamp))
-    ft = ft[["series", "month", "pred", "lo", "hi"]].rename(columns={"month": W["unit"], "pred": "forecast",
-                                                                      "lo": "low (10%)", "hi": "high (90%)"})
+    ly = f"same {W['unit']} last year"
+    ft = fc.assign(series=fc.series.map(lambda c: labels.get(c, c)), month=fc.month.map(stamp),
+                   last_year=[wide.at[back(m, W["season"]), c] if back(m, W["season"]) in wide.index else float("nan")
+                              for m, c in zip(fc.month, fc.series)])
+    ft = ft[["series", "month", "pred", "lo", "hi", "last_year"]].rename(
+        columns={"month": W["unit"], "pred": "forecast", "lo": "low (10%)", "hi": "high (90%)", "last_year": ly})
     num = lambda v: f"{v:,.0f}"
 
     charts = "".join(plot(fig_series(c, labels.get(c, c), wide, bt, fc, (res["tune_window"], res["test_window"]), unit,
@@ -793,7 +811,11 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
                      "names the time grain. Fixed code then checks that the SQL can only read data, never change it; "
                      f"sums the selected records into {W['adj']} totals for each series; picks and tests the model; and "
                      f"generates this page.</p>{toolbox_html(usage)}")
-            trace_html = (f"<h2>What the agent did</h2><p>{intro}{agent_knowledge(panel.sql)}"
+            from .agent import GLOSSARY, RULES   # imported here: the agent module imports the forecast path
+            rules = (f"<details><summary>The agent's rules and business definitions</summary><p>Part of its "
+                     f"instructions for every request: three rules for this warehouse's traps, and the company's "
+                     f"definitions of common business words.</p><pre>{esc(RULES + GLOSSARY)}</pre></details>")
+            trace_html = (f"<h2>What the agent did</h2><p>{intro}{rules}{agent_knowledge(panel.sql)}"
                           "<p><strong>What it did, step by step:</strong></p>"
                           f"<ol>{steps}</ol><details><summary>The raw tool calls</summary>"
                           + table(tr[["turn", "tool", "input", "result"]], nowrap=("turn", "tool"), mono=("result",), wide=("input",)) + "</details>")
@@ -823,7 +845,7 @@ data. The re-tuned model, <strong>{esc(short_model(res, " + "))}</strong>, is re
 period; it spans the middle 80% of those misses.</li>
 {big_buyer_note(panel.stores, unit, wide.shape[1])}
 </ul>
-{table(ft, {"forecast": num, "low (10%)": num, "high (90%)": num})}
+{table(ft, {"forecast": num, "low (10%)": num, "high (90%)": num, ly: num})}
 
 <h2>How far to trust it</h2>
 <p>Every {W['unit']} in the Testing period was forecast by a model trained only on earlier {units()}, then compared with what
@@ -833,6 +855,7 @@ actually happened and with the simplest serious baseline: the {base()}.</p>
 <h2>How the data was prepared</h2>
 {prep_section(spec, panel, res, unit, wide)}
 {features_section(spec, panel, res, unit, fc)}
+{products_section(panel.products, unit, panel.records_through)}
 {stores_section(panel.stores, spec, unit, wide.index[-1], plot)}
 
 <h2>How the model was chosen</h2>

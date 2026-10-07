@@ -42,9 +42,27 @@ def weekly_rows(sql):
                     f"FROM ({sql}) q GROUP BY 1, 2")
 
 
-def product_items(sql):
-    """Every item number among the AI's order lines."""
-    return list(db.query(f"SELECT DISTINCT item_no FROM ({sql}) q").item_no)
+def product_rows(sql, last_month):
+    """The AI's order lines summed by item number: the last 12 complete months, and the first and last month sold."""
+    since, until = last_month - pd.DateOffset(months=11), last_month + pd.offsets.MonthBegin(1)
+    # the dates are written in (fixed code makes them), not passed as parameters: the AI's SQL may contain % signs
+    return db.query(f"SELECT item_no, sum(value) FILTER (WHERE day >= '{since:%Y-%m-%d}' AND day < '{until:%Y-%m-%d}') "
+                    f"AS last_12_months, min(day) AS first_day, max(day) AS last_day FROM ({sql}) q GROUP BY 1")
+
+
+def product_list(rows):
+    """One row per product (old item numbers joined to their product's current one), largest first."""
+    names = db.query("SELECT i.item_no, i.family_item_no AS product_id, h.item_desc AS product, h.bottle_volume_ml "
+                     "AS ml, c.category_name AS category FROM sales.item i JOIN sales.item h ON h.item_no = "
+                     "i.family_item_no LEFT JOIN sales.category c ON c.category_code = h.category_current "
+                     "WHERE i.item_no = ANY(%s)", (list(rows.item_no),))
+    g = rows.merge(names, on="item_no").groupby(["product_id", "product", "ml", "category"], dropna=False)
+    out = g.agg(first_sold=("first_day", "min"), last_sold=("last_day", "max"),
+                last_12_months=("last_12_months", "sum")).reset_index()
+    out["product"], out["category"] = out["product"].str.title(), out["category"].str.title()
+    for c in ("first_sold", "last_sold"):
+        out[c] = pd.to_datetime(out[c]).dt.strftime("%Y-%m")
+    return out.fillna({"last_12_months": 0}).sort_values(["last_12_months", "product"], ascending=[False, True])
 
 
 def to_grain(rows, grain, end, last_month):
@@ -104,10 +122,11 @@ def build(sql, grain, steps):
         pops = features.population(sold, idx)
         exog = {c: cal.join(pops[c]) if c in pops else cal.copy() for c in wide}
 
-    items = product_items(sql)
+    products = product_rows(sql, last_month)
+    items = list(products.item_no)
     store_rows = months.groupby(["month", "store_no"], as_index=False).value.sum()
     p = Panel(series=wide, exog=exog, future_index=future, sql=sql, data_end=end, start="2016-01-01",
               labels={c: c for c in wide}, stores=store_list(store_rows, last_month), unknown_packs=unknown_packs(items))
-    p.items, p.older = items, older_numbers(items)
+    p.items, p.older, p.products = items, older_numbers(items), product_list(products)
     p.records, p.records_through = int(months.records.sum()), last_month
     return p, groups

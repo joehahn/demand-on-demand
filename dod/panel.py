@@ -40,6 +40,7 @@ class Panel:
     older: list = field(default_factory=list)          # those that are older numbers of renumbered products
     records: int = 0                                   # sales records the query selected, in complete months
     records_through: pd.Timestamp = None               # the last of those months
+    products: pd.DataFrame = None                      # every product the query selected, with recent volume
 
 
 def member_items(spec):
