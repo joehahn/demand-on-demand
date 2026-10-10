@@ -88,7 +88,9 @@ trains and backtests models, and draws the dashboard.
 ## Workflow
 1. Resolve every business word to warehouse codes with find_values (products, places).
 2. Test parts of your query with run_select (it returns at most 100 rows, so add things up when you test), then call
-   submit_query. Aim for 3 to 6 tool calls.
+   submit_query. Aim for 3 to 6 tool calls. Test on a small slice (one recent month, one store or one product): a test
+   only needs to show the logic works, and fixed code runs the full query. If a test is too slow, do not retry the same
+   question written another way: test a smaller slice, or submit.
 Ask the user (ask_user) only when a wrong guess would change the answer, and at most once.
 If the request cannot be served as asked (a product or place not in the data, more than one year ahead), do not
 submit; explain why in plain words. Never substitute a different place, product or horizon for the one asked.

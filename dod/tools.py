@@ -7,6 +7,7 @@ from . import db
 from .sqlcheck import check_sql
 
 MAX_ROWS = 100
+TEST_SECONDS = 5    # a test query only needs to show the logic works; the full query is run later by fixed code
 
 
 def as_text(df, max_rows=MAX_ROWS):
@@ -100,8 +101,11 @@ def run_select(sql):
     if problem:
         return f"Error: rejected ({problem}). Write one SELECT over sales, ref or meta, schema-qualified."
     try:
-        return as_text(db.query(f"SELECT * FROM ({sql}) q LIMIT {MAX_ROWS + 1}"))
+        return as_text(db.query(f"SELECT * FROM ({sql}) q LIMIT {MAX_ROWS + 1}", timeout=f"{TEST_SECONDS}s"))
     except Exception as e:  # database errors go back to the model so it can correct its query
+        if "statement timeout" in str(e):
+            return (f"Error: too slow to test (over {TEST_SECONDS} seconds). Test a smaller slice instead (one recent "
+                    f"month, one store or one product), or submit: fixed code runs the full query without this limit.")
         return f"Error: {str(e).splitlines()[0]}"
 
 
@@ -117,7 +121,7 @@ TOOLS = [
      "strict": True},
     {"name": "run_select",
      "description": "Run one read-only SELECT against the sales, ref or meta schemas (tables must be "
-                    f"schema-qualified). Returns at most {MAX_ROWS} rows. Use it to test parts of your query (add "
+                    f"schema-qualified). Returns at most {MAX_ROWS} rows and stops after {TEST_SECONDS} seconds. Use it to test parts of your query (add "
                     "things up: only 100 rows come back) and to check facts the other tools do not give you (e.g. "
                     "which counties are largest).",
      "input_schema": {"type": "object", "properties": {"sql": {"type": "string"}},

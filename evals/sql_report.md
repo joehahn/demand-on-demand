@@ -1,6 +1,6 @@
 # AI-written SQL scored against the answer key
 
-34 requests x 3 runs = 102 runs. Passed: **102 of 102** (data right in 102, reading right in 102). Requests right in every run: 34 of 34. Cost $1.79, median 12 s and 3 tool calls per request.
+34 requests x 3 runs = 102 runs. Passed: **102 of 102** (data right in 102, reading right in 102). Requests right in every run: 34 of 34. Cost $1.92, median 12 s and 4 tool calls per request.
 
 | request | passed | what went wrong |
 |---|---|---|

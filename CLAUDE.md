@@ -186,4 +186,9 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    results, agent steps); `python make_examples.py --rebuild` (or `python -m dod.forecast --rebuild out/<slug>`) redraws
    pages with the current dashboard code in seconds, same numbers and original "Updated" time. Use it for wording and
    layout changes; a full `python make_examples.py` reruns the agent and models.
+19. Agent test queries (2026-10-09): run_select stops after tools.TEST_SECONDS = 5 s ("too slow to test: test a smaller
+   slice, or submit"); instructions say test on a small slice and never retry a slow test rewritten. Fixed code's sums
+   run in one pass (GROUPING SETS) with up to 180 s. A plan-cost check was tried and rejected: Postgres estimates do not
+   predict time here (name matches are misestimated). Tito's-without-Fireball request: agent 332 s -> 48 s (10 s limit).
+   Answer key still 102/102 ($1.92).
 
