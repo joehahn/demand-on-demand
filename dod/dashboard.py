@@ -612,51 +612,67 @@ def short_model(res, joiner=", "):
     return joiner.join(f"{v:.0%} {k}" for k, v in mix.items() if v > 0)
 
 
-def read_as_html(spec, unit, months, wide, assumptions_html):
+def period_word(res):
+    from .periods import NAMES
+    return NAMES[res["period_grain"]]
+
+
+def read_as_html(spec, unit, months, wide, assumptions_html, res=None):
     """How the request was read, as one line of short phrases, with the agent's assumptions one click away."""
     n = wide.shape[1]
     series = "combined into one forecast" if spec.series_by == "none" else f"one forecast per {spec.series_by} ({n})"
-    per = "quarter" if months.startswith("Q") else W["unit"]
+    per = period_word(res) if res is not None and res.get("periods") is not None else W["unit"]
     parts = [spec.product, spec.place, f"{unit} per {per}", months.replace(" ", "\u00a0"), series]
     why = (f'<details class="note"><summary>Why it was read this way</summary><ul>{assumptions_html}</ul></details>'
            if assumptions_html else "")
     return f'<p class="readas"><span>Read as</span> {" &middot; ".join(esc(x) for x in parts)}</p>{why}'
 
 
-def quarters_section(res, wide, unit, plot):
-    """For a quarterly request: calendar quarters, actual and forecast, with each quarter's 80% range and a table."""
-    q = res.get("quarters")
+def periods_section(res, wide, unit, plot):
+    """For a request by fortnight, quarter, half-year or year: the periods asked for, actual and forecast, with each
+    period's 80% range and a table (dod/periods.py adds the weeks or months up)."""
+    from . import periods
+    q = res.get("periods")
     if q is None or not len(q):
         return ""
+    grain = res["period_grain"]
+    name, size = periods.NAMES[grain], periods.PERIODS[grain][1]
     money = "$" if unit == "dollars" else ""
     total = wide.sum(axis=1, min_count=1).dropna()
-    hist = total.groupby(total.index.to_period("Q")).agg(["sum", "size"])
-    hist = hist[hist["size"] == 3]["sum"].iloc[-8:]   # the last 8 complete quarters
-    x_hist = [f"Q{p.quarter} {p.year}" for p in hist.index]
-    fig = go.Figure([go.Bar(x=x_hist, y=hist.values, name="actual", marker_color=BLUE),
-                     go.Bar(x=list(q.quarter), y=list(q.sold), name="sold so far", marker_color=BLUE, opacity=0.55),
-                     go.Bar(x=list(q.quarter), y=list(q.forecast), name="forecast", marker_color=AQUA,
+    start = pd.Series(periods.blocks(grain, total.index), index=total.index)
+    hist = total.groupby(start).agg(["sum", "size"])
+    hist = hist[hist["size"] == size].iloc[-8:]   # the last 8 complete periods
+    step = pd.tseries.frequencies.to_offset(model.GRAINS[W["grain"]]["freq"])
+    x_hist = [periods.label(grain, s, s + (size - 1) * step) for s in hist.index]
+    fig = go.Figure([go.Bar(x=x_hist, y=hist["sum"].values, name="actual", marker_color=BLUE),
+                     go.Bar(x=list(q.period), y=list(q.sold), name="sold so far", marker_color=BLUE, opacity=0.55),
+                     go.Bar(x=list(q.period), y=list(q.forecast), name="forecast", marker_color=AQUA,
                             error_y=dict(type="data", symmetric=False, array=list(q.high - q.total),
                                          arrayminus=list(q.total - q.low), color="rgba(137,135,129,0.9)"))])
     fig.update_traces(hovertemplate=f"{money}%{{y:,.0f}}<extra>%{{fullData.name}}</extra>")
-    fig = style(fig, "By quarter: actual, and the forecast with its 80% range", f"{unit} per quarter", height=340,
+    fig = style(fig, f"By {name}: actual, and the forecast with its 80% range", f"{unit} per {name}", height=340,
                 legend=True).update_layout(barmode="stack", hovermode="closest")
-    t = pd.DataFrame({"quarter": q.quarter, "months": q.months,
-                      "sold so far": [f"{money}{v:,.0f}" if v else "" for v in q.sold],
-                      "forecast": q.forecast.map(lambda v: f"{money}{v:,.0f}"),
-                      "total": q.total.map(lambda v: f"{money}{v:,.0f}"),
-                      "low (10%)": q.low.map(lambda v: f"{money}{v:,.0f}"),
-                      "high (90%)": q.high.map(lambda v: f"{money}{v:,.0f}"),
-                      "same quarter last year": q.last_year.map(lambda v: "" if v != v else f"{money}{v:,.0f}")})
-    asked, full = res.get("quarters_asked", 0), int((q.status == "forecast").sum())
-    short = (f" You asked for {asked} quarters; the models look at most 12 months ahead, so the forecast stops after "
-             f"{full} full quarters." if full < asked else "")
+    cash = lambda v: "" if v != v else f"{money}{v:,.0f}"
+    t = pd.DataFrame({name: q.period, "covers": q.span, "sold so far": [cash(v) if v else "" for v in q.sold],
+                      "forecast": q.forecast.map(cash), "total": q.total.map(cash), "low (10%)": q.low.map(cash),
+                      "high (90%)": q.high.map(cash), f"same {name} last year": q.last_year.map(cash)})
+    if grain in ("fortnight", "year"):   # the name already says which weeks or months
+        t = t.drop(columns="covers")
+    if not (q.status == "in progress").any():   # nothing sold yet in any period shown
+        t = t.drop(columns="sold so far")
+    asked, full = res.get("periods_asked", 0), int((q.status == "forecast").sum())
+    limit = "52 weeks" if W["grain"] == "week" else "12 months"
+    short = (f" You asked for {asked} {name}s; the models look at most {limit} ahead, so the forecast stops after "
+             f"{full} full {name}{'s' if full != 1 else ''}." if full < asked else "")
     progress = q[q.status == "in progress"]
-    inprog = (f" {progress.quarter.iloc[0]} is in progress: the months already sold are actual sales, the rest is "
+    inprog = (f" {progress.period.iloc[0]} is in progress: the {units()} already sold are actual sales, the rest is "
               f"forecast." if len(progress) else "")
-    return (f"<h2>By quarter</h2><p>The models forecast month by month; here the months are added up into calendar "
-            f"quarters.{inprog}{short} Each range comes from the Testing period: forecasts made there, added up over "
-            f"the same months ahead, compared with what actually sold.</p>{plot(fig)}{table(t)}")
+    how = {"year": " A year here is the next 12 months: a calendar year ahead would need forecasts further out than "
+                   "can be tested honestly.",
+           "fortnight": " Fortnights start with the first week forecast."}.get(grain, "")
+    return (f"<h2>By {name}</h2><p>The models forecast {W['adj']}; here the {units()} are added up into {name}s.{how}"
+            f"{inprog}{short} Each range comes from the Testing period: forecasts made there, added up over the same "
+            f"{units()} ahead, compared with what actually sold.</p>{plot(fig)}{table(t)}")
 
 
 def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
@@ -779,16 +795,19 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
     last_year = sum(wide.at[back(m, W["season"]), c] for m, c in zip(fc.month, fc.series)
                     if back(m, W["season"]) in wide.index)
     yoy = total / last_year - 1 if last_year else float("nan")
-    q = res.get("quarters")
-    if q is not None and len(q):   # a quarterly request: the headline is the quarters reported, sold part included
-        months = f"{q.quarter.iloc[0]} to {q.quarter.iloc[-1]}"
+    q = res.get("periods")
+    if q is not None and len(q):   # a request by longer periods: the headline is those periods, sold part included
+        months = f"{q.period.iloc[0]} to {q.period.iloc[-1]}" if len(q) > 1 else q.period.iloc[0]
+        if res["period_grain"] == "fortnight":   # first Monday to the last Sunday
+            first, end = q["first"].iloc[0], q["last"].iloc[-1] + pd.Timedelta(days=6)
+            months = f"{first:%b} {first.day} to {end:%b} {end.day}, {end.year}"
         total, last_year = q.total.sum(), q.last_year.sum(min_count=len(q))
         yoy = total / last_year - 1 if last_year == last_year and last_year else float("nan")
     rel = res["test_rel_mae"]
     money = "$" if unit == "dollars" else ""
     tiles = [
         (f"{money}{total:,.0f}", f"forecast {unit}, {months}"),
-        (f"{yoy:+.1%}", f"vs the same {'quarters' if q is not None and len(q) else units()} last year"),
+        (f"{yoy:+.1%}", f"vs the same {period_word(res) + 's' if q is not None and len(q) else units()} last year"),
         (f"{bt.dropna(subset=['actual']).pipe(lambda d: (d.actual - d.pred).abs().sum() / d.actual.sum()):.0%}",
          f"typical {W['adj']} miss in the Testing period ({when(res['test_window'][0])} to {when(res['test_window'][1])})"),
         (f"{round(abs(1 - rel) * 100)}%", (("more" if rel < 1 else "less") + f" accurate than repeating the {base()}")
@@ -850,7 +869,7 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
     ask_html, trace_html = "", ""
     if agent:
         assumptions = "".join(f"<li>{esc(a)}</li>" for a in agent.get("assumptions", []))
-        ask_html = (f'<p class="asked">&ldquo;{esc(agent["request"])}&rdquo;</p>' + read_as_html(spec, unit, months, wide, assumptions)
+        ask_html = (f'<p class="asked">&ldquo;{esc(agent["request"])}&rdquo;</p>' + read_as_html(spec, unit, months, wide, assumptions, res)
                     + (f'<p class="headline">{esc(agent["summary"])}</p>' if agent.get("summary") else ""))
         tr = pd.DataFrame(agent.get("trace", []))
         if not tr.empty:
@@ -873,10 +892,10 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
 {nav_html()}
 <h1>{esc(spec.title)}</h1>
 {updated_html(panel)}
-{ask_html or read_as_html(spec, unit, months, wide, "")}
+{ask_html or read_as_html(spec, unit, months, wide, "", res)}
 <div class="tiles">{tiles_html}</div>
 {skipped_html}
-{quarters_section(res, wide, unit, plot)}
+{periods_section(res, wide, unit, plot)}
 {charts}{more}
 <ul class="note">
 <li><strong>Tuning</strong> ({when(uw[0])} to {when(uw[1])}): {refit} through these {units()}, each candidate model was

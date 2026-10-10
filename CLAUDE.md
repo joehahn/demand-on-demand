@@ -191,4 +191,10 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    run in one pass (GROUPING SETS) with up to 180 s. A plan-cost check was tried and rejected: Postgres estimates do not
    predict time here (name matches are misestimated). Tito's-without-Fireball request: agent 332 s -> 48 s (10 s limit).
    Answer key still 102/102 ($1.92).
+20. Report periods (2026-10-09): dod/periods.py adds weeks or months up into the period asked for (temporal aggregation):
+   fortnight (2 weeks, from the first week forecast), quarter and half (calendar periods: the one in progress = months
+   sold + forecast, then the next full ones within 12 months), year (the next 12 months: a calendar year ahead would need
+   up to 16 months). Each period's 80% range: Testing-period forecasts summed over the same steps ahead vs actual.
+   Dashboard "By <period>" section, headline tiles, Read as and summary facts use the periods. Plan grains: week,
+   fortnight, month, quarter, half, year. Answer key gains crown_biweekly and jack_polk_halves (36 requests).
 

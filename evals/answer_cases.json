@@ -1266,5 +1266,77 @@
    "series_by": "none"
   },
   "definition": "every product whose current category is Spiced Rum (1062400)"
+ },
+ {
+  "id": "crown_biweekly",
+  "request": "Crown Royal bottles statewide, biweekly, for the next 12 weeks",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "fortnight",
+   "horizon": 6,
+   "accept": [
+    [
+     "fortnight",
+     6
+    ],
+    [
+     "week",
+     12
+    ]
+   ]
+  },
+  "form": {
+   "title": "Weekly Crown Royal bottles statewide",
+   "target": "sales_bottles",
+   "horizon": 10,
+   "product": {
+    "kind": "name",
+    "codes": [
+     "crown royal"
+    ],
+    "label": "Crown Royal (all sizes/variants)"
+   },
+   "region": {
+    "kind": "statewide",
+    "codes": [],
+    "label": "Iowa"
+   },
+   "series_by": "none",
+   "grain": "week"
+  },
+  "definition": "biweekly = fortnights; 12 weeks = 6 fortnights"
+ },
+ {
+  "id": "jack_polk_halves",
+  "request": "Jack Daniel's sales dollars in Polk County by half-year, next two halves",
+  "source": "new",
+  "expect": {
+   "status": "ok",
+   "grain": "half",
+   "horizon": 2
+  },
+  "form": {
+   "title": "Jack Daniel's, Polk County, next 6 months",
+   "target": "sales_dollars",
+   "horizon": 6,
+   "grain": "month",
+   "product": {
+    "kind": "name",
+    "codes": [
+     "jack daniels"
+    ],
+    "label": "Jack Daniel's (all products)"
+   },
+   "region": {
+    "kind": "county",
+    "codes": [
+     "19153"
+    ],
+    "label": "Polk County"
+   },
+   "series_by": "none"
+  },
+  "definition": "calendar half-years: the one in progress, then the next"
  }
 ]

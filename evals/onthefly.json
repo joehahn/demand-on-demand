@@ -629,18 +629,19 @@
  {
   "request": "Quarterly forecast of Fireball revenue in Linn County for the next 2 quarters",
   "status": "ok",
-  "title": "Fireball Revenue Forecast - Linn County, Next 2 Quarters",
+  "title": "Fireball Revenue Forecast - Linn County",
   "grain": "quarter",
   "horizon": 2,
   "model_grain": "month",
-  "sql": "SELECT\n  l.ordered_on AS day,\n  l.store_no,\n  l.item_no,\n  'total' AS series,\n  l.sales_dollars AS value\nFROM sales.invoice_line l\nJOIN sales.store s ON s.store_no = l.store_no\nWHERE s.county_name = 'LINN'\n  AND l.item_no IN (\n    SELECT i.item_no\n    FROM sales.item i\n    JOIN sales.item h ON h.item_no = i.family_item_no\n    WHERE h.item_desc ILIKE '%FIREBALL%'\n  )\n  AND l.ordered_on >= '2016-01-01'",
+  "sql": "SELECT\n  il.ordered_on AS day,\n  il.store_no   AS store_no,\n  il.item_no    AS item_no,\n  'total'       AS series,\n  il.sales_dollars AS value\nFROM sales.invoice_line il\nJOIN sales.store s ON s.store_no = il.store_no\nWHERE s.county_name = 'LINN'\n  AND il.item_no IN (\n    SELECT i.item_no\n    FROM sales.item i\n    JOIN sales.item h ON h.item_no = i.family_item_no\n    WHERE h.item_desc ILIKE '%FIREBALL%'\n  )\n  AND il.ordered_on >= '2016-01-01'",
   "assumptions": [
-   "Fireball means the full brand family: every size, flavor, pack, and special edition whose current family name contains 'FIREBALL' (e.g. Cinnamon Whiskey, Blazin Apple, Torch'd Vanilla, minis, gift sets).",
-   "Linn County is matched by store county_name = 'LINN'.",
+   "Fireball means every product of the Fireball brand (all sizes, flavors, mini packs, and specialty/seasonal packaging) sold under that family name, matched via the product family's current description containing 'FIREBALL'.",
+   "Linn County is identified by store county_name = 'LINN' (the county containing Cedar Rapids), using each store's current county assignment.",
    "Revenue means sales_dollars from invoice lines.",
-   "History starts 2016-01-01 through the latest available data (2026-08-31); forecast covers the next 2 full quarters after that (Q4 2026 and Q1 2027)."
+   "The two quarters forecast are the one in progress, Q3 2026 (July-September, with July and August already sold and September forecast), and the next full quarter, Q4 2026 (October-December).",
+   "All historical order lines from 2016-01-01 onward for matching products and stores are included for model training."
   ],
-  "rel_mae": 0.9460941075046096,
+  "rel_mae": 1.0845473691243463,
   "test_window": [
    "2024-09-01",
    "2026-08-01"
@@ -778,44 +779,50 @@
   "forecast": [
    {
     "period": "2026-09-01",
-    "pred": 205528.68321928836,
-    "lo": 188469.36776251937,
-    "hi": 230451.13618910054
+    "pred": 200718.28593319946,
+    "lo": 184317.82088786122,
+    "hi": 227201.47722492384
    },
    {
     "period": "2026-10-01",
-    "pred": 203456.61006856625,
-    "lo": 187477.98364190044,
-    "hi": 227602.99254294316
+    "pred": 203620.1470411423,
+    "lo": 185061.4168340182,
+    "hi": 235968.17728872318
    },
    {
     "period": "2026-11-01",
-    "pred": 184600.31082326383,
-    "lo": 170647.43807182406,
-    "hi": 212654.66646943393
+    "pred": 179382.37807948745,
+    "lo": 164511.62543931126,
+    "hi": 213312.7734554126
    },
    {
     "period": "2026-12-01",
-    "pred": 198309.27063627783,
-    "lo": 187803.26897179248,
-    "hi": 228037.25260492496
+    "pred": 196441.28161293067,
+    "lo": 184331.64288338594,
+    "hi": 234505.18113675635
    },
    {
     "period": "2027-01-01",
-    "pred": 162706.3192847398,
-    "lo": 156726.18740084945,
-    "hi": 197775.28063279786
+    "pred": 162895.64415466823,
+    "lo": 150670.7640322101,
+    "hi": 195034.04331701365
    },
    {
     "period": "2027-02-01",
-    "pred": 156705.51551451194,
-    "lo": 149995.14109271934,
-    "hi": 189796.18990313326
+    "pred": 154641.9278254301,
+    "lo": 144213.6132071807,
+    "hi": 185943.26562718718
+   },
+   {
+    "period": "2027-03-01",
+    "pred": 169263.30742292348,
+    "lo": 161694.1071310523,
+    "hi": 206044.98147260593
    }
   ],
-  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/fireball_revenue_forecast_linn_county_next_2_quarters/dashboard.html",
-  "cost": 0.034,
-  "seconds": 153.60000000000002
+  "dashboard": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/fireball_revenue_forecast_linn_county/dashboard.html",
+  "cost": 0.0322,
+  "seconds": 65.4
  },
  {
   "request": "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",

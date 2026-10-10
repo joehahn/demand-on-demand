@@ -82,7 +82,7 @@ GLOSSARY = """## Business definitions (the company's dictionary; follow them unl
 """
 
 SYSTEM = """You are the forecasting analyst for a company that sells to Iowa liquor retailers. A business user asks for a
-demand forecast in plain English, by week, month, quarter or year. Your job is to write ONE SQL query that picks the
+demand forecast in plain English, by week, fortnight, month, quarter, half-year or year. Your job is to write ONE SQL query that picks the
 order lines to forecast, and to say plainly how you read the request. Fixed code adds the lines up by week or month,
 trains and backtests models, and draws the dashboard.
 
@@ -113,10 +113,12 @@ may select millions of lines.
 The warehouse has orders through {data_end}; the forecast starts with the first week or month after that, so count the
 horizon from there (e.g. "through December" from data ending in August is 4 months). The calendar quarter in progress
 is {quarter_now}.
-grain: "week" | "month" | "quarter" | "year" (as asked; "month" if not stated). horizon: periods ahead in that grain
-(weeks up to 52, months up to 12, quarters up to 4, years 1; 6 months if not stated). Quarters are calendar quarters:
-fixed code reports the quarter in progress (months already sold plus the rest forecast) and then the next full
-quarters, as many as fit within 12 months ahead, so describe them that way in your assumptions. measure: bottles, dollars or
+grain: "week" | "fortnight" | "month" | "quarter" | "half" | "year" (as asked; "month" if not stated; biweekly =
+fortnight). horizon: periods ahead in that grain (weeks up to 52, fortnights 26, months 12, quarters 4, halves 2,
+years 1; 6 months if not stated). Fixed code forecasts weeks or months and adds them up into the periods asked for.
+Quarters and half-years are calendar periods: the one in progress (months already sold plus the rest forecast), then
+the next full ones, as many as fit within 12 months ahead. A year is the next 12 months. Fortnights start with the
+first week forecast. Describe the periods that way in your assumptions. measure: bottles, dollars or
 liters. product and place: short readable names. breakout: "none" for one total, else what each series is (county,
 city, item, category, store, ...). title: a short title for the dashboard.
 
@@ -132,7 +134,7 @@ SUBMIT = {"name": "submit_query",
               "sql": {"type": "string"}, "title": {"type": "string"},
               "measure": {"type": "string", "enum": ["bottles", "dollars", "liters"]},
               "product": {"type": "string"}, "place": {"type": "string"}, "breakout": {"type": "string"},
-              "grain": {"type": "string", "enum": ["week", "month", "quarter", "year"]},
+              "grain": {"type": "string", "enum": ["week", "fortnight", "month", "quarter", "half", "year"]},
               "horizon": {"type": "integer"}, "assumptions": {"type": "array", "items": {"type": "string"}}},
               "required": ["sql", "title", "measure", "product", "place", "breakout", "grain", "horizon", "assumptions"],
               "additionalProperties": False},
@@ -149,7 +151,7 @@ def narrate(client, facts, usage):
                "from the same months last year. Do not discuss accuracy; a sentence about it is added after yours. "
                "Quote only numbers and percentages that appear in the facts JSON; never compute new ones (no ranges you "
                "derived yourself). Round large numbers to about three significant figures ($15.2 million, 53,000 "
-               "bottles); a forecast is not precise to the unit. Speak of the facts' period if they name one (weeks or quarters), otherwise months. Mention unvalidated or skipped series only if there are any. Do not name the model. No em dashes.",
+               "bottles); a forecast is not precise to the unit. Speak of the facts' period if they name one, otherwise months. Mention unvalidated or skipped series only if there are any. Do not name the model. No em dashes.",
         messages=[{"role": "user", "content": json.dumps(facts, default=str)}],
         output_config={"effort": "low", "format": {"type": "json_schema", "schema": {
             "type": "object", "properties": {"summary": {"type": "string"}},

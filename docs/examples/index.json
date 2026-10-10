@@ -17,11 +17,11 @@
   "title": "Fireball, Linn County, next quarter revenue",
   "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/fireball_linn_county_next_quarter_revenue",
   "grain": "month",
-  "rel_mae": 0.8773563658486657,
-  "summary": "Fireball's forecast for Linn County next quarter totals $594,000, up 3% from the same months last year. This forecast is 12% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0297,
-  "agent_seconds": 12.0,
-  "harness_seconds": 86.0
+  "rel_mae": 0.9240903936855143,
+  "summary": "Fireball Linn County revenue for Q3 2026 to Q4 2026 is forecast at $1.18 million, up 6% from the same period last year. This forecast is 8% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0333,
+  "agent_seconds": 14.8,
+  "harness_seconds": 62.9
  },
  {
   "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
