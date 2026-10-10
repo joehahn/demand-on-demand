@@ -13,6 +13,7 @@ import sys
 import time
 
 import anthropic
+import pandas as pd
 
 from . import db, history, panel, tools
 from .plan import MAX_AHEAD, Plan
@@ -110,9 +111,12 @@ may select millions of lines.
 
 ## How you read the request (submit_query fields)
 The warehouse has orders through {data_end}; the forecast starts with the first week or month after that, so count the
-horizon from there (e.g. "through December" from data ending in August is 4 months).
+horizon from there (e.g. "through December" from data ending in August is 4 months). The calendar quarter in progress
+is {quarter_now}.
 grain: "week" | "month" | "quarter" | "year" (as asked; "month" if not stated). horizon: periods ahead in that grain
-(weeks up to 52, months up to 12, quarters up to 4, years 1; 6 months if not stated). measure: bottles, dollars or
+(weeks up to 52, months up to 12, quarters up to 4, years 1; 6 months if not stated). Quarters are calendar quarters:
+fixed code reports the quarter in progress (months already sold plus the rest forecast) and then the next full
+quarters, as many as fit within 12 months ahead, so describe them that way in your assumptions. measure: bottles, dollars or
 liters. product and place: short readable names. breakout: "none" for one total, else what each series is (county,
 city, item, category, store, ...). title: a short title for the dashboard.
 
@@ -202,8 +206,11 @@ def submitted(request, a):
 def ask(request, interactive=False, log=print):
     """The agent's part: a checked Plan (its SQL and its reading of the request), or the reason it declined."""
     client = anthropic.Anthropic()
-    end, _ = panel.data_end()
-    system = SYSTEM.format(schema=schema_text(), rules=RULES + GLOSSARY, data_end=f"{end:%B} {end.day}, {end.year}")
+    end, last_month = panel.data_end()
+    q = (last_month + pd.offsets.MonthBegin(1)).to_period("Q")   # the quarter of the first month still to come
+    quarter_now = f"Q{q.quarter} {q.year} ({q.start_time:%B} to {q.end_time:%B})"
+    system = SYSTEM.format(schema=schema_text(), rules=RULES + GLOSSARY, data_end=f"{end:%B} {end.day}, {end.year}",
+                           quarter_now=quarter_now)
     messages = [{"role": "user", "content": request}]
     usage = {"model": MODEL, "calls": 0, "input_tokens": 0, "output_tokens": 0, "cache_write_tokens": 0,
              "cache_read_tokens": 0, "est_cost_usd": 0.0}

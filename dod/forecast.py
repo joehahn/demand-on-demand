@@ -22,7 +22,7 @@ from pathlib import Path
 import anthropic
 import pandas as pd
 
-from . import agent, dashboard, history, model
+from . import agent, dashboard, history, model, panel as panel_mod, quarters
 
 OUT = Path(__file__).parent.parent / "out"
 
@@ -54,7 +54,19 @@ def facts_for(plan, p, res):
             # weeks or quarters: say so, since the keys above are named for months (monthly facts stay as they were)
             **({"period": model.GRAIN, "compare_with": f"the same {model.GRAIN}s last year",
                 "note": f"each 'month' entry above is one {model.GRAIN}, labeled by its first day"}
-               if model.GRAIN != "month" else {})}
+               if model.GRAIN != "month" else {}),
+            # a quarterly request: the page reports calendar quarters (the one in progress, then the next full ones)
+            **({"quarters_reported": f"{res['quarters'].quarter.iloc[0]} to {res['quarters'].quarter.iloc[-1]}",
+                "quarters_total": round(res["quarters"].total.sum()),
+                "quarters_change_vs_last_year": pct(res["quarters"].total.sum(), res["quarters"].last_year.sum()),
+                "by_quarter": [{"quarter": r.quarter, "status": r.status, "sold_so_far": round(r.sold),
+                                "forecast_total": round(r.total),
+                                "same_quarter_last_year": round(r.last_year) if r.last_year == r.last_year else None,
+                                "change": pct(r.total, r.last_year) if r.last_year == r.last_year else "n/a"}
+                               for r in res["quarters"].itertuples()],
+                "note": "The request asked for quarters: quote quarters_total and quarters_change_vs_last_year for "
+                        "quarters_reported (the first quarter is in progress, part already sold), not the monthly "
+                        "totals above."} if "quarters" in res else {})}
 
 
 def trust_sentence(rel):
@@ -70,11 +82,16 @@ def run(plan, usage=None, trace=None, narrate=True, out_root=OUT, log=print):
     e.g. for the benchmark. Returns the summary dict written to summary.json."""
     t0 = time.time()
     grain, steps = plan.model_grain
+    if plan.grain == "quarter":   # calendar quarters: the quarter in progress, then the next full ones (dod/quarters.py)
+        left, fit, steps = quarters.months_needed(panel_mod.data_end()[1], plan.horizon)
     p, groups = history.build(plan.sql, grain, steps)
     shown = plan.model_copy(update={"grain": grain, "horizon": steps, "features": groups})
     log(f"  history: {p.series.shape[1]} series x {p.series.shape[0]} {grain}s ({time.time() - t0:.0f}s)")
     with model.use_grain(grain):
         res = model.run(p.series, p.exog, p.future_index, steps, groups, log=log)
+        if plan.grain == "quarter":
+            res["quarters"] = quarters.table(p.series, res, left, fit)
+            res["quarters_asked"] = plan.horizon
         facts = facts_for(shown, p, res)
         info = {"request": plan.request or plan.title, "assumptions": plan.assumptions, "trace": trace or [],
                 "usage": usage or {}}

@@ -616,10 +616,47 @@ def read_as_html(spec, unit, months, wide, assumptions_html):
     """How the request was read, as one line of short phrases, with the agent's assumptions one click away."""
     n = wide.shape[1]
     series = "combined into one forecast" if spec.series_by == "none" else f"one forecast per {spec.series_by} ({n})"
-    parts = [spec.product, spec.place, f"{unit} per {W['unit']}", months.replace(" ", "\u00a0"), series]
+    per = "quarter" if months.startswith("Q") else W["unit"]
+    parts = [spec.product, spec.place, f"{unit} per {per}", months.replace(" ", "\u00a0"), series]
     why = (f'<details class="note"><summary>Why it was read this way</summary><ul>{assumptions_html}</ul></details>'
            if assumptions_html else "")
     return f'<p class="readas"><span>Read as</span> {" &middot; ".join(esc(x) for x in parts)}</p>{why}'
+
+
+def quarters_section(res, wide, unit, plot):
+    """For a quarterly request: calendar quarters, actual and forecast, with each quarter's 80% range and a table."""
+    q = res.get("quarters")
+    if q is None or not len(q):
+        return ""
+    money = "$" if unit == "dollars" else ""
+    total = wide.sum(axis=1, min_count=1).dropna()
+    hist = total.groupby(total.index.to_period("Q")).agg(["sum", "size"])
+    hist = hist[hist["size"] == 3]["sum"].iloc[-8:]   # the last 8 complete quarters
+    x_hist = [f"Q{p.quarter} {p.year}" for p in hist.index]
+    fig = go.Figure([go.Bar(x=x_hist, y=hist.values, name="actual", marker_color=BLUE),
+                     go.Bar(x=list(q.quarter), y=list(q.sold), name="sold so far", marker_color=BLUE, opacity=0.55),
+                     go.Bar(x=list(q.quarter), y=list(q.forecast), name="forecast", marker_color=AQUA,
+                            error_y=dict(type="data", symmetric=False, array=list(q.high - q.total),
+                                         arrayminus=list(q.total - q.low), color="rgba(137,135,129,0.9)"))])
+    fig.update_traces(hovertemplate=f"{money}%{{y:,.0f}}<extra>%{{fullData.name}}</extra>")
+    fig = style(fig, "By quarter: actual, and the forecast with its 80% range", f"{unit} per quarter", height=340,
+                legend=True).update_layout(barmode="stack", hovermode="closest")
+    t = pd.DataFrame({"quarter": q.quarter, "months": q.months,
+                      "sold so far": [f"{money}{v:,.0f}" if v else "" for v in q.sold],
+                      "forecast": q.forecast.map(lambda v: f"{money}{v:,.0f}"),
+                      "total": q.total.map(lambda v: f"{money}{v:,.0f}"),
+                      "low (10%)": q.low.map(lambda v: f"{money}{v:,.0f}"),
+                      "high (90%)": q.high.map(lambda v: f"{money}{v:,.0f}"),
+                      "same quarter last year": q.last_year.map(lambda v: "" if v != v else f"{money}{v:,.0f}")})
+    asked, full = res.get("quarters_asked", 0), int((q.status == "forecast").sum())
+    short = (f" You asked for {asked} quarters; the models look at most 12 months ahead, so the forecast stops after "
+             f"{full} full quarters." if full < asked else "")
+    progress = q[q.status == "in progress"]
+    inprog = (f" {progress.quarter.iloc[0]} is in progress: the months already sold are actual sales, the rest is "
+              f"forecast." if len(progress) else "")
+    return (f"<h2>By quarter</h2><p>The models forecast month by month; here the months are added up into calendar "
+            f"quarters.{inprog}{short} Each range comes from the Testing period: forecasts made there, added up over "
+            f"the same months ahead, compared with what actually sold.</p>{plot(fig)}{table(t)}")
 
 
 def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
@@ -742,11 +779,16 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
     last_year = sum(wide.at[back(m, W["season"]), c] for m, c in zip(fc.month, fc.series)
                     if back(m, W["season"]) in wide.index)
     yoy = total / last_year - 1 if last_year else float("nan")
+    q = res.get("quarters")
+    if q is not None and len(q):   # a quarterly request: the headline is the quarters reported, sold part included
+        months = f"{q.quarter.iloc[0]} to {q.quarter.iloc[-1]}"
+        total, last_year = q.total.sum(), q.last_year.sum(min_count=len(q))
+        yoy = total / last_year - 1 if last_year == last_year and last_year else float("nan")
     rel = res["test_rel_mae"]
     money = "$" if unit == "dollars" else ""
     tiles = [
         (f"{money}{total:,.0f}", f"forecast {unit}, {months}"),
-        (f"{yoy:+.1%}", f"vs the same {units()} last year"),
+        (f"{yoy:+.1%}", f"vs the same {'quarters' if q is not None and len(q) else units()} last year"),
         (f"{bt.dropna(subset=['actual']).pipe(lambda d: (d.actual - d.pred).abs().sum() / d.actual.sum()):.0%}",
          f"typical {W['adj']} miss in the Testing period ({when(res['test_window'][0])} to {when(res['test_window'][1])})"),
         (f"{round(abs(1 - rel) * 100)}%", (("more" if rel < 1 else "less") + f" accurate than repeating the {base()}")
@@ -834,6 +876,7 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
 {ask_html or read_as_html(spec, unit, months, wide, "")}
 <div class="tiles">{tiles_html}</div>
 {skipped_html}
+{quarters_section(res, wide, unit, plot)}
 {charts}{more}
 <ul class="note">
 <li><strong>Tuning</strong> ({when(uw[0])} to {when(uw[1])}): {refit} through these {units()}, each candidate model was
