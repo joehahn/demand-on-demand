@@ -31,9 +31,9 @@ def build():
 <p>This is exactly what the AI agent is told about the warehouse at the start of every forecast request:
 {rows.tbl.nunique()} tables and {len(rows)} columns, each described in a sentence. The agent uses it to know which
 tables and columns hold products, places and sales; its search tools then find the actual names (a product, a city),
-and it fills in a forecast request. It never writes the SQL: the harness does. The descriptions are written once in the
-loader and stored in the database, so this page, the agent and any SQL client all read the same text. Raw tables and
-credentials are not described because the agent cannot reach them.</p>
+and it writes the SQL that selects the sales records to forecast. <strong>The descriptions are written once in the
+loader and stored in the database, so this page, the agent and any SQL client all read the same text.</strong> Raw
+tables and credentials are not described because the agent cannot reach them.</p>
 <p><a href="index.html">Back to demand-on-demand</a> &middot; <a href="data_exploration.html">data exploration</a>
 &middot; <a href="data_fixes.html">data fixes</a></p>
 {"".join(parts)}
