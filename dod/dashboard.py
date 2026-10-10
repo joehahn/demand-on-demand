@@ -171,7 +171,7 @@ def model_explanation(res, unit, spec, panel):
             f"(smaller is better; 1.00 = as good as last year). {tested}</p>{tbl}")
 
 
-FEATURE_NAMES = {"season": "time of year (season)", "calendar": "calendar (business days, holidays)",
+FEATURE_NAMES = {"season": "time of year (season)", "calendar": "business days and holidays",
                  "population": "county population", "stores": "active stores"}
 FEATURE_COLUMNS = model.FEATURE_GROUPS
 
@@ -432,7 +432,7 @@ def prep_section(spec, panel, res, unit, wide):
     built = {"season": "time of year: where the period falls in the year. Ridge regression sees the sine and cosine of the "
                        "date, a smooth wave that repeats every year so that December sits next to January; LightGBM sees "
                        f"the month number, 1 to 12{month_note}",
-             "calendar": f"calendar: business days in each {W['unit']} (weekdays minus federal holidays), and four flags "
+             "calendar": f"business days and holidays: business days in each {W['unit']} (weekdays minus federal holidays), and four flags "
                          f"for whether Thanksgiving, Christmas, New Year's Day or July 4th falls in it",
              "population": "county population: Census population of the counties this forecast's stores are in",
              "stores": f"active stores: how many stores ordered the product in the 12 months before each {W['unit']}, "
@@ -692,7 +692,8 @@ def fig_accuracy(per_step):
 def fig_inputs(effects, tw):
     """How much each input group helped when re-tuning on the Testing period, which decides the forecast's inputs:
     the forecast's error without the input, relative to its error with it (right of 0 = the input helps)."""
-    names = [FEATURE_NAMES.get(g, g).split(" (")[0] + (" (used)" if k else " (left out)")
+    label = {"season": "time of year (sine/cosine, month)"}   # both encodings: ridge sees one, LightGBM the other
+    names = [label.get(g, FEATURE_NAMES.get(g, g).split(" (")[0]) + (": used" if k else ": left out")
              for g, k in zip(effects.group, effects.kept)]
     fig = go.Figure(go.Bar(y=names, x=effects.latest * 100, orientation="h",
                            marker_color=[AQUA if k else ORANGE for k in effects.kept],
@@ -703,7 +704,7 @@ def fig_inputs(effects, tw):
         fig.add_vline(x=model.KEEP_MARGIN * 100, line_dash="dot", line_color="rgba(137,135,129,0.8)",
                       annotation_text="keep line", annotation_position="top")
     fig = style(fig, f"Which inputs helped, Testing period ({when(tw[0])} to {when(tw[1])})", height=120 + 50 * len(effects))
-    return fig.update_layout(margin=dict(l=150, r=20, t=50, b=50), hovermode="closest")
+    return fig.update_layout(margin=dict(l=230, r=20, t=50, b=50), hovermode="closest")
 
 
 def inputs_section(res, plot):
