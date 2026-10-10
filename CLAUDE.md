@@ -182,4 +182,8 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    (lagged by the horizon); model.LGBM_MONTH: LightGBM sees month_of_year instead of sine and cosine; change-from-last-
    year targets drop time of year. benchmark/menu.md (arm C). Benchmark now 18/30, median 0.92, mean 0.913 (was 20/30,
    0.91, 0.952). Examples: Tito's 0.837, Fireball 0.877, cream holidays 0.70, cream weekly 0.823.
+18. Fast page rebuilds (2026-10-09): forecast.run saves out/<slug>/page.pkl (the page's inputs: plan, history, model
+   results, agent steps); `python make_examples.py --rebuild` (or `python -m dod.forecast --rebuild out/<slug>`) redraws
+   pages with the current dashboard code in seconds, same numbers and original "Updated" time. Use it for wording and
+   layout changes; a full `python make_examples.py` reruns the agent and models.
 

@@ -471,7 +471,7 @@ REPO = "https://github.com/joehahn/demand-on-demand"
 def updated_html(panel):
     """When this page was built, and how far its data goes."""
     import datetime
-    d = datetime.datetime.now().astimezone()
+    d = getattr(panel, "built_at", None) or datetime.datetime.now().astimezone()   # a rebuilt page keeps its time
     end = pd.Timestamp(panel.data_end)
     return (f'<p class="note">Updated {d:%b} {d.day}, {d.year} at {d.hour % 12 or 12}:{d:%M %p %Z} &middot; '
             f"orders through {end:%b} {end.day}, {end.year}</p>")

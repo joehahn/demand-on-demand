@@ -3,44 +3,48 @@
   "request": "Monthly forecast of Tito's minis in Des Moines for the next 5 months",
   "slug": "tito_s_minis_des_moines_next_5_months",
   "title": "Tito's minis, Des Moines, next 5 months",
+  "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/tito_s_minis_des_moines_next_5_months",
   "grain": "month",
   "rel_mae": 0.8374132921961794,
-  "summary": "Tito's minis in Des Moines are forecast at about 27,000 bottles over the next 5 months, down 6% from the same months last year. This forecast is 16% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0329,
-  "agent_seconds": 25.1,
-  "harness_seconds": 10.0
+  "summary": "Forecast totals about 27,000 bottles over the next 5 months, down 6% from the same months last year. This forecast is 16% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0331,
+  "agent_seconds": 14.1,
+  "harness_seconds": 9.2
  },
  {
   "request": "What revenue should we expect from Fireball in Linn County next quarter?",
   "slug": "fireball_linn_county_next_quarter",
   "title": "Fireball, Linn County, next quarter revenue",
+  "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/fireball_linn_county_next_quarter_revenue",
   "grain": "month",
   "rel_mae": 0.8773563658486657,
-  "summary": "Fireball's Linn County revenue is forecast at $594,000 next quarter, up 3% from the same quarter last year. This forecast is 12% more accurate than simply repeating last year's outcome.",
-  "cost": 0.03,
-  "agent_seconds": 73.2,
-  "harness_seconds": 73.7
+  "summary": "Fireball's forecast for Linn County next quarter totals $594,000, up 3% from the same months last year. This forecast is 12% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0297,
+  "agent_seconds": 12.0,
+  "harness_seconds": 86.0
  },
  {
   "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
   "slug": "cream_liqueur_holidays",
   "title": "Cream liqueurs, Iowa, through the holidays",
+  "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/cream_liqueurs_iowa_through_the_holidays",
   "grain": "month",
   "rel_mae": 0.699859621273913,
   "summary": "Cream liqueurs in Iowa are forecast at about 250,000 bottles through the holidays, down 6% from the same months last year. This forecast is 30% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0155,
-  "agent_seconds": 10.1,
-  "harness_seconds": 11.5
+  "cost": 0.0154,
+  "agent_seconds": 9.8,
+  "harness_seconds": 11.8
  },
  {
   "request": "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
   "slug": "cream_liqueur_by_week_next_12_weeks",
   "title": "Weekly Cream Liqueur Bottles Statewide",
+  "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/weekly_cream_liqueur_bottles_statewide",
   "grain": "week",
   "rel_mae": 0.8229315229222476,
-  "summary": "Forecast totals about 157,000 bottles over the period, down 5% from the same weeks last year. This forecast is 18% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0126,
-  "agent_seconds": 6.6,
-  "harness_seconds": 24.6
+  "summary": "Forecast calls for about 157,000 bottles over the coming weeks, down 5% from the same weeks last year. This forecast is 18% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0138,
+  "agent_seconds": 7.6,
+  "harness_seconds": 24.9
  }
 ]

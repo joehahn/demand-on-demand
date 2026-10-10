@@ -2,6 +2,8 @@
 
     python make_examples.py            # every example (about $0.15 of API calls and 3 minutes)
     python make_examples.py 4          # only example 4
+    python make_examples.py --rebuild  # redraw the published pages from their saved results: no AI, no models,
+                                       # seconds (for wording and layout changes to dod/dashboard.py)
 
 Each request goes through the same path as any forecast (dod/forecast.py). The dashboard is copied to
 docs/examples/<file>.html, and docs/examples/index.json (read by showcase.py) gets its summary, cost and timings.
@@ -35,7 +37,8 @@ def make(request, name, title):
     plan = a["plan"].model_copy(update={"title": title}) if title else a["plan"]
     s = forecast.run(plan, a["usage"], a["trace"])
     shutil.copy(s["dashboard"], DOCS / f"{name}.html")
-    return {"request": request, "slug": name, "title": plan.title, "grain": s["grain"], "rel_mae": s["test_rel_mae"],
+    return {"request": request, "slug": name, "title": plan.title, "out": str(Path(s["dashboard"]).parent),
+            "grain": s["grain"], "rel_mae": s["test_rel_mae"],
             "summary": s["agent"]["summary"], "cost": a["usage"]["est_cost_usd"],
             "agent_seconds": a["usage"]["agent_seconds"], "harness_seconds": s["seconds"]}
 
@@ -43,6 +46,11 @@ def make(request, name, title):
 if __name__ == "__main__":
     only = {int(x) for x in sys.argv[1:] if x.isdigit()}
     index_path = DOCS / "index.json"
+    if "--rebuild" in sys.argv:   # same results, current page code
+        for e in json.loads(index_path.read_text()):
+            shutil.copy(forecast.rebuild(e["out"]), DOCS / f"{e['slug']}.html")
+            print("rebuilt", e["slug"])
+        sys.exit()
     index = {e["slug"]: e for e in json.loads(index_path.read_text())} if index_path.exists() else {}
     for n, (request, name, title) in enumerate(EXAMPLES, 1):
         if only and n not in only:

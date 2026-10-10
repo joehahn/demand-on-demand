@@ -6,9 +6,15 @@
   2. fixed code adds the lines up by week or month and builds the inputs (dod/history.py, dod/features.py)
   3. fixed code picks and tests the model (dod/model.py, grain-aware), and a short summary is written from its numbers
   4. fixed code draws the dashboard (dod/dashboard.py)
-Writes out/<slug>/: dashboard.html, forecast.csv, backtest.csv, stores.csv, summary.json.
+Writes out/<slug>/: dashboard.html, forecast.csv, backtest.csv, stores.csv, summary.json, and page.pkl (everything the
+page is drawn from).
+
+    python -m dod.forecast --rebuild out/<slug> [...]   # redraw pages with the current dashboard code, from page.pkl:
+                                                         # no AI call, no model training (for wording and layout changes)
 """
+import datetime
 import json
+import pickle
 import sys
 import time
 from pathlib import Path
@@ -78,9 +84,13 @@ def run(plan, usage=None, trace=None, narrate=True, out_root=OUT, log=print):
                                                      "cache_read_tokens": 0, "est_cost_usd": 0.0}
             info["summary"] = (agent.narrate(anthropic.Anthropic(), facts, usage) + " "
                                + trust_sentence(res["test_rel_mae"]))
-        html = dashboard.build(shown, p, res, usage, info if plan.request else None, harness_seconds=time.time() - t0)
+        p.built_at = datetime.datetime.now().astimezone()
+        page = {"spec": shown, "panel": p, "res": res, "usage": usage, "agent": info if plan.request else None,
+                "harness_seconds": time.time() - t0}
+        html = dashboard.build(**page)
     out = Path(out_root) / plan.slug
     out.mkdir(parents=True, exist_ok=True)
+    (out / "page.pkl").write_bytes(pickle.dumps(page))   # for rebuild: the page's inputs, not its code
     (out / "dashboard.html").write_text(html)
     res["forecast"].to_csv(out / "forecast.csv", index=False)
     res["backtest"].to_csv(out / "backtest.csv", index=False)
@@ -107,6 +117,19 @@ def forecast(request, interactive=False, log=print, out_root=OUT):
     return {**a, "status": "ok", "summary": summary}
 
 
+def rebuild(out_dir):
+    """Redraw out_dir/dashboard.html from its saved page.pkl with the current dashboard code (same numbers)."""
+    page = pickle.loads((Path(out_dir) / "page.pkl").read_bytes())
+    with model.use_grain(page["spec"].grain):
+        html = dashboard.build(**page)
+    (Path(out_dir) / "dashboard.html").write_text(html)
+    return str(Path(out_dir) / "dashboard.html")
+
+
 if __name__ == "__main__":
+    if "--rebuild" in sys.argv:
+        for d in sys.argv[sys.argv.index("--rebuild") + 1:]:
+            print("rebuilt", rebuild(d))
+        sys.exit()
     r = forecast(" ".join(x for x in sys.argv[1:] if not x.startswith("--")), interactive="--interactive" in sys.argv)
     print(f"\n{r['status']}: {r.get('message', '')}" if r["status"] != "ok" else r["summary"]["dashboard"])
