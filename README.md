@@ -61,15 +61,14 @@ the clean tables, with a query time limit. Credentials live in `.env`, are read 
 
 ## See it live
 
-- **[Landing page](https://joehahn.github.io/demand-on-demand/)**: the idea in one screen, with the five example forecasts.
 - **[Data exploration](https://joehahn.github.io/demand-on-demand/data_exploration.html)**: what 26 million orders look like: volume by day, month and
   year, seasonality (flat statewide, 3x to 8x swings in slices like cream liqueurs and gift packs), and every data
   problem found while loading.
 - **[Data fixes](https://joehahn.github.io/demand-on-demand/data_fixes.html)**: each problem, the fix applied once in the warehouse, and before and after.
 - **[Data dictionary](https://joehahn.github.io/demand-on-demand/data_dictionary.html)**: every table and column, exactly as the
-  agent is told about them at the start of each request (written once in `load_data.py`, stored as database comments).
+  agent is told about them at the start of each request (written once by the loader, stored as database comments).
 
-**Example forecasts.** Each was made by the agent from the plain-English request shown (`python make_examples.py`).
+**Example forecasts.** Each was made by the agent from the plain-English request shown.
 Each dashboard is one page with how the request was read, the forecast chart and table (with an 80% range), the
 backtest against the same period last year, the table the model learns from, which inputs helped, a map of the stores
 included, the 48 model configurations compared, every tool call the agent made, and the exact SQL that ran.
@@ -88,10 +87,6 @@ anything SQL can express, such as the stores in the last example.
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
 
-**Live demo.** `python demo.py` lists canned requests to run in front of an audience (`python demo.py 3` runs one
-live and opens its dashboard; `--rehearse` saves copies for `--replay` if the network fails). Their SQL is checked
-against the answer key with `python demo.py --check`.
-
 ## Results
 
 - [benchmark/report.md](benchmark/report.md): 30 forecasts sampled from the warehouse (products, categories, vendors;
@@ -99,8 +94,7 @@ against the answer key with `python demo.py --check`.
   The model beat "same month last year" on 18, with a median error 8% lower and a mean error 9% lower. Iowa liquor
   demand is very regular year to year, so last year is a hard baseline, and on the other 12 it was not beaten. The report lists every forecast, the
   misses included.
-- [evals/sql_report.md](evals/sql_report.md): the agent's SQL scored against an answer key (`evals/answer_cases.json`,
-  `evals/build_answers.py`): 34 requests (brands, categories, minis, cities, counties, a 207-store chain, weeks,
+- [evals/sql_report.md](evals/sql_report.md): the agent's SQL scored against an answer key: 34 requests (brands, categories, minis, cities, counties, a 207-store chain, weeks,
   quarters, a year, and requests it should decline), 3 runs each. The sales records its SQL selected, summed by month,
   matched the key in every month in all 102 runs, and all 102 read the grain and horizon right.
 - [evals/grounding.md](evals/grounding.md): each dashboard's summary opens with one sentence written by Claude from the
@@ -141,7 +135,6 @@ agent's part: its SQL and how it read the request.
 | `dod/spec.py`, `dod/panel.py` | reference queries from hand-checked request forms, for the answer key and the benchmark |
 | `evals/`, `benchmark/` | the answer key and SQL score, summary grounding, forecast-accuracy benchmark and experiments |
 | `make_examples.py`, `demo.py` | the published example dashboards; canned requests for a live demo |
-| `showcase.py` | the landing page |
 | `CLAUDE.md`, `PLAN.md` | the working notes Claude Code built this from |
 
 ## About the author
@@ -166,4 +159,4 @@ Code and writing: [MIT](LICENSE).
 **Data:** [Iowa Liquor Sales](https://catalog.data.gov/dataset?q=iowa+liquor+sales), State of Iowa, via the Iowa Data
 Hub, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); modified (duplicates removed, cleaned,
 aggregated). County population and income: U.S. Census Bureau. Not endorsed by the State of Iowa. Brand names appear
-only as they do in the public data. Raw data is not stored in this repo; `load_data.py` downloads it.
+only as they do in the public data. Raw data is not stored in this repo; the loader downloads it.

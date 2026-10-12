@@ -199,4 +199,6 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    fortnight, month, quarter, half, year. Answer key gains crown_biweekly and jack_polk_halves (36 requests).
 21. Any-grain page retired (2026-10-11): docs/onthefly.html, evals/onthefly_report.py and evals/onthefly.json removed;
    the README examples (monthly, quarterly, weekly, a store filter) and one sentence on supported periods replace it.
+22. Landing page retired (2026-10-11): docs/index.html and showcase.py removed; the README is the front page. Dashboard
+   nav and data pages link to the GitHub README. README narrative has no inline commands (Run it yourself keeps them).
 

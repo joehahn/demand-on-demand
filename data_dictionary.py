@@ -34,7 +34,7 @@ tables and columns hold products, places and sales; its search tools then find t
 and it writes the SQL that selects the sales records to forecast. <strong>The descriptions are written once in the
 loader and stored in the database, so this page, the agent and any SQL client all read the same text.</strong> Raw
 tables and credentials are not described because the agent cannot reach them.</p>
-<p><a href="index.html">Back to demand-on-demand</a> &middot; <a href="data_exploration.html">data exploration</a>
+<p><a href="https://github.com/joehahn/demand-on-demand#readme">Back to demand-on-demand</a> &middot; <a href="data_exploration.html">data exploration</a>
 &middot; <a href="data_fixes.html">data fixes</a></p>
 {"".join(parts)}
 <footer>Data: Iowa Liquor Sales, State of Iowa, via the Iowa Data Hub, CC BY 4.0; modified (see the data fixes page).

@@ -112,7 +112,7 @@ def build():
         trs.append(f"<tr><td>{html.escape(r1['request'])}{sqls}</td>{cell(r1, WHY)}{cell(r2, WHY_RULES)}</tr>")
     rules = html.escape(RULES_TEXT)
     body = f"""
-<p class="note"><a href="index.html">demand-on-demand</a> &middot; <a href="data_dictionary.html">data dictionary</a>
+<p class="note"><a href="https://github.com/joehahn/demand-on-demand#readme">demand-on-demand</a> &middot; <a href="data_dictionary.html">data dictionary</a>
 &middot; <a href="https://github.com/joehahn/demand-on-demand">GitHub</a></p>
 <h1>Can AI-written SQL be trusted? Testing it against a reference</h1>
 <p>Two ways to turn a plain-English request into the data a forecast is trained on:</p>

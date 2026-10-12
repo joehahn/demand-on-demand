@@ -197,7 +197,8 @@ def features_section(spec, panel, res, unit, fc):
     targets = {c["target"] for c in ens}
     yoy_col = f"change vs {season} {units()} back"
     if "yoy" in targets and season in shown:  # a model predicting the change from last year sees this as its target
-        t[yoy_col] = [y[m] / y[back(m, season)] - 1 if m in y.index else None for m in months]
+        t[yoy_col] = [y[m] / y[back(m, season)] - 1 if m in y.index and y[back(m, season)] else None
+                      for m in months]   # blank when nothing sold a year back (no percent change exists)
     chosen = res.get("feature_groups", [])
     ex = panel.exog[code]
     for col in [c for g in chosen for c in FEATURE_COLUMNS[g] if c in ex.columns]:
@@ -478,9 +479,8 @@ def updated_html(panel):
 
 
 def nav_html():
-    return (f'<p class="note"><a href="{SITE}/">demand-on-demand</a> &middot; <a href="{SITE}/#how">how it works</a> '
-            f'&middot; <a href="{SITE}/#examples">examples</a> &middot; <a href="{SITE}/data_dictionary.html">data '
-            f'dictionary</a> &middot; <a href="{REPO}">GitHub</a></p>')
+    return (f'<p class="note"><a href="{REPO}#readme">demand-on-demand</a> &middot; <a href="{REPO}#how-it-works">how '
+            f'it works</a> &middot; <a href="{SITE}/data_dictionary.html">data dictionary</a></p>')
 
 
 def model_label(usage):
