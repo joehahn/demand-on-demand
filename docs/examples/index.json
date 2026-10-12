@@ -46,5 +46,17 @@
   "cost": 0.0138,
   "agent_seconds": 7.6,
   "harness_seconds": 24.9
+ },
+ {
+  "request": "Weekly forecast of Tito's bottles at stores that have never ordered Fireball, next 8 weeks",
+  "slug": "titos_at_stores_without_fireball_next_8_weeks",
+  "title": "Weekly Tito's Bottles at Stores That Never Ordered Fireball",
+  "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/weekly_tito_s_bottles_at_stores_that_never_ordered_fireball",
+  "grain": "week",
+  "rel_mae": 0.81571811021475,
+  "summary": "Forecast totals 142 bottles over the period, down 82% from the same weeks last year. This forecast is 18% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0475,
+  "agent_seconds": 29.2,
+  "harness_seconds": 121.6
  }
 ]

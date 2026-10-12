@@ -27,6 +27,8 @@ EXAMPLES = [
      "Cream liqueurs, Iowa, through the holidays"),
     ("show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
      "cream_liqueur_by_week_next_12_weeks", "Weekly Cream Liqueur Bottles Statewide"),
+    ("Weekly forecast of Tito's bottles at stores that have never ordered Fireball, next 8 weeks",
+     "titos_at_stores_without_fireball_next_8_weeks", "Weekly Tito's Bottles at Stores That Never Ordered Fireball"),
 ]
 
 

@@ -61,7 +61,7 @@ the clean tables, with a query time limit. Credentials live in `.env`, are read 
 
 ## See it live
 
-- **[Landing page](https://joehahn.github.io/demand-on-demand/)**: the idea in one screen, with the four example forecasts.
+- **[Landing page](https://joehahn.github.io/demand-on-demand/)**: the idea in one screen, with the five example forecasts.
 - **[Data exploration](https://joehahn.github.io/demand-on-demand/data_exploration.html)**: what 26 million orders look like: volume by day, month and
   year, seasonality (flat statewide, 3x to 8x swings in slices like cream liqueurs and gift packs), and every data
   problem found while loading.
@@ -80,6 +80,10 @@ included, the 48 model configurations compared, every tool call the agent made, 
 | [What revenue should we expect from Fireball in Linn County next quarter?](https://joehahn.github.io/demand-on-demand/examples/fireball_linn_county_next_quarter.html) | 8% more accurate |
 | [How many bottles of cream liqueur will Iowa stores order for the holidays?](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_holidays.html) | 30% more accurate |
 | [show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_by_week_next_12_weeks.html) | 18% more accurate |
+| [Weekly forecast of Tito's bottles at stores that have never ordered Fireball, next 8 weeks](https://joehahn.github.io/demand-on-demand/examples/titos_at_stores_without_fireball_next_8_weeks.html) | 18% more accurate* |
+
+\*Only 18 stores in Iowa have sold Tito's but never ordered Fireball, so this niche forecast is small and lumpy: its
+weekly ranges are wide. The agent's SQL finds the stores with a subquery that the old request form could not express.
 
 More by week, quarter and year: [forecasts by any grain](https://joehahn.github.io/demand-on-demand/onthefly.html).
 
