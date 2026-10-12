@@ -10,7 +10,7 @@ same period last year, and publishes a dashboard that says how far to trust the 
 
 | | |
 |---|---|
-| Plain English to dashboard | about 30 seconds (median of the five examples; up to 2.5 minutes) |
+| Plain English to dashboard | about 25 seconds (median of the five examples; all under 35 seconds) |
 | Claude API cost per request | about $0.02 |
 | Forecast accuracy | beats "same month last year" on 18 of 30 sampled forecasts; median error 8% lower, mean 9% lower |
 | Agent accuracy | on 34 test requests run 3 times each, its SQL added up to the answer key in 102 of 102 runs |
@@ -76,10 +76,10 @@ included, the 48 model configurations compared, every tool call the agent made, 
 | request | backtest vs same period last year | built from scratch |
 |---|---|---|
 | [Monthly forecast of Tito's minis in Des Moines for the next 5 months](https://joehahn.github.io/demand-on-demand/examples/tito_s_minis_des_moines_next_5_months.html) | 16% more accurate | 23 s, $0.03 |
-| [What revenue should we expect from Fireball in Linn County next quarter?](https://joehahn.github.io/demand-on-demand/examples/fireball_linn_county_next_quarter.html) | 8% more accurate | 1 min 34 s, $0.04 |
+| [What revenue should we expect from Fireball in Linn County next quarter?](https://joehahn.github.io/demand-on-demand/examples/fireball_linn_county_next_quarter.html) | 8% more accurate | 24 s, $0.05 |
 | [How many bottles of cream liqueur will Iowa stores order for the holidays?](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_holidays.html) | 30% more accurate | 22 s, $0.02 |
 | [show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_by_week_next_12_weeks.html) | 18% more accurate | 32 s, $0.01 |
-| [Quarterly forecast of Tito's sales dollars at stores that have never ordered Fireball, next 4 quarters](https://joehahn.github.io/demand-on-demand/examples/titos_at_stores_without_fireball_next_4_quarters.html) | 11% more accurate | 1 min 55 s, $0.04 |
+| [Quarterly forecast of Tito's sales dollars at stores that have never ordered Fireball, next 4 quarters](https://joehahn.github.io/demand-on-demand/examples/titos_at_stores_without_fireball_next_4_quarters.html) | 11% more accurate | 26 s, $0.05 |
 
 Requests can ask for weeks, fortnights, months, calendar quarters, half-years or the next 12 months, and can select
 anything SQL can express, such as the stores in the last example.
