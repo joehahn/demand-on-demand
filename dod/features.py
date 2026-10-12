@@ -29,17 +29,18 @@ HOLIDAYS = {"thanksgiving": "Thanksgiving Day", "christmas": "Christmas Day", "n
 def season(index):
     """Sine and cosine of the time of year, at the middle of each period."""
     index = pd.DatetimeIndex(index)
-    mid = 14 if (index.freqstr or pd.infer_freq(index) or "").startswith("M") else 3
+    freq = index.freqstr or pd.infer_freq(index) or ""
+    mid = 14 if freq.startswith("M") else 45 if freq.startswith("Q") else 3   # days from period start to its middle
     t = 2 * np.pi * (index.dayofyear + mid) / 365.25
     return pd.DataFrame({"season_sin": np.sin(t), "season_cos": np.cos(t)}, index=index)
 
 
 def holidays(index, grain):
-    """1 if the holiday (its actual day) falls in the period: a week (by its Monday) or a month."""
+    """1 if the holiday (its actual day) falls in the period: a week (by its Monday), a month or a quarter."""
     cal = db.query("SELECT cal_date, holiday_name FROM ref.calendar WHERE holiday_name IS NOT NULL")
     day = pd.to_datetime(cal.cal_date)
     cal["period"] = (day - pd.to_timedelta(day.dt.weekday, unit="D")) if grain == "week" else \
-        day.dt.to_period("M").dt.start_time
+        day.dt.to_period("Q" if grain == "quarter" else "M").dt.start_time
     out = pd.DataFrame(0.0, index=index, columns=list(HOLIDAYS))
     for col, name in HOLIDAYS.items():
         periods = set(cal[cal.holiday_name == name].period)
