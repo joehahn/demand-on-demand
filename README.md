@@ -89,13 +89,14 @@ included, the 48 model configurations compared, every tool call the agent made, 
 Requests can ask for weeks, fortnights, months, calendar quarters, half-years or the next 12 months, and can select
 anything SQL can express, such as the stores in the last example.
 
-**Try it live.** Three requests that each build in about 30 seconds and each tell a different story. In Claude Code,
-type `!` and paste one line; the dashboard opens in the browser when it is ready.
+**Try it live.** Three requests that each build in about 30 seconds and each tell a different story. Start Claude
+Code in this folder and paste one, as is: the project's instructions tell Claude Code to run the forecaster on it (not
+to answer it itself), open the dashboard and quote its summary.
 
-```bash
-open "$(.venv/bin/python -m dod.forecast "Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months" | tail -1)"
-open "$(.venv/bin/python -m dod.forecast "Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months" | tail -1)"
-open "$(.venv/bin/python -m dod.forecast "What tequila revenue should Polk County stores expect next quarter?" | tail -1)"
+```text
+Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months
+Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months
+What tequila revenue should Polk County stores expect next quarter?
 ```
 
 1. **Casey's vs Hy-Vee:** two chains defined only by store name, side by side, something a fill-in-the-form agent
@@ -105,6 +106,13 @@ open "$(.venv/bin/python -m dod.forecast "What tequila revenue should Polk Count
 3. **Tequila in Polk County:** sales nearly tripled from 2016 to 2024 and then turned down. "Next quarter" is read as
    Q4 2026, the first full quarter after the one in progress, and the page says plainly that at this turning point
    the model is no more accurate than last year's numbers: it reports how far to trust it, not just a number.
+
+**From any AI assistant.** At a firm, employees would ask their own assistant, not open this repo. The next step
+(not built yet) is a small MCP server: MCP is the open standard for giving AI assistants tools, supported by Claude
+Desktop, Claude Code and Microsoft Copilot Studio among others. It would offer one tool, "forecast demand from a
+plain-English request", running on a firm machine with the warehouse, and return the summary and a link to the
+dashboard. The assistant then only passes the question along: the SQL, the models and the trust check stay in this
+governed, tested code, whichever assistant the firm uses.
 
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
