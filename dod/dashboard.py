@@ -628,6 +628,51 @@ def read_as_html(spec, unit, months, wide, assumptions_html, res=None):
     return f'<p class="readas"><span>Read as</span> {" &middot; ".join(esc(x) for x in parts)}</p>{why}'
 
 
+def changes_section(res, wide, labels, unit, top=10):
+    """For a request broken out into several series: which series are forecast to change most against the same
+    periods last year, in units (a small series can swing wildly in percent), with whether each series' own forecasts
+    beat last year in the Testing period."""
+    fc, bt = res["forecast"], res["backtest"]
+    if wide.shape[1] < 3:
+        return ""
+    money = "$" if unit == "dollars" else ""
+    rows = []
+    for c, g in fc.groupby("series"):
+        last = [back(m, W["season"]) for m in g.month]
+        ly = sum(wide.at[m, c] for m in last if m in wide.index and wide.at[m, c] == wide.at[m, c])
+        mine = bt[(bt.series == c)].dropna(subset=["actual", "pred", "naive"])
+        naive = (mine.actual - mine.naive).abs().sum()
+        rel = (mine.actual - mine.pred).abs().sum() / naive if naive else float("nan")
+        recent = wide[c].iloc[-W["season"]:].sum()
+        rows.append({"series": labels.get(c, c), "forecast": g.pred.sum(), "last_year": ly, "change": g.pred.sum() - ly,
+                     "pct": g.pred.sum() / ly - 1 if ly else float("nan"), "recent": recent, "rel": rel})
+    d = pd.DataFrame(rows)
+    n_all = len(d)
+    d = d[(d.forecast > 0) | (d.last_year > 0)]   # series with no sales then or now (e.g. retired categories) say nothing
+    span = f"{when(fc.month.min())} to {when(fc.month.max())}"
+    cash = lambda v: f"{money}{v:,.0f}"
+    def show(part):
+        return table(pd.DataFrame({
+            "series": part.series, f"forecast {unit}": part.forecast.map(cash),
+            "same periods last year": part.last_year.map(cash),
+            "change": part.change.map(lambda v: ("+" if v >= 0 else "-") + cash(abs(v))),
+            "change %": part.pct.map(lambda v: "" if v != v else f"{v:+.0%}"),
+            f"last 12 months": part.recent.map(cash),
+            "its own forecasts in the Testing period": part.rel.map(
+                lambda r: "no track record" if r != r else (f"beat last year ({r:.2f})" if r < 1 else
+                                                            f"did not beat last year ({r:.2f})"))}))
+    n = min(top, len(d) // 2) if len(d) > 2 * top else len(d)
+    downs = d[d.change < 0].nsmallest(n, "change")
+    ups = d[d.change > 0].nlargest(n, "change")
+    some = f"{n_all} series ({len(d)} with sales then or now)" if len(d) < n_all else f"{n_all} series"
+    return (f"<h2>Biggest changes</h2><p>Of the {some}, the ones forecast to change most from {span} against "
+            f"the same {units()} last year, in {unit} (a small series can swing wildly in percent, so the ranking is by "
+            f"size of the change). The last column says how far to trust each one: whether that series' own forecasts "
+            f"beat simply repeating last year in the Testing period.</p>"
+            + (f"<h3>Largest forecast declines</h3>{show(downs)}" if len(downs) else "")
+            + (f"<h3>Largest forecast rises</h3>{show(ups)}" if len(ups) else ""))
+
+
 def periods_section(res, wide, unit, plot):
     """For a request by fortnight, quarter, half-year or year: the periods asked for, actual and forecast, with each
     period's 80% range and a table (dod/periods.py adds the weeks or months up)."""
@@ -904,6 +949,7 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
 <div class="tiles">{tiles_html}</div>
 {skipped_html}
 {periods_html}
+{changes_section(res, wide, labels, unit)}
 {charts}{more}
 <ul class="note">
 <li><strong>Tuning</strong> ({when(uw[0])} to {when(uw[1])}): {refit} through these {units()}, each candidate model was
