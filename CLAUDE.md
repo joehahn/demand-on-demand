@@ -19,6 +19,14 @@ needs Claude Code to run. See `PLAN.md` for the full design.
 
 GitHub: https://github.com/joehahn/demand-on-demand (not yet created)
 
+## Forecast requests typed into Claude Code
+
+When the user types a plain-English forecast request (e.g. "Monthly Fireball mini bottles at Casey's stores vs Hy-Vee
+stores, next 6 months"), do not answer it yourself, write SQL or build models. Run the app on the request, word for word:
+`.venv/bin/python -m dod.forecast "<request>"` (about 30 seconds). Its last line is the dashboard's path: `open` it, then
+reply in two or three sentences with the summary from that folder's summary.json (`agent.summary`) and the path. If it
+prints `no_forecast` or an error, relay that message instead.
+
 ## Environment
 
 - Python 3.12 venv at `.venv/` (Dropbox-ignored): `.venv/bin/python`
