@@ -78,10 +78,7 @@ def search_space(res, n_counties=15):
             ("Predicts", "; ".join(predicts(t) for t in model.COMMON["target"]), len(model.COMMON["target"])),
             ("Inputs", "; ".join(lags_words(l) for l in model.COMMON["lags"]), len(model.COMMON["lags"])),
             ("History used", "; ".join("all years" if y is None else f"the last {y} years" for y in model.COMMON["train_years"]),
-             len(model.COMMON["train_years"])),
-            ("Other counties", "learn from this forecast's own history only; or also from the same product's history in "
-             f"the {n_counties} busiest counties (more examples of its seasonality and trend)" if pooled
-             else "this series only (no other counties to learn from)", 2 if pooled else 1)]
+             len(model.COMMON["train_years"]))]
     t = pd.DataFrame(rows, columns=["setting", "options", "choices"])
     count = " \u00d7 ".join(map(str, t.choices)) + f" = {int(t.choices.prod())}"
     return table(t, {"choices": lambda v: f"{v}"}), count
@@ -96,12 +93,12 @@ def grid_words(grid):
     rows = []
     for r in grid.itertuples():
         if r.model == "seasonal_naive":
-            rows.append((f"{base()} (baseline)", "", "", "", "", "", f"{r.rel_mae:.3f}"))
+            rows.append((f"{base()} (baseline)", "", "", "", "", f"{r.rel_mae:.3f}"))
             continue
         rows.append(({"ridge": "ridge regression", "lightgbm": "LightGBM"}[r.model], size(r), predicts(r.target),
                       lags_words(r.lags), "all years" if r.train_years in (None, "None") else f"last {r.train_years} years",
-                      "yes" if str(r.pool) == "True" else "no", f"{r.rel_mae:.3f}"))
-    return pd.DataFrame(rows, columns=["algorithm", "size", "predicts", "inputs", "history", "other counties",
+                      f"{r.rel_mae:.3f}"))
+    return pd.DataFrame(rows, columns=["algorithm", "size", "predicts", "inputs", "history",
                                        ERR_LABEL])
 
 
@@ -138,8 +135,7 @@ def forecast_parts(res):
     for i, c in enumerate(ens):
         size = f"regularization {c['alpha']:g}" if c["model"] == "ridge" else f"{c['num_leaves']} leaves"
         settings = "; ".join([predicts(c["target"]), lags_words(c["lags"]), size,
-                              "all years" if not c.get("train_years") else f"last {c['train_years']} years",
-                              "also other counties" if c.get("pool") else "this series only"])
+                              "all years" if not c.get("train_years") else f"last {c['train_years']} years"])
         rows.append(({"ridge": "ridge regression", "lightgbm": "LightGBM"}[c["model"]], w / len(ens), settings, errs[i]))
     return rows
 
@@ -148,8 +144,8 @@ def model_explanation(res, unit, spec, panel):
     """How the forecast is made, in a few sentences and one small table."""
     uw, tw = res["tune_window"], res["test_window"]
     parts = forecast_parts(res)
-    t = pd.DataFrame(parts, columns=["part", "weight", "settings", ERR_LABEL])
-    tbl = table(t, {"weight": lambda v: f"{v:.0%}", ERR_LABEL: lambda v: f"{v:.2f}"}, bold=("part", "weight"))
+    t = pd.DataFrame(parts, columns=["part", "weight", "settings", ERR_LABEL]).drop(columns=ERR_LABEL)
+    tbl = table(t, {"weight": lambda v: f"{v:.0%}"}, bold=("part", "weight"))
     rel = res["test_rel_mae"]
     pct = round(abs(1 - rel) * 100)
     test = (f"{pct}% {'more' if rel < 1 else 'less'} accurate than last year alone" if pct
@@ -167,8 +163,9 @@ def model_explanation(res, unit, spec, panel):
             else f"Each {W['unit']}'s forecast comes from this model.")
     return (f"<p><strong>How this forecast is made.</strong> {lead} It was picked by re-tuning on the Testing "
             f"period ({when(tw[0])} to {when(tw[1])}), with models trained on earlier {units()} only: its total misses there "
-            f"were {chosen:.2f} times those of last year alone, against {best_alone:.2f} for the best single model "
-            f"(smaller is better; 1.00 = as good as last year). {tested}</p>{tbl}")
+            f"were {chosen:.2f} times those of last year alone"
+            + (f", against {best_alone:.2f} for the best single model" if abs(chosen - best_alone) > 0.005 else "")
+            + f" (smaller is better; 1.00 = as good as last year). {tested}</p>{tbl}")
 
 
 FEATURE_NAMES = {"season": "time of year (season)", "calendar": "business days and holidays",
@@ -285,7 +282,8 @@ def agent_step(t):
         args = {}
     out = str(t.get("result", ""))
     if t.get("error"):
-        return f"Tried {t['tool'].replace('_', ' ')}, which was rejected: {out[:160]}"
+        what = "A test query" if t["tool"] == "run_select" else f"A call to {t['tool'].replace('_', ' ')}"
+        return f"{what} failed ({out.removeprefix('Error: ')[:160]}); the agent corrected course."
     if t["tool"] == "find_values":
         kind = args.get("kind", "")
         rows = text_table(out)
@@ -364,8 +362,10 @@ def query_prep_rows(unit, panel, wide):
     return [("This forecast", f"The AI wrote one SQL query that selects the sales records for this request: which "
              f"products, which stores, and the {unit} on each record (see The SQL as run).",
              f'the AI (Claude), checked by <a href="{GITHUB}/dod/sqlcheck.py">dod/sqlcheck.py</a>'),
-            ("This forecast", f"Computed {W['adj']} sums of the selected records ({shape}), complete {units()} only, "
-             f"and monthly sums for each store (for the store list and map). A {W['unit']} with no "
+            ("This forecast", (f"Computed monthly sums of the selected records for each series and each store (calendar "
+             f"months), complete months only." if W["grain"] == "month" else
+             f"Computed {W['adj']} sums of the selected records ({shape}), complete {units()} only, and monthly sums "
+             f"for each store (for the store list and map).") + f" A {W['unit']} with no "
              f"orders counts as 0, since the warehouse was checked to have orders in every month from "
              f"{when(panel.start)} to {when(wide.index[-1])}; {units()} before the first sale are left blank.",
              hist + " (SQL + Python)")]
@@ -441,7 +441,7 @@ def prep_section(spec, panel, res, unit, wide):
     offered = [g for g in built if g in spec.features]   # all of them are built; Figure 4 shows which were used
     if offered:
         rows.append(("This forecast", "Derived new features for every " + W["unit"] + ", including the "
-                     + units() + " being forecast (Figure 4 shows which ones the forecast uses): "
+                     + units() + " being forecast (the Which inputs helped figure shows which ones the forecast uses): "
                      + "; ".join(built[g] for g in offered) + ".",
                      f'<a href="{GITHUB}/dod/features.py">dod/features.py</a> (Python)'))
     targets = {c["target"] for c in res.get("ensemble") or []}
@@ -790,24 +790,29 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
     wide, fc, bt, ps = panel.series, res["forecast"], res["backtest"], res["per_step"]
     labels = panel.labels
     months = f"{when(fc.month.min())} to {when(fc.month.max())}"
+    if W["grain"] == "week":   # weeks are labeled by their Monday: say where the last one ends
+        first, end = pd.Timestamp(fc.month.min()), pd.Timestamp(fc.month.max()) + pd.Timedelta(days=6)
+        months = f"{first:%b} {first.day} to {end:%b} {end.day}, {end.year}"
     unit = {"sales_bottles": "bottles", "sales_dollars": "dollars", "sales_liters": "liters"}[spec.target]
     total = fc.pred.sum()
     last_year = sum(wide.at[back(m, W["season"]), c] for m, c in zip(fc.month, fc.series)
                     if back(m, W["season"]) in wide.index)
     yoy = total / last_year - 1 if last_year else float("nan")
     q = res.get("periods")
-    if q is not None and len(q):   # a request by longer periods: the headline is those periods, sold part included
-        months = f"{q.period.iloc[0]} to {q.period.iloc[-1]}" if len(q) > 1 else q.period.iloc[0]
+    if q is not None and len(q):   # a request by longer periods: the headline is the full periods asked for
+        full = q[q.status == "forecast"]
+        full = full if len(full) else q   # nothing but a period in progress: report that
+        months = f"{full.period.iloc[0]} to {full.period.iloc[-1]}" if len(full) > 1 else full.period.iloc[0]
         if res["period_grain"] == "fortnight":   # first Monday to the last Sunday
-            first, end = q["first"].iloc[0], q["last"].iloc[-1] + pd.Timedelta(days=6)
+            first, end = full["first"].iloc[0], full["last"].iloc[-1] + pd.Timedelta(days=6)
             months = f"{first:%b} {first.day} to {end:%b} {end.day}, {end.year}"
-        total, last_year = q.total.sum(), q.last_year.sum(min_count=len(q))
+        total, last_year = full.total.sum(), full.last_year.sum(min_count=len(full))
         yoy = total / last_year - 1 if last_year == last_year and last_year else float("nan")
     rel = res["test_rel_mae"]
     money = "$" if unit == "dollars" else ""
     tiles = [
         (f"{money}{total:,.0f}", f"forecast {unit}, {months}"),
-        (f"{yoy:+.1%}", f"vs the same {period_word(res) + 's' if q is not None and len(q) else units()} last year"),
+        (f"{yoy:+.1%}", f"vs the same {(period_word(res) + ('s' if ' to ' in months else '')) if q is not None and len(q) else units()} last year"),
         (f"{bt.dropna(subset=['actual']).pipe(lambda d: (d.actual - d.pred).abs().sum() / d.actual.sum()):.0%}",
          f"typical {W['adj']} miss in the Testing period ({when(res['test_window'][0])} to {when(res['test_window'][1])})"),
         (f"{round(abs(1 - rel) * 100)}%", (("more" if rel < 1 else "less") + f" accurate than repeating the {base()}")

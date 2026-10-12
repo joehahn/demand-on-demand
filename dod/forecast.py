@@ -62,16 +62,19 @@ def facts_for(plan, p, res):
 def period_facts(res, pct):
     """The reported periods, for the summary writer: their total and change, and each period."""
     q, name = res["periods"], periods.NAMES[res["period_grain"]]
-    return {"periods_reported": f"{q.period.iloc[0]} to {q.period.iloc[-1]}" if len(q) > 1 else q.period.iloc[0],
-            "period": name, "periods_total": round(q.total.sum()),
-            "periods_change_vs_last_year": pct(q.total.sum(), q.last_year.sum()),
+    full = q[q.status == "forecast"]
+    full = full if len(full) else q   # the headline: the full periods asked for (a period in progress is context)
+    return {"periods_reported": f"{full.period.iloc[0]} to {full.period.iloc[-1]}" if len(full) > 1 else full.period.iloc[0],
+            "period": name, "periods_total": round(full.total.sum()),
+            "periods_change_vs_last_year": pct(full.total.sum(), full.last_year.sum()),
             "by_period": [{name: r.period, "status": r.status, "sold_so_far": round(r.sold),
                            "forecast_total": round(r.total),
                            "same_period_last_year": round(r.last_year) if r.last_year == r.last_year else None,
                            "change": pct(r.total, r.last_year) if r.last_year == r.last_year else "n/a"}
                           for r in q.itertuples()],
             "note": f"The request asked for {name}s: quote periods_total and periods_change_vs_last_year for "
-                    f"periods_reported (a period in progress includes what already sold), not the totals above."}
+                    f"periods_reported, not the totals above. A {name} with status 'in progress' is mostly already "
+                    f"sold and is not part of the answer; leave it out."}
 
 
 def trust_sentence(rel):

@@ -243,7 +243,7 @@ def ask(request, interactive=False, log=print):
             t1 = time.time()
             if call.name == "submit_query":
                 plan, err = submitted(request, call.input)
-                out = err or "Accepted. Fixed code is adding up the order lines."
+                out = err or "Accepted. Fixed code is adding up the sales records."
             else:
                 out = call_tool(call.name, call.input, interactive)
             is_error = str(out).startswith("Error")

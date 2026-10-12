@@ -18,10 +18,10 @@
   "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/fireball_linn_county_next_quarter_revenue",
   "grain": "month",
   "rel_mae": 0.9240903936855143,
-  "summary": "Fireball Linn County revenue for Q3 2026 to Q4 2026 is forecast at $1.18 million, up 6% from the same period last year. This forecast is 8% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0333,
-  "agent_seconds": 14.8,
-  "harness_seconds": 62.9
+  "summary": "Q4 2026 revenue is forecast at $593,000, up 8% from the same quarter last year. This forecast is 8% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0433,
+  "agent_seconds": 17.0,
+  "harness_seconds": 76.8
  },
  {
   "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
@@ -54,9 +54,9 @@
   "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/quarterly_tito_s_dollars_at_stores_that_never_ordered_fireba",
   "grain": "month",
   "rel_mae": 0.8915317320953001,
-  "summary": "Forecast Tito's dollars at these stores total $118,000 for Q3 2026 to Q2 2027, up 7% from the same period last year. This forecast is 11% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0761,
-  "agent_seconds": 45.4,
-  "harness_seconds": 110.1
+  "summary": "Forecast Tito's sales for Q4 2026 to Q2 2027 total $81,500, down 9% from the same quarters last year. This forecast is 11% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0399,
+  "agent_seconds": 22.3,
+  "harness_seconds": 93.1
  }
 ]
