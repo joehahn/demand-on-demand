@@ -213,7 +213,11 @@ CURATE_SQL = [
         CREATE INDEX ON sales.invoice_line (store_no, ordered_on);
         CREATE INDEX ON sales.invoice_line (item_no, ordered_on);
         CREATE INDEX ON sales.invoice_line (category_code, ordered_on);
-        CREATE INDEX ON sales.invoice_line (vendor_no, ordered_on)"""),
+        CREATE INDEX ON sales.invoice_line (vendor_no, ordered_on);
+        -- product and store together, carrying the date and the measures: a query for some products at some stores
+        -- (Fireball in Linn County, stores that ever ordered Fireball) is answered from this index alone
+        CREATE INDEX invoice_line_item_store_idx ON sales.invoice_line (item_no, store_no)
+            INCLUDE (ordered_on, sales_bottles, sales_dollars, sales_liters)"""),
 
     ("analyze", "ANALYZE sales.invoice_line, sales.store, sales.item, sales.vendor, sales.category"),
 ]
@@ -555,7 +559,8 @@ def clean():
         ]
         copy_rows(conn, "meta.data_fixes", "fix_id text PRIMARY KEY, description text, rows_affected bigint", fixes)
         conn.execute("DROP TABLE IF EXISTS meta.known_issues")   # superseded: the fixes now live in the warehouse
-        conn.execute("ANALYZE sales.invoice_line, sales.item, sales.store")
+        conn.execute("VACUUM (ANALYZE) sales.invoice_line")   # also lets queries answer from indexes alone
+        conn.execute("ANALYZE sales.item, sales.store")
         for fix_id, _, n in fixes:
             print(f"  {fix_id}: {n:,}")
 

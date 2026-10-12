@@ -201,4 +201,9 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    the README examples (monthly, quarterly, weekly, a store filter) and one sentence on supported periods replace it.
 22. Landing page retired (2026-10-11): docs/index.html and showcase.py removed; the README is the front page. Dashboard
    nav and data pages link to the GitHub README. README narrative has no inline commands (Run it yourself keeps them).
+23. Product-and-store index (2026-10-11): invoice_line (item_no, store_no) INCLUDE (ordered_on, sales_bottles,
+   sales_dollars, sales_liters), 1.3 GB, built in 42 s, then VACUUM (ANALYZE) so queries answer from the index alone
+   (load_data.py curate/clean build it too). Fireball in Linn County sums 60-75 s -> 0.3 s; Tito's without Fireball
+   110 s -> 0.4 s; stores that ever ordered Fireball 58 s -> 0.5 s. Fixed-code sums over the 32 test queries: median
+   0.3 s; slowest all liquor statewide 49 s (reads all 26M records), vodka statewide 15 s, Hy-Vee stores 14 s.
 
