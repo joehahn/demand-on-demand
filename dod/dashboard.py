@@ -664,7 +664,8 @@ def changes_section(res, wide, labels, unit, top=10):
     n = min(top, len(d) // 2) if len(d) > 2 * top else len(d)
     downs = d[d.change < 0].nsmallest(n, "change")
     ups = d[d.change > 0].nlargest(n, "change")
-    some = f"{n_all} series ({len(d)} with sales then or now)" if len(d) < n_all else f"{n_all} series"
+    some = (f"{wide.shape[1]} series ({len(d)} forecast, with sales then or now)" if len(d) < wide.shape[1]
+            else f"{wide.shape[1]} series")
     return (f"<h2>Biggest changes</h2><p>Of the {some}, the ones forecast to change most from {span} against "
             f"the same {units()} last year, in {unit} (a small series can swing wildly in percent, so the ranking is by "
             f"size of the change). The last column says how far to trust each one: whether that series' own forecasts "
