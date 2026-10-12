@@ -833,6 +833,9 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
         columns={"month": W["unit"], "pred": "forecast", "lo": "low (10%)", "hi": "high (90%)", "last_year": ly})
     num = lambda v: f"{v:,.0f}"
 
+    # drawn before the other figures: the first figure drawn loads plotly.js and is numbered Figure 1, so figures must
+    # be drawn in the order they appear on the page
+    periods_html = periods_section(res, wide, unit, plot)
     charts = "".join(plot(fig_series(c, labels.get(c, c), wide, bt, fc, (res["tune_window"], res["test_window"]), unit,
                                     panel.start))
                      for c in [c for c in wide.columns if c in set(fc.series)][:MAX_PANELS])
@@ -895,7 +898,7 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
 {ask_html or read_as_html(spec, unit, months, wide, "", res)}
 <div class="tiles">{tiles_html}</div>
 {skipped_html}
-{periods_section(res, wide, unit, plot)}
+{periods_html}
 {charts}{more}
 <ul class="note">
 <li><strong>Tuning</strong> ({when(uw[0])} to {when(uw[1])}): {refit} through these {units()}, each candidate model was
