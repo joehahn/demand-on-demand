@@ -89,23 +89,32 @@ included, the 48 model configurations compared, every tool call the agent made, 
 Requests can ask for weeks, fortnights, months, calendar quarters, half-years or the next 12 months, and can select
 anything SQL can express, such as the stores in the last example.
 
-**Try it live.** Three requests that each build in about 30 seconds and each tell a different story. Start Claude
-Code in this folder and paste one, as is: the project's instructions tell Claude Code to run the forecaster on it (not
-to answer it itself), open the dashboard and quote its summary.
+**Try it live: a regional manager's drill-down.** Three questions in a row, the way a manager would dig into the
+business. Start Claude Code in this folder and paste one at a time, as is: the project's instructions tell Claude Code to
+run the forecaster on it (not to answer it itself), open the dashboard and quote its summary.
 
 ```text
-Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months
-Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months
-What tequila revenue should Polk County stores expect next quarter?
+Monthly Hy-Vee liquor dollars by category, next 6 months
+Monthly Hy-Vee bottles of each mixto tequila product, next 6 months
+Monthly mixto tequila dollars at Hy-Vee vs Casey's vs Fareway stores, next 6 months
 ```
 
-1. **Casey's vs Hy-Vee:** two chains defined only by store name, side by side, something a fill-in-the-form agent
-   could not express. Casey's convenience stores order about twice as many Fireball minis as Hy-Vee.
-2. **The five largest counties:** the agent works out which counties are largest, then fixed code makes one forecast
-   per county, with a map of every store included.
-3. **Tequila in Polk County:** sales nearly tripled from 2016 to 2024 and then turned down. "Next quarter" is read as
-   Q4 2026, the first full quarter after the one in progress, and the page says plainly that at this turning point
-   the model is no more accurate than last year's numbers: it reports how far to trust it, not just a number.
+1. **Where is it going?** One forecast per category (about 1.5 minutes). Biggest changes shows most big categories
+   forecast down at Hy-Vee, with cheap mixto tequila falling about three times as fast as 100% agave, and gift and
+   specialty packs the one real riser.
+2. **What is driving it?** One forecast per mixto tequila product. The decline is in gold and reposado tequilas, while
+   the silver versions of the same brands rise: the small, fading products are the candidates to cut.
+3. **Is it us, or the market?** The same category at three chains. Casey's and Fareway are falling too, so it is mostly
+   a market shift, with Hy-Vee slightly worse.
+
+The conclusion is the manager's: trim the fading products, keep the growing ones, and give the space to what is rising.
+The tool finds where to look and says how far to trust each number; it knows orders, not margins or shelf space, so
+it does not make the call.
+
+More requests to try: *Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months* (two chains
+defined only by store name); *Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months* (the agent
+finds the counties); *What tequila revenue should Polk County stores expect next quarter?* (a turning point, where the
+page says plainly the model is no better than last year's numbers).
 
 **From any AI assistant.** At a firm, employees would ask their own assistant, not open this repo. The next step
 (not built yet) is a small MCP server: MCP is the open standard for giving AI assistants tools, supported by Claude
