@@ -98,19 +98,31 @@ def rescore(row, case, answer):
     return score(case, answer, dict(row), rows)
 
 
+def counts_as(case):
+    """What the answer key counts for a request: its written definition, else the hand-checked form in words."""
+    if case["expect"]["status"] != "ok":
+        return "should be declined"
+    f = case["form"]
+    measure = f.get("target", "sales_bottles").replace("sales_", "")
+    by = "" if f.get("series_by", "none") == "none" else f", one series per {f['series_by']}"
+    words = f"{f['product']['label']}; {f['region']['label']}; {measure}{by}"
+    return f"{words}. {case['definition'][0].upper() + case['definition'][1:]}" if case.get("definition") else words
+
+
 def report(rows, cases):
     df = pd.DataFrame(rows)
+    cases = [c for c in cases if c["id"] in set(df.id)]   # the requests this run covered
     by = df.groupby("id")
     lines = ["# AI-written SQL scored against the answer key\n",
              f"{len(cases)} requests x {df.run.nunique()} runs = {len(df)} runs. Passed: **{df.passed.sum()} of {len(df)}** "
              f"(data right in {df.data.sum()}, reading right in {df.reading.sum()}). Requests right in every run: "
              f"{int(by.passed.all().sum())} of {len(cases)}. Cost ${df.cost.sum():.2f}, median {df.seconds.median():.0f} s "
              f"and {df.tool_calls.median():.0f} tool calls per request.\n",
-             "| request | passed | what went wrong |", "|---|---|---|"]
+             "| request | what the answer key counts | passed | what went wrong |", "|---|---|---|---|"]
     for c in cases:
         g = df[df.id == c["id"]]
         whys = sorted({w for w in g.why if w})
-        lines.append(f"| {c['request']} | {g.passed.sum()}/{len(g)} | {'; '.join(whys)[:300]} |")
+        lines.append(f"| {c['request']} | {counts_as(c)} | {g.passed.sum()}/{len(g)} | {'; '.join(whys)[:300]} |")
     return "\n".join(lines) + "\n"
 
 
