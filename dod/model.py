@@ -44,8 +44,8 @@ FAMILY = {
 }
 
 
-# Time grain. Everything above is for months, the default; use_grain switches the harness to weeks or quarters for
-# the on-the-fly path (dod/onthefly.py). SEASON is the number of periods in a year: the baseline is the same period
+# Time grain. Everything above is for months, the default; use_grain switches the harness to weeks for weekly
+# and fortnightly forecasts (dod/periods.py adds periods up). SEASON is the number of periods in a year: the baseline is the same period
 # SEASON periods back, lags reach back one season, and the selection and test windows are two seasons long.
 GRAIN, SEASON, FREQ, ORIGIN_STRIDE = "month", 12, "MS", 1
 GRAINS = {"month": dict(season=12, freq="MS", stride=1),

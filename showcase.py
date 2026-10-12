@@ -155,7 +155,7 @@ number in the dashboard summaries is checked against the models' results.
 SQL (slot filling). Comparing AI-written SQL with it month by month found three warehouse traps (renumbered products,
 recoded categories, brand names with extra words); <a href="differential.html">three short rules</a> fixed them. The
 answer key then showed every remaining miss was a business definition ("minis" by size, whiskey without whiskey
-liqueur), fixed with a short glossary. <a href="onthefly.html">Weekly, quarterly and yearly examples</a>.</p>
+liqueur), fixed with a short glossary.</p>
 
 <h2>Built with</h2>
 <p>Claude Code (building), the Claude API with Claude Sonnet 5 (the agent at runtime), Postgres, skforecast,

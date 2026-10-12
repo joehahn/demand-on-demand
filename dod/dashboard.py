@@ -14,8 +14,8 @@ from .viz import AQUA, BLUE, ORANGE, Plots, line, page, style, table
 
 MAX_PANELS = 8   # small multiples beyond this fold into the table only
 
-# Time grain: the page reads in the forecast's own periods. Months by default; weeks or quarters for the on-the-fly
-# path (dod/onthefly.py). build() sets it from the request.
+# Time grain: the page reads in the model's own periods, weeks or months (longer periods are added up by
+# dod/periods.py). build() sets it from the request.
 GRAIN_WORDS = {"month": dict(unit="month", adj="monthly", season=12, history=48),
                "week": dict(unit="week", adj="weekly", season=52, history=156),
                "quarter": dict(unit="quarter", adj="quarterly", season=4, history=20)}

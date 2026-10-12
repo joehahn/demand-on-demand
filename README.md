@@ -80,12 +80,10 @@ included, the 48 model configurations compared, every tool call the agent made, 
 | [What revenue should we expect from Fireball in Linn County next quarter?](https://joehahn.github.io/demand-on-demand/examples/fireball_linn_county_next_quarter.html) | 8% more accurate |
 | [How many bottles of cream liqueur will Iowa stores order for the holidays?](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_holidays.html) | 30% more accurate |
 | [show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_by_week_next_12_weeks.html) | 18% more accurate |
-| [Weekly forecast of Tito's bottles at stores that have never ordered Fireball, next 8 weeks](https://joehahn.github.io/demand-on-demand/examples/titos_at_stores_without_fireball_next_8_weeks.html) | 18% more accurate* |
+| [Weekly forecast of Tito's bottles at stores that have never ordered Fireball, next 8 weeks](https://joehahn.github.io/demand-on-demand/examples/titos_at_stores_without_fireball_next_8_weeks.html) | 18% more accurate |
 
-\*Only 18 stores in Iowa have sold Tito's but never ordered Fireball, so this niche forecast is small and lumpy: its
-weekly ranges are wide. The agent's SQL finds the stores with a subquery that the old request form could not express.
-
-More by week, quarter and year: [forecasts by any grain](https://joehahn.github.io/demand-on-demand/onthefly.html).
+Requests can ask for weeks, fortnights, months, calendar quarters, half-years or the next 12 months, and can select
+anything SQL can express, such as the stores in the last example.
 
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
