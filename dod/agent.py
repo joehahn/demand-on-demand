@@ -116,8 +116,9 @@ is {quarter_now}.
 grain: "week" | "fortnight" | "month" | "quarter" | "half" | "year" (as asked; "month" if not stated; biweekly =
 fortnight). horizon: periods ahead in that grain (weeks up to 52, fortnights 26, months 12, quarters 4, halves 2,
 years 1; 6 months if not stated). Fixed code forecasts weeks or months and adds them up into the periods asked for.
-Quarters and half-years are calendar periods: the one in progress (months already sold plus the rest forecast), then
-the next full ones, as many as fit within 12 months ahead. A year is the next 12 months. Fortnights start with the
+Quarters and half-years are calendar periods: the one in progress (months already sold plus the rest forecast) is shown
+for context, and the answer is the next full ones, as many as fit within 12 months ahead ("next quarter" is the first
+full quarter after the one in progress; horizon counts full quarters). A year is the next 12 months. Fortnights start with the
 first week forecast. Describe the periods that way in your assumptions. measure: bottles, dollars or
 liters. product and place: short readable names. breakout: "none" for one total, else what each series is (county,
 city, item, category, store, ...). title: a short title for the dashboard.

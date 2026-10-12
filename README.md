@@ -89,6 +89,23 @@ included, the 48 model configurations compared, every tool call the agent made, 
 Requests can ask for weeks, fortnights, months, calendar quarters, half-years or the next 12 months, and can select
 anything SQL can express, such as the stores in the last example.
 
+**Try it live.** Three requests that each build in about 30 seconds and each tell a different story. In Claude Code,
+type `!` and paste one line; the dashboard opens in the browser when it is ready.
+
+```bash
+open "$(.venv/bin/python -m dod.forecast "Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months" | tail -1)"
+open "$(.venv/bin/python -m dod.forecast "Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months" | tail -1)"
+open "$(.venv/bin/python -m dod.forecast "What tequila revenue should Polk County stores expect next quarter?" | tail -1)"
+```
+
+1. **Casey's vs Hy-Vee:** two chains defined only by store name, side by side, something a fill-in-the-form agent
+   could not express. Casey's convenience stores order about twice as many Fireball minis as Hy-Vee.
+2. **The five largest counties:** the agent works out which counties are largest, then fixed code makes one forecast
+   per county, with a map of every store included.
+3. **Tequila in Polk County:** sales nearly tripled from 2016 to 2024 and then turned down. "Next quarter" is read as
+   Q4 2026, the first full quarter after the one in progress, and the page says plainly that at this turning point
+   the model is no more accurate than last year's numbers: it reports how far to trust it, not just a number.
+
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
 
