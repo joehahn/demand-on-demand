@@ -56,6 +56,11 @@ months; cities are spelled several ways. The loader fixes each one once, in the 
 [data fixes page](https://joehahn.github.io/demand-on-demand/data_fixes.html) shows before and after. No forecast
 has to know these problems existed.
 
+**Fast because of the database, not the model.** AI-written SQL is only as fast as the database it runs on. One index
+on the sales records, by product and then store, lets a request like "Fireball in Linn County" read its 98,000 sales
+instead of all 1.2 million Fireball sales in Iowa: those queries went from about a minute to under a second, with
+identical results. A typical forecast now builds from plain English in under 35 seconds.
+
 **Least privilege.** Postgres runs with password authentication and separate roles. The agent's login can only read
 the clean tables, with a query time limit. Credentials live in `.env`, are read by Python, and never appear in a prompt.
 
