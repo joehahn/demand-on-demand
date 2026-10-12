@@ -1,6 +1,6 @@
 # Forecast-accuracy benchmark
 
-30 forecasts sampled from the warehouse (seed 0), 30 completed, in 325s (12s median each).
+30 forecasts sampled from the warehouse (seed 0), 30 completed, in 296s (6s median each).
 
 - Beat "same month last year" on the 24-month test window: **18 of 30** (60%)
 - Median error relative to that baseline: **0.92** (below 1 is better)
@@ -33,8 +33,8 @@
 | Black Velvet 200 ml, Boone County, liters, 6 months | 6 | 1.05 | 74.3% | 70.8% | ridge |
 | Proximo, O'Brien County, liters, 6 months | 6 | 1.06 | 31.0% | 29.4% | ridge |
 | Irish Whiskies, Iowa, bottles, 12 months | 12 | 1.06 | 6.5% | 6.2% | ridge |
-| 99 Bananas 100 ml, Woodbury County, liters, 12 months | 12 | 1.07 | 16.9% | 15.8% | ridge |
 | Jim Beam Apple Mini 50 ml, Iowa, liters, 12 months | 12 | 1.08 | 12.0% | 11.1% | ridge |
 | Captain Morgan Original Spiced 375 ml, Iowa, bottles, 3 months | 3 | 1.12 | 16.4% | 14.7% | lightgbm |
 | Captain Morgan Original Spiced 1000 ml, Story County, bottles, 12 months | 12 | 1.27 | 63.8% | 49.8% | ridge |
+| 99 Bananas 100 ml, Woodbury County, liters, 12 months | 12 | 1.27 | 20.1% | 15.8% | ridge |
 | Kinky Blue Mini 50 ml, O'Brien County, liters, 6 months | 6 | 1.44 | 145.2% | 98.7% | lightgbm |

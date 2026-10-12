@@ -12,7 +12,7 @@ same period last year, and publishes a dashboard that says how far to trust the 
 |---|---|
 | Plain English to dashboard | about 25 seconds (median of the five examples; all under 35 seconds) |
 | Claude API cost per request | about $0.02 |
-| Forecast accuracy | beats "same month last year" on 18 of 30 sampled forecasts; median error 8% lower, mean 9% lower |
+| Forecast accuracy | beats "same month last year" on 18 of 30 sampled forecasts; median and mean error 8% lower |
 | Agent accuracy | on 34 test requests run 3 times each, its SQL added up to the answer key in 102 of 102 runs |
 
 **Author:** Joseph M. Hahn, Ph.D., independent AI and machine learning consultant  
@@ -91,7 +91,7 @@ misses included, and when a model does not beat last year its dashboard says so.
 
 - [benchmark/report.md](benchmark/report.md): 30 forecasts sampled from the warehouse (products, categories, vendors;
   counties and statewide; bottles, dollars, liters; 3 to 12 months), run through the same fixed code as every forecast.
-  The model beat "same month last year" on 18, with a median error 8% lower and a mean error 9% lower. Iowa liquor
+  The model beat "same month last year" on 18, with a median and mean error 8% lower. Iowa liquor
   demand is very regular year to year, so last year is a hard baseline, and on the other 12 it was not beaten. The report lists every forecast, the
   misses included.
 - [evals/sql_report.md](evals/sql_report.md): the agent's SQL scored against an answer key: 34 requests (brands, categories, minis, cities, counties, a 207-store chain, weeks,

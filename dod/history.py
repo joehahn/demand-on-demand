@@ -57,6 +57,8 @@ FROM ({sql}) q
 GROUP BY GROUPING SETS ((date_trunc('month', day)::date, store_no, series),
                         (date_trunc('week', day)::date, series),
                         (item_no))""", timeout="180s")
+    # sums rounded far below a cent or a milliliter: the same history however the database orders its additions
+    rows[["value", "last_12_months"]] = rows[["value", "last_12_months"]].round(4)
     months = rows[(rows.no_store == 0)][["month", "store_no", "series", "value", "records"]]
     weeks = rows[(rows.no_store == 1) & (rows.no_item == 1)][["period", "series", "value"]]
     products = rows[rows.no_item == 0][["item_no", "last_12_months", "first_day", "last_day"]]
@@ -89,7 +91,7 @@ def product_list(rows):
 def to_grain(rows, grain, end, last_month):
     """Period totals (columns period, series, value) -> one column per series, complete periods only. A period with no
     orders is 0 (check_months makes sure the warehouse has every month); periods before a series' first sale are blank."""
-    wide = rows.pivot_table(index="period", columns="series", values="value", aggfunc="sum")
+    wide = rows.pivot_table(index="period", columns="series", values="value", aggfunc="sum").round(4)   # see all_sums
     wide.index = pd.to_datetime(wide.index)
     step = pd.tseries.frequencies.to_offset(FREQ[grain])
     # complete periods: a month or quarter must end by the last complete month, a week by the last day with orders

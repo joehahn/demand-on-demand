@@ -206,4 +206,10 @@ accurate forecasts on request. No runtime issue discovery (register, slice check
    (load_data.py curate/clean build it too). Fireball in Linn County sums 60-75 s -> 0.3 s; Tito's without Fireball
    110 s -> 0.4 s; stores that ever ordered Fireball 58 s -> 0.5 s. Fixed-code sums over the 32 test queries: median
    0.3 s; slowest all liquor statewide 49 s (reads all 26M records), vodka statewide 15 s, Hy-Vee stores 14 s.
+24. Index check (2026-10-12): fixed-code sums on all 32 answer-key queries with and without the new index (hidden in a
+   rolled-back transaction): 31 identical, 1 over 5 min without it (Ames whiskey, correct per the answer key);
+   total 434 s -> 115 s for the comparable ones. Found: one-pass vs three-pass sums differ by ~1e-14 (summing order),
+   enough to flip near-ties in model selection on tiny series; history sums are now rounded to 4 decimals (all_sums and
+   to_grain), so results no longer depend on summing order. Benchmark: 29 of 30 identical to Oct 6; 99 Bananas Woodbury
+   (170 L/month, knife-edge) 1.069 -> 1.273; 18/30 beat last year, median 0.92, mean 0.92; median 11.6 s -> 6.0 s each.
 
