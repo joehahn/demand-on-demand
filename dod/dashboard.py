@@ -648,7 +648,7 @@ def changes_section(res, wide, labels, unit, top=10):
                      "pct": g.pred.sum() / ly - 1 if ly else float("nan"), "recent": recent, "rel": rel})
     d = pd.DataFrame(rows)
     n_all = len(d)
-    d = d[(d.forecast > 0) | (d.last_year > 0)]   # series with no sales then or now (e.g. retired categories) say nothing
+    d = d[(d.forecast >= 0.5) | (d.last_year >= 0.5)]   # series with no sales then or now (e.g. retired categories) say nothing
     span = f"{when(fc.month.min())} to {when(fc.month.max())}"
     cash = lambda v: f"{money}{v:,.0f}"
     def show(part):
