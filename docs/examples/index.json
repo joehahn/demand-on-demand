@@ -48,15 +48,15 @@
   "harness_seconds": 24.9
  },
  {
-  "request": "Weekly forecast of Tito's bottles at stores that have never ordered Fireball, next 8 weeks",
-  "slug": "titos_at_stores_without_fireball_next_8_weeks",
-  "title": "Weekly Tito's Bottles at Stores That Never Ordered Fireball",
-  "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/weekly_tito_s_bottles_at_stores_that_never_ordered_fireball",
-  "grain": "week",
-  "rel_mae": 0.81571811021475,
-  "summary": "Forecast totals 142 bottles over the period, down 82% from the same weeks last year. This forecast is 18% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0475,
-  "agent_seconds": 29.2,
-  "harness_seconds": 121.6
+  "request": "Quarterly forecast of Tito's sales dollars at stores that have never ordered Fireball, next 4 quarters",
+  "slug": "titos_at_stores_without_fireball_next_4_quarters",
+  "title": "Quarterly Tito's Dollars at Stores That Never Ordered Fireball",
+  "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/quarterly_tito_s_dollars_at_stores_that_never_ordered_fireba",
+  "grain": "month",
+  "rel_mae": 0.8915317320953001,
+  "summary": "Forecast Tito's dollars at these stores total $118,000 for Q3 2026 to Q2 2027, up 7% from the same period last year. This forecast is 11% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0761,
+  "agent_seconds": 45.4,
+  "harness_seconds": 110.1
  }
 ]

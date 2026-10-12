@@ -79,7 +79,7 @@ included, the 48 model configurations compared, every tool call the agent made, 
 | [What revenue should we expect from Fireball in Linn County next quarter?](https://joehahn.github.io/demand-on-demand/examples/fireball_linn_county_next_quarter.html) | 8% more accurate |
 | [How many bottles of cream liqueur will Iowa stores order for the holidays?](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_holidays.html) | 30% more accurate |
 | [show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_by_week_next_12_weeks.html) | 18% more accurate |
-| [Weekly forecast of Tito's bottles at stores that have never ordered Fireball, next 8 weeks](https://joehahn.github.io/demand-on-demand/examples/titos_at_stores_without_fireball_next_8_weeks.html) | 18% more accurate |
+| [Quarterly forecast of Tito's sales dollars at stores that have never ordered Fireball, next 4 quarters](https://joehahn.github.io/demand-on-demand/examples/titos_at_stores_without_fireball_next_4_quarters.html) | 11% more accurate |
 
 Requests can ask for weeks, fortnights, months, calendar quarters, half-years or the next 12 months, and can select
 anything SQL can express, such as the stores in the last example.
