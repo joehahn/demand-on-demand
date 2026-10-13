@@ -887,9 +887,12 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
     # drawn before the other figures: the first figure drawn loads plotly.js and is numbered Figure 1, so figures must
     # be drawn in the order they appear on the page
     periods_html = periods_section(res, wide, unit, plot)
+    # the largest series first (last 12 months' volume), so the charts show what matters most
+    by_size = sorted([c for c in wide.columns if c in set(fc.series)],
+                     key=lambda c: -wide[c].iloc[-W["season"]:].sum())
     charts = "".join(plot(fig_series(c, labels.get(c, c), wide, bt, fc, (res["tune_window"], res["test_window"]), unit,
                                     panel.start))
-                     for c in [c for c in wide.columns if c in set(fc.series)][:MAX_PANELS])
+                     for c in by_size[:MAX_PANELS])
     more = f'<p class="note">{len(wide.columns) - MAX_PANELS} more series are in the table only.</p>' \
         if len(wide.columns) > MAX_PANELS else ""
 
