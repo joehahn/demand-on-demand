@@ -199,6 +199,8 @@ def seasonal_naive(wide, month, series):
 
 def score(bt):
     """Relative MAE: model error divided by seasonal-naive error on the same months (below 1 = better)."""
+    if bt.empty or not {"actual", "pred", "naive"} <= set(bt.columns):   # nothing could be tested
+        return np.nan
     ok = bt.dropna(subset=["actual", "pred", "naive"])
     naive = (ok.actual - ok.naive).abs().sum()
     return (ok.actual - ok.pred).abs().sum() / naive if naive else np.nan
@@ -247,18 +249,21 @@ def per_step(bt):
 
 
 def ensemble_backtest(cfgs, wide, exog, origins, steps, features, pool, weight):
-    """Average the configurations' forecasts, then blend with the seasonal-naive forecast: weight 1 = all model."""
-    bts = [backtest(c, wide, exog, origins, steps, features, pool, N_JOBS) for c in cfgs]
-    bt = bts[0].copy()
-    bt["pred"] = np.mean([b.pred.to_numpy() for b in bts], axis=0)
+    """Average the configurations' forecasts, then blend with the seasonal-naive forecast: weight 1 = all model.
+    Forecasts are matched by origin, period and series: settings that use fewer years of history may forecast fewer
+    series (a young product), and each forecast is the average of the models that made it."""
+    bt = pd.concat([backtest(c, wide, exog, origins, steps, features, pool, N_JOBS) for c in cfgs])
+    if bt.empty:
+        return bt
+    bt = bt.groupby(["origin", "month", "step", "series"], as_index=False, sort=False).agg(
+        pred=("pred", "mean"), actual=("actual", "first"), naive=("naive", "first"))
     bt["pred"] = weight * bt.pred + (1 - weight) * bt.naive.fillna(bt.pred)
     return bt
 
 
 def ensemble_forecast(cfgs, wide, exog, end, steps, features, pool, weight):
-    fcs = [fit_predict(c, wide, exog, end, steps, features, pool) for c in cfgs]
-    fc = fcs[0].copy()
-    fc["pred"] = np.mean([f.pred.to_numpy() for f in fcs], axis=0)
+    fc = pd.concat([fit_predict(c, wide, exog, end, steps, features, pool) for c in cfgs])
+    fc = fc.groupby(["month", "series", "step"], as_index=False, sort=False).agg(pred=("pred", "mean"))
     naive = [seasonal_naive(wide, m, c) for m, c in zip(fc.month, fc.series)]
     fc["pred"] = weight * fc.pred + (1 - weight) * pd.Series(naive, index=fc.index).fillna(fc.pred)
     return fc
@@ -340,6 +345,10 @@ def run(wide, exog, future_index, steps, feature_groups, log=print, pool=None):
                                tested["model_share"])
     else:
         bt = backtest(tested["best"], wide, exog, test_origins, steps, tested["features"], pool, N_JOBS)
+    if score(bt) != score(bt):   # NaN: no series has the history to test a forecast honestly
+        raise TooLittleData("None of these series has enough history to test a forecast: each needs at least two years "
+                            "of sales before the Testing period. New or short-lived products (such as seasonal gift "
+                            "sets) cannot be forecast this way; try a category or brand instead.")
     steps_table = per_step(bt)
     log(f"  backtest: {len(test_origins)} origins, test rel MAE {score(bt):.3f}")
 
