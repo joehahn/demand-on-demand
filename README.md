@@ -95,21 +95,20 @@ run the forecaster on it (not to answer it itself), open the dashboard and quote
 
 ```text
 Monthly Hy-Vee liquor dollars by category, next 6 months
-Monthly Hy-Vee bottles of each mixto tequila product, next 6 months
-Monthly mixto tequila dollars at Hy-Vee vs Casey's vs Fareway stores, next 6 months
+Monthly Hy-Vee bottles of each Jose Cuervo product, next 6 months
+Monthly Jose Cuervo dollars at Hy-Vee vs Casey's vs Fareway stores, next 6 months
 ```
 
 1. **Where is it going?** One forecast per category (about 1.5 minutes). Biggest changes shows most big categories
-   forecast down at Hy-Vee, with cheap mixto tequila falling about three times as fast as 100% agave, and gift and
-   specialty packs the one real riser.
-2. **What is driving it?** One forecast per mixto tequila product. The decline is in gold and reposado tequilas, while
-   the silver versions of the same brands rise: the small, fading products are the candidates to cut.
-3. **Is it us, or the market?** The same category at three chains. Casey's and Fareway are falling too, so it is mostly
-   a market shift, with Hy-Vee slightly worse.
+   forecast down at Hy-Vee, with cheap tequila among the fastest decliners.
+2. **What is driving it?** One forecast per Jose Cuervo product, the biggest brand in that cheap tequila. Cuervo is
+   fading across the board at Hy-Vee, with the reposado and the small flask and mini packs falling fastest.
+3. **Is it us, or the market?** Cuervo at three chains. The grocery chains, Hy-Vee and Fareway, are losing it faster
+   than Casey's convenience stores.
 
-The conclusion is the manager's: trim the fading products, keep the growing ones, and give the space to what is rising.
-The tool finds where to look and says how far to trust each number; it knows orders, not margins or shelf space, so
-it does not make the call.
+The tool narrows the business down to the right question in three plain-English requests: why are Hy-Vee's customers
+buying less Cuervo than Casey's customers? A person answers why. The tool says where to look and how far to trust each
+number; it knows orders, not prices, shelf space or promotions, so it does not make the call.
 
 More requests to try: *Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months* (two chains
 defined only by store name); *Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months* (the agent
