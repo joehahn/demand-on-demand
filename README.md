@@ -89,28 +89,29 @@ included, the 48 model configurations compared, every tool call the agent made, 
 Requests can ask for weeks, fortnights, months, calendar quarters, half-years or the next 12 months, and can select
 anything SQL can express, such as the stores in the last example.
 
-**Try it live: a regional manager's drill-down.** Three questions in a row, the way a manager would dig into the
-business. Start Claude Code in this folder and paste one at a time, as is: the project's instructions tell Claude Code to
-run the forecaster on it (not to answer it itself), open the dashboard and quote its summary.
+**Try it live: what happens when Costco moves in?** Three questions in a row, the way a regional manager would dig
+in. Start Claude Code in this folder and paste one at a time, as is: the project's instructions tell Claude Code to run
+the forecaster on it (not to answer it itself), open the dashboard and quote its summary. Each takes about 30 seconds.
 
 ```text
-Monthly Hy-Vee liquor dollars by category, next 6 months
-Monthly Hy-Vee bottles of each Jose Cuervo product, next 6 months
-Monthly Jose Cuervo dollars at Hy-Vee vs Casey's vs Fareway stores, next 6 months
+Monthly liquor dollars at Hy-Vee stores in Ankeny vs the Costco in Ankeny, next 6 months
+Monthly liquor dollars for each Hy-Vee store in Ankeny, next 6 months
+Monthly liquor dollars at Hy-Vee stores in Davenport vs the Costco in Davenport, next 6 months
 ```
 
-1. **Where is it going?** One forecast per category (about 1.5 minutes). Biggest changes shows most big categories
-   forecast down at Hy-Vee, with cheap tequila among the fastest decliners.
-2. **What is driving it?** One forecast per Jose Cuervo product, the biggest brand in that cheap tequila. Cuervo is
-   fading across the board at Hy-Vee, with the reposado and the small flask and mini packs falling fastest.
-3. **Is it us, or the market?** Cuervo at three chains. The grocery chains, Hy-Vee and Fareway, are losing it faster
-   than Casey's convenience stores.
+1. **Costco opens.** Costco started selling liquor in Ankeny in October 2022. Its line appears and climbs to about
+   $2.1 million a year, while Ankeny's four Hy-Vees slide from $4.8 million (2021) to $3.9 million (2025). The town's
+   market grew; Hy-Vee's share shrank. The obvious conclusion: Costco did it.
+2. **Which stores?** The State Street food store took the big hit early (down about a quarter since 2021) and is now
+   forecast to hold steady; the Wine and Spirits store fell less but is still sliding, the largest forecast decline.
+3. **Check the story.** Davenport has had a Costco since 2018, and its Hy-Vees have also fallen about 20% since 2021,
+   with no new Costco. So the real question is not what Costco did, but what is pulling Iowa's liquor buyers away from
+   Hy-Vee everywhere.
 
-The tool narrows the business down to the right question in three plain-English requests: why are Hy-Vee's customers
-buying less Cuervo than Casey's customers? A person answers why. The tool says where to look and how far to trust each
-number; it knows orders, not prices, shelf space or promotions, so it does not make the call.
+The third question keeps the analysis honest: plain-English requests make it cheap to test a first explanation before
+acting on it. The tool shows where and how much, and how far to trust each number; a person works out why.
 
-More requests to try: *Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months* (two chains
+More requests to try: *Monthly Hy-Vee bottles of each Jose Cuervo product, next 6 months* (dozens of products, ranked by forecast change); *Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months* (two chains
 defined only by store name); *Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months* (the agent
 finds the counties); *What tequila revenue should Polk County stores expect next quarter?* (a turning point, where the
 page says plainly the model is no better than last year's numbers).
