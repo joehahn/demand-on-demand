@@ -2,7 +2,7 @@
 
     python evals/grounding.py [--runs 3]
 
-For each out/*/summary.json that has saved facts, asks the narrator for a summary several times and checks
+For each out/*/summary.json written by the current forecaster (dod/forecast.py) that has saved facts, asks the narrator for a summary several times and checks
 every number it writes against the numbers in the facts (2% tolerance for rounding). Dates and small counts
 such as "5 months" are allowed. Writes evals/grounding.md.
 """
@@ -43,7 +43,8 @@ def ungrounded(summary, facts):
         if 2000 <= v <= 2100 or (abs(v) <= 12 and not raw.endswith("%")):  # years, months, horizons, counts
             continue
         tol = 0.02 if v < 1e5 else 0.05  # "$15.2 million" rounds harder than "53,000"
-        if not any(abs(v - a) <= tol * max(abs(a), 1) for a in allowed):
+        # sign-free: the summary says "down 6%" for the fact "-6%"
+        if not any(abs(abs(v) - abs(a)) <= tol * max(abs(a), 1) for a in allowed):
             bad.append(raw)
     return bad
 
@@ -54,8 +55,9 @@ if __name__ == "__main__":
     rows, cost = [], {"model": agent.MODEL, "calls": 0, "input_tokens": 0, "output_tokens": 0,
                       "cache_write_tokens": 0, "cache_read_tokens": 0, "est_cost_usd": 0.0}
     for path in sorted(ROOT.glob("out/*/summary.json")):
-        facts = json.loads(path.read_text()).get("facts")
-        if not facts:
+        saved = json.loads(path.read_text())
+        facts = saved.get("facts")
+        if not facts or "plan" not in saved:   # only forecasts made by the current forecaster (dod/forecast.py)
             continue
         for k in range(runs):
             text = agent.narrate(client, facts, cost)

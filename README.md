@@ -179,7 +179,7 @@ firm uses.
   matched the key in every month in all 102 runs, and all 102 read the grain and horizon right.
 - [evals/grounding.md](evals/grounding.md): each dashboard's summary opens with one sentence written by Claude from the
   forecast's computed numbers (the accuracy sentence and every other number come from fixed code). This check traces
-  every number in such sentences back to the computed results: 60 of 60 matched.
+  every number in such sentences back to the computed results: 144 of 144 matched (48 forecasts, 3 runs each, 2026-10-13).
 - [HISTORY.md](HISTORY.md): how the forecasting agent got there, from an AI-filled request form to AI-written SQL
   checked against an answer key.
 
