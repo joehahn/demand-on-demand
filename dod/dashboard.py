@@ -784,11 +784,14 @@ def fig_series(code, label, wide, bt, fc, windows, unit, train_start, view_from=
                       annotation_font_color="rgba(137,135,129,1)")
     # an arrow over the months the final model is trained on, ending where it is applied
     grey = "rgba(137,135,129,1)"
-    top = max(hist.max(), f.hi.max())
-    fig.update_yaxes(range=[0, top * 1.3])   # headroom above the data for the arrow
-    fig.add_annotation(x=first_fc, y=top * 1.12, xref="x", yref="y", ax=hist.index[0], ay=0, axref="x", ayref="pixel",
+    # the vertical axis fits the data (every year, so no view clips it) instead of starting at 0, with headroom
+    # above for the arrow; a line chart needs no zero baseline, and changes read more clearly
+    top, low = max(full.max(), f.hi.max()), min(full.min(), f.lo.min())
+    span = (top - low) or top or 1
+    arrow_y = top + 0.12 * span
+    fig.add_annotation(x=first_fc, y=arrow_y, xref="x", yref="y", ax=hist.index[0], ay=0, axref="x", ayref="pixel",
                        text="", showarrow=True, arrowhead=2, arrowsize=1.2, arrowwidth=1.5, arrowcolor=grey)
-    fig.add_annotation(x=hist.index[0] + (first_fc - hist.index[0]) / 2, y=top * 1.12, xref="x", yref="y",
+    fig.add_annotation(x=hist.index[0] + (first_fc - hist.index[0]) / 2, y=arrow_y, xref="x", yref="y",
                        yanchor="bottom", yshift=2, showarrow=False, font=dict(size=11, color=grey),
                        text=f"final model trained on {when(train_start)} to {when(wide.index[-1])}")
     fig.update_traces(hovertemplate="%{y:,.0f}", selector=dict(type="scatter"))
@@ -802,7 +805,7 @@ def fig_series(code, label, wide, bt, fc, windows, unit, train_start, view_from=
                  dict(label=f"from {view_start:%Y}", count=7 * (len(hist) + len(f)), step="day", stepmode="backward"),
                  dict(label="all years", step="all")],
         x=1, xanchor="right", y=-0.32, yanchor="top", font=dict(size=11), bgcolor="rgba(0,0,0,0)"))
-    fig.update_yaxes(range=[0, max(full.max(), f.hi.max()) * 1.3])
+    fig.update_yaxes(range=[max(0, low - 0.08 * span), top + 0.3 * span])
     return fig.update_layout(legend=dict(orientation="h", y=-0.12, yanchor="top", x=0, xanchor="left"),  # clear of long titles
                              margin=dict(b=90))
 
