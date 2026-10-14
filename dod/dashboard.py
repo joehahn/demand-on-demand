@@ -628,31 +628,6 @@ def read_as_html(spec, unit, months, wide, assumptions_html, res=None):
     return f'<p class="readas"><span>Read as</span> {" &middot; ".join(esc(x) for x in parts)}</p>{why}'
 
 
-def years_section(wide, labels, unit, order):
-    """Actual sales per calendar year for the largest series (as charted), and this year to date against the same
-    months last year: the long view a forecast sits in."""
-    money = "$" if unit == "dollars" else ""
-    last = wide.index[-1]
-    year = pd.Series(wide.index.year, index=wide.index)
-    full_years = [y for y in sorted(set(year)) if y < last.year]
-    end_md = (last + pd.tseries.frequencies.to_offset(model.GRAINS[W["grain"]]["freq"]) - pd.Timedelta(days=1))
-    rows = []
-    for c in order[:MAX_PANELS]:
-        s = wide[c]
-        r = {"series": labels.get(c, c)}
-        for y in full_years:
-            v = s[year == y]
-            r[str(y)] = "" if v.isna().all() else f"{money}{v.sum():,.0f}"
-        ytd = s[s.index.year == last.year].sum()
-        prev = s[(s.index.year == last.year - 1) & (s.index <= end_md - pd.DateOffset(years=1))].sum()
-        span = f"Jan to {end_md:%b}"
-        r[f"{span} {last.year - 1}"] = f"{money}{prev:,.0f}"
-        r[f"{span} {last.year}"] = f"{money}{ytd:,.0f}"
-        rows.append(r)
-    return (f"<h3>Year by year</h3><p>Actual {unit} per calendar year, and this year so far against the same months last "
-            f"year: the long view the forecast sits in.</p>" + table(pd.DataFrame(rows)))
-
-
 def changes_section(res, wide, labels, unit, top=10):
     """For a request broken out into several series: which series are forecast to change most against the same
     periods last year, in units (a small series can swing wildly in percent), with whether each series' own forecasts
@@ -1010,7 +985,6 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
 {periods_html}
 {changes_section(res, wide, labels, unit)}
 {charts}{more}
-{years_section(wide, labels, unit, by_size)}
 <ul class="note">
 <li><strong>Tuning</strong> ({when(uw[0])} to {when(uw[1])}): {refit} through these {units()}, each candidate model was
 trained on all {units()} before that point and forecast the next {max(ps.step)}, and its forecasts were compared with what
