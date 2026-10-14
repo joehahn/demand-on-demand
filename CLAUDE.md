@@ -27,6 +27,11 @@ stores, next 6 months"), do not answer it yourself, write SQL or build models. R
 reply in two or three sentences with the summary from that folder's summary.json (`agent.summary`) and the path. If it
 prints `no_forecast` or an error, relay that message instead.
 
+A plain data question that is not a forecast (e.g. "show total liquor sales by year for the Hy-Vee stores in Ankeny")
+is answered with one read-only query through the agent's login: `from dod import db; db.query(sql)` (never the owner or
+DBA login), using the clean tables as the data dictionary describes them (products by family_item_no, categories by
+category_current, places by sales.store). Show the result as a short table and say what it shows; build no forecast.
+
 A follow-up asking for a custom chart or number about a forecast already made (e.g. "plot annual sales with this
 year's actuals plus forecast") is answered from that forecast's saved results, not by forecasting or querying again:
 `from dod.results import load, latest` gives its actual and forecast tables (latest() is the newest forecast). Write a
