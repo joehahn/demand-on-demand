@@ -699,7 +699,7 @@ def changes_section(res, wide, labels, unit, top=10):
             + (f"<h3>Largest forecast rises</h3>{show(ups)}" if len(ups) else ""))
 
 
-def periods_section(res, wide, unit, plot):
+def periods_section(res, wide, unit, plot, labels=None):
     """For a request by fortnight, quarter, half-year or year: the periods asked for, actual and forecast, with each
     period's 80% range and a table (dod/periods.py adds the weeks or months up)."""
     from . import periods
@@ -711,22 +711,42 @@ def periods_section(res, wide, unit, plot):
     money = "$" if unit == "dollars" else ""
     total = wide.sum(axis=1, min_count=1).dropna()
     start = pd.Series(periods.blocks(grain, total.index), index=total.index)
-    hist = total.groupby(start).agg(["sum", "size"])
-    hist = hist[hist["size"] == size].iloc[-8:]   # the last 8 complete periods
     step = pd.tseries.frequencies.to_offset(model.GRAINS[W["grain"]]["freq"])
-    x_hist = [periods.label(grain, s, s + (size - 1) * step) for s in hist.index]
-    fig = go.Figure([go.Bar(x=x_hist, y=hist["sum"].values, name="actual", marker_color=BLUE),
-                     go.Bar(x=list(q.period), y=list(q.sold), name="sold so far", marker_color=BLUE, opacity=0.55),
-                     go.Bar(x=list(q.period), y=list(q.forecast), name="forecast", marker_color=AQUA,
-                            error_y=dict(type="data", symmetric=False, array=list(q.high - q.total),
-                                         arrayminus=list(q.total - q.low), color="rgba(137,135,129,0.9)"))])
+    # one set of bars per series when a few are compared (side by side), else one for all of them added up
+    by = res.get("periods_by_series") or {None: q}
+    colors = [BLUE, ORANGE, AQUA, "#7b5ea7", "#c2477a", "#3b8c4a", "#8a6d3b", "#5f6b7a"]
+    bars = []
+    for i, (code, qs) in enumerate(by.items()):
+        s = (wide[code] if code is not None else total).dropna()
+        st = pd.Series(periods.blocks(grain, s.index), index=s.index)
+        h = s.groupby(st).agg(["sum", "size"])
+        h = h[h["size"] == size].iloc[-8:]   # the last 8 complete periods
+        x_hist = [periods.label(grain, b, b + (size - 1) * step) for b in h.index]
+        who = labels.get(code, code) if code is not None else ""
+        tag = f"{who}: " if who else ""
+        color = colors[i % len(colors)] if code is not None else BLUE
+        bars += [go.Bar(x=x_hist, y=h["sum"].values, name=f"{tag}actual", marker_color=color, offsetgroup=str(i),
+                        legendgroup=str(i)),
+                 go.Bar(x=list(qs.period), y=list(qs.sold), name=f"{tag}sold so far", marker_color=color, opacity=0.55,
+                        offsetgroup=str(i), legendgroup=str(i), showlegend=bool(qs.sold.sum())),
+                 go.Bar(x=list(qs.period), y=list(qs.forecast), base=list(qs.sold), name=f"{tag}forecast",
+                        marker_color=color if code is not None else AQUA, opacity=0.3 if code is not None else 1,
+                        marker_line=dict(color=color, width=1.5), offsetgroup=str(i), legendgroup=str(i),
+                        error_y=dict(type="data", symmetric=False, array=list(qs.high - qs.total),
+                                     arrayminus=list(qs.total - qs.low), color="rgba(137,135,129,0.9)"))]
+    fig = go.Figure(bars)
     fig.update_traces(hovertemplate=f"{money}%{{y:,.0f}}<extra>%{{fullData.name}}</extra>")
-    fig = style(fig, f"By {name}: actual, and the forecast with its 80% range", f"{unit} per {name}", height=340,
-                legend=True).update_layout(barmode="stack", hovermode="closest")
+    fig = style(fig, f"By {name}: actual, and the forecast with its 80% range", f"{unit} per {name}", height=360,
+                legend=True).update_layout(barmode="group", hovermode="closest")
     cash = lambda v: "" if v != v else f"{money}{v:,.0f}"
-    t = pd.DataFrame({name: q.period, "covers": q.span, "sold so far": [cash(v) if v else "" for v in q.sold],
-                      "forecast": q.forecast.map(cash), "total": q.total.map(cash), "low (10%)": q.low.map(cash),
-                      "high (90%)": q.high.map(cash), f"same {name} last year": q.last_year.map(cash)})
+    labels = labels or {}
+    qt = pd.concat([qs.assign(series=labels.get(c, c)) for c, qs in res["periods_by_series"].items()]) \
+        if res.get("periods_by_series") else q
+    t = pd.DataFrame({name: qt.period, "covers": qt.span, "sold so far": [cash(v) if v else "" for v in qt.sold],
+                      "forecast": qt.forecast.map(cash), "total": qt.total.map(cash), "low (10%)": qt.low.map(cash),
+                      "high (90%)": qt.high.map(cash), f"same {name} last year": qt.last_year.map(cash)})
+    if "series" in qt:
+        t.insert(0, "series", list(qt.series))
     if grain in ("fortnight", "year"):   # the name already says which weeks or months
         t = t.drop(columns="covers")
     if not (q.status == "in progress").any():   # nothing sold yet in any period shown
@@ -734,7 +754,7 @@ def periods_section(res, wide, unit, plot):
     asked, full = res.get("periods_asked", 0), int((q.status == "forecast").sum())
     limit = "52 weeks" if W["grain"] == "week" else "12 months"
     short = (f" You asked for {asked} {name}s; the models look at most {limit} ahead, so the forecast stops after "
-             f"{full} full {name}{'s' if full != 1 else ''}." if full < asked else "")
+             f"{full} full {name}{'s' if full != 1 else ''}." if full < asked and grain != "calendar_year" else "")
     progress = q[q.status == "in progress"]
     inprog = (f" {progress.period.iloc[0]} is in progress: the {units()} already sold are actual sales, the rest is "
               f"forecast." if len(progress) else "")
@@ -921,7 +941,7 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
 
     # drawn before the other figures: the first figure drawn loads plotly.js and is numbered Figure 1, so figures must
     # be drawn in the order they appear on the page
-    periods_html = periods_section(res, wide, unit, plot)
+    periods_html = periods_section(res, wide, unit, plot, labels)
     # the largest series first (last 12 months' volume), so the charts show what matters most
     by_size = sorted([c for c in wide.columns if c in set(fc.series)],
                      key=lambda c: -wide[c].iloc[-W["season"]:].sum())

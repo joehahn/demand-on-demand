@@ -113,12 +113,14 @@ may select millions of lines.
 The warehouse has orders through {data_end}; the forecast starts with the first week or month after that, so count the
 horizon from there (e.g. "through December" from data ending in August is 4 months). The calendar quarter in progress
 is {quarter_now}.
-grain: "week" | "fortnight" | "month" | "quarter" | "half" | "year" (as asked; "month" if not stated; biweekly =
+grain: "week" | "fortnight" | "month" | "quarter" | "half" | "year" | "calendar_year" (as asked; "month" if not stated; biweekly =
 fortnight). horizon: periods ahead in that grain (weeks up to 52, fortnights 26, months 12, quarters 4, halves 2,
 years 1; 6 months if not stated). Fixed code forecasts weeks or months and adds them up into the periods asked for.
 Quarters and half-years are calendar periods: the one in progress (months already sold plus the rest forecast) is shown
 for context, and the answer is the next full ones, as many as fit within 12 months ahead ("next quarter" is the first
-full quarter after the one in progress; horizon counts full quarters). A year is the next 12 months. Fortnights start with the
+full quarter after the one in progress; horizon counts full quarters). A year is the next 12 months; "calendar_year" is the
+calendar year in progress (months already sold plus the rest forecast), for requests like "annual totals including this
+year's forecast", "this year" or the current year by number, with horizon 1. Fortnights start with the
 first week forecast. Describe the periods that way in your assumptions. measure: bottles, dollars or
 liters. product and place: short readable names. breakout: "none" for one total, else what each series is (county,
 city, item, category, store, ...). title: a short title for the dashboard.
@@ -135,7 +137,8 @@ SUBMIT = {"name": "submit_query",
               "sql": {"type": "string"}, "title": {"type": "string"},
               "measure": {"type": "string", "enum": ["bottles", "dollars", "liters"]},
               "product": {"type": "string"}, "place": {"type": "string"}, "breakout": {"type": "string"},
-              "grain": {"type": "string", "enum": ["week", "fortnight", "month", "quarter", "half", "year"]},
+              "grain": {"type": "string", "enum": ["week", "fortnight", "month", "quarter", "half", "year",
+                                                                       "calendar_year"]},
               "horizon": {"type": "integer"}, "assumptions": {"type": "array", "items": {"type": "string"}}},
               "required": ["sql", "title", "measure", "product", "place", "breakout", "grain", "horizon", "assumptions"],
               "additionalProperties": False},

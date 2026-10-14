@@ -9,6 +9,8 @@ for (temporal aggregation). One rule for every request:
   half         months     6             yes: H1 and H2, starting with the half in progress
   year         months     12            no: the next 12 months (a calendar year ahead would need forecasts up to 16
                                         months out, further than can be tested honestly)
+  calendar_year months    12            yes: the calendar year in progress, months sold plus the rest forecast
+                                        ("annual, including this year's forecast")
 
 A calendar period in progress is reported as the months already sold plus the months still to come. The models look
 at most 12 months (52 weeks) ahead, so a request may stop short; the page says so. Each period's 80% range comes from
@@ -20,9 +22,10 @@ import pandas as pd
 
 # requested grain -> (model grain, periods of the model grain per period, calendar-aligned)
 PERIODS = {"week": ("week", 1, False), "fortnight": ("week", 2, False), "month": ("month", 1, False),
-           "quarter": ("month", 3, True), "half": ("month", 6, True), "year": ("month", 12, False)}
+           "quarter": ("month", 3, True), "half": ("month", 6, True), "year": ("month", 12, False),
+           "calendar_year": ("month", 12, True)}
 MAX_STEPS = {"week": 52, "month": 12}
-NAMES = {"fortnight": "fortnight", "quarter": "quarter", "half": "half-year", "year": "year"}
+NAMES = {"fortnight": "fortnight", "quarter": "quarter", "half": "half-year", "year": "year", "calendar_year": "year"}
 
 
 def steps_needed(grain, horizon, last_month):
@@ -38,6 +41,8 @@ def label(grain, first, last):
     first, last = pd.Timestamp(first), pd.Timestamp(last)
     if grain == "quarter":
         return f"Q{first.quarter} {first.year}"
+    if grain == "calendar_year":
+        return f"{first.year}"
     if grain == "half":
         return f"H{1 if first.month <= 6 else 2} {first.year}"
     if grain == "fortnight":
@@ -58,15 +63,18 @@ def blocks(grain, index):
     return [first[b] for b in back]
 
 
-def table(grain, wide, res, left, fit):
-    """One row per reported period: sold so far, forecast, total, 80% range, the same period last year (all series
-    added up)."""
+def table(grain, wide, res, left, fit, series=None):
+    """One row per reported period: sold so far, forecast, total, 80% range, the same period last year, for one
+    series, or with series=None for all series added up."""
     model_grain, size, aligned = PERIODS[grain]
     step = pd.tseries.frequencies.to_offset("W-MON" if model_grain == "week" else "MS")
     year_back = 52 if model_grain == "week" else 12
-    fc = res["forecast"].groupby("month").pred.sum()
+    fc, bt = res["forecast"], res["backtest"]
+    if series is not None:
+        fc, bt, wide = fc[fc.series == series], bt[bt.series == series], wide[[series]]
+    fc = fc.groupby("month").pred.sum()
     total = wide.sum(axis=1, min_count=1)
-    bt = res["backtest"].dropna(subset=["actual", "pred"]).groupby(["origin", "step"])[["pred", "actual"]].sum()
+    bt = bt.dropna(subset=["actual", "pred"]).groupby(["origin", "step"])[["pred", "actual"]].sum()
     parts = ([("in progress", range(1, left + 1))] if left else []) + \
             [("forecast", range(left + size * k + 1, left + size * k + size + 1)) for k in range(fit)]
     rows = []

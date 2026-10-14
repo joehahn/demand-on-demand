@@ -63,6 +63,7 @@ def period_facts(res, pct):
     """The reported periods, for the summary writer: their total and change, and each period."""
     q, name = res["periods"], periods.NAMES[res["period_grain"]]
     full = q[q.status == "forecast"]
+    in_progress_only = not len(full)   # e.g. this calendar year: the period in progress is the answer
     full = full if len(full) else q   # the headline: the full periods asked for (a period in progress is context)
     return {"periods_reported": f"{full.period.iloc[0]} to {full.period.iloc[-1]}" if len(full) > 1 else full.period.iloc[0],
             "period": name, "periods_total": round(full.total.sum()),
@@ -72,9 +73,12 @@ def period_facts(res, pct):
                            "same_period_last_year": round(r.last_year) if r.last_year == r.last_year else None,
                            "change": pct(r.total, r.last_year) if r.last_year == r.last_year else "n/a"}
                           for r in q.itertuples()],
-            "note": f"The request asked for {name}s: quote periods_total and periods_change_vs_last_year for "
-                    f"periods_reported, not the totals above. A {name} with status 'in progress' is mostly already "
-                    f"sold and is not part of the answer; leave it out."}
+            "note": (f"The request asked for {name}s: quote periods_total and periods_change_vs_last_year for "
+                     f"periods_reported, not the totals above. " +
+                     (f"That {name} is in progress: part of it is already sold (sold_so_far), the rest is forecast."
+                      if in_progress_only else
+                      f"A {name} with status 'in progress' is mostly already sold and is not part of the answer; "
+                      f"leave it out."))}
 
 
 def trust_sentence(rel):
@@ -99,6 +103,9 @@ def run(plan, usage=None, trace=None, narrate=True, out_root=OUT, log=print):
         res = model.run(p.series, p.exog, p.future_index, steps, groups, log=log)
         if periods.PERIODS[plan.grain][1] > 1:
             res["periods"] = periods.table(plan.grain, p.series, res, left, fit)
+            if 1 < p.series.shape[1] <= 8:   # a comparison of a few series: each one's periods too, side by side
+                res["periods_by_series"] = {c: periods.table(plan.grain, p.series, res, left, fit, c)
+                                            for c in p.series if c in set(res["forecast"].series)}
             res["period_grain"], res["periods_asked"] = plan.grain, plan.horizon
         facts = facts_for(shown, p, res)
         info = {"request": plan.request or plan.title, "assumptions": plan.assumptions, "trace": trace or [],
