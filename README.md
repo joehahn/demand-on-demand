@@ -89,31 +89,6 @@ included, the 48 model configurations compared, every tool call the agent made, 
 Requests can ask for weeks, fortnights, months, calendar quarters, half-years or the next 12 months, and can select
 anything SQL can express, such as the stores in the last example.
 
-**Try it live: "my liquor sales are going down".** You manage the Hy-Vee stores in Ankeny. Start Claude Code in this
-folder and type these five requests one at a time. Forecasts go to the governed forecaster; quick lookups and charts are
-answered by Claude Code itself, from the database (read-only) or from the forecast it just made.
-
-```text
-I manage the Hy-Vee stores in Ankeny and I'm worried my liquor sales are going down. Show a table of total liquor sales by year for all Hy-Vee stores in Ankeny, no forecast.
-Costco arrived in Ankeny in 2023 I think, so show monthly liquor dollars in Ankeny: Hy-Vee vs Costco vs all other stores, next 6 months, but have all charts start in year 2019
-Plot annual liquor sales of Hy-Vee vs Costco vs all other stores in Ankeny, with 2026 showing actuals plus forecast
-Also overlay Hy-Vee's market share on that plot
-Which other Ankeny stores grew the most?
-```
-
-1. **Confirm the worry.** A lookup, no forecast: Ankeny's Hy-Vees peaked at about $4.8 million in 2020 and 2021 and have
-   fallen every year since, to $3.9 million in 2025.
-2. **Test a hunch.** A forecast, about 30 seconds. The charts start in 2019, Costco's line appears, and the agent notes
-   Costco actually started selling liquor in October 2022.
-3. **See the years side by side.** A chart Claude Code builds from that forecast: Hy-Vee shrinking, Costco climbing to
-   about $2.1 million a year, everyone else growing; 2026 is January to August actual plus the forecast.
-4. **Measure it.** Hy-Vee's share of all liquor sold in Ankeny fell from about 43% to 29%.
-5. **Find the cause.** A lookup: not just Costco. A wave of new local liquor stores opened, led by one that went from
-   nothing in 2023 to $1.1 million in 2025.
-
-Five plain-English questions take a manager from "I think it's Costco" to a new set of competitors they didn't know to
-ask about. The tool shows where, how much and how far to trust each forecast; the person works out what to do.
-
 More requests to try: *Monthly liquor dollars for each Hy-Vee store in Ankeny, next 6 months* (one forecast per store, ranked); *Monthly Hy-Vee bottles of each Jose Cuervo product, next 6 months* (dozens of products, ranked by forecast change); *Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months* (two chains
 defined only by store name); *Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months* (the agent
 finds the counties); *What tequila revenue should Polk County stores expect next quarter?* (a turning point, where the
@@ -128,6 +103,63 @@ governed, tested code, whichever assistant the firm uses.
 
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
+
+## Using an AI agent and forecasting for market analysis
+
+You manage the Hy-Vee stores in Ankeny, and you are worried your liquor sales are going down. Start Claude Code in this
+folder and paste these five requests one at a time. Forecasts go to the governed forecaster (about 30 seconds each);
+quick lookups and charts are answered by Claude Code itself, from the database (read-only) or from the forecast it just
+made.
+
+**1. Confirm the worry**
+
+```text
+I manage the Hy-Vee stores in Ankeny and I'm worried my liquor sales are going down.
+Show a table of total liquor sales by year for all Hy-Vee stores in Ankeny, no forecast.
+```
+
+A quick lookup, no forecast. The table confirms it: Ankeny's Hy-Vees peaked at about $4.9 million in 2020 and have
+fallen every year since, to $3.9 million in 2025, about 20% down.
+
+**2. Test a hunch with a forecast**
+
+```text
+Costco arrived in Ankeny in 2023 I think, so show monthly liquor dollars in Ankeny:
+Hy-Vee vs Costco vs all other stores, next 6 months, but have all charts start in year 2017
+```
+
+The forecaster builds a dashboard with one forecast per group. Costco's chart is empty until its line appears, and the
+agent points out that Costco actually started selling liquor in October 2022, a little earlier than remembered.
+
+**3. See the years side by side**
+
+```text
+Plot annual liquor sales of Hy-Vee vs Costco vs all other stores in Ankeny, with 2026 showing actuals plus forecast
+```
+
+A chart Claude Code builds from the forecast it just made, with no new forecasting. Hy-Vee shrinks after 2020, Costco
+climbs to about $2.1 million a year, and all the other stores keep growing.
+
+**4. Measure it**
+
+```text
+Also overlay Hy-Vee's market share on that plot
+```
+
+Hy-Vee held about 43 to 45% of Ankeny's liquor sales through 2021, then fell to 29% from 2022 on, the year Costco
+arrived. Hy-Vee lost about a third of its share in four years.
+
+**5. Find the cause**
+
+```text
+Which other Ankeny stores grew the most?
+```
+
+Another quick lookup, and the twist: not just Costco. Five new local liquor stores opened since late 2021, led by one
+that went from nothing in 2023 to $1.1 million in 2025, while Sam's Club lost about $1 million a year to Costco.
+
+Five plain-English questions take a manager from "I think it's Costco" to a new set of competitors they didn't know to
+ask about. The tool shows where, how much and how far to trust each forecast; the person works out what to do.
 
 ## Results
 
