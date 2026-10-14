@@ -106,7 +106,7 @@ misses included, and when a model does not beat last year its dashboard says so.
 
 ## Using an AI agent + forecasting for market analysis
 
-You manage the Hy-Vee stores in Ankeny, and you are worried your liquor sales are going down. Start Claude Code in this
+Suppose you manage the Hy-Vee stores in Ankeny and worry that your liquor sales are going down. Start Claude Code in this
 folder and paste these five requests one at a time. Claude Code is the assistant you talk to: it hands forecast
 requests to the forecasting agent (taking about 30 seconds to generate a forecast), and answers quick lookups and chart requests itself, from
 the database (read-only) or from the forecast just made. Other coding assistants that can run commands in this folder
@@ -116,12 +116,11 @@ assistants would use the forecaster through an MCP server (see [From any AI assi
 **1. Confirm the worry**
 
 ```text
-I manage the Hy-Vee stores in Ankeny and I'm worried my liquor sales are going down.
 Show a table of total liquor sales by year for all Hy-Vee stores in Ankeny, no forecast.
 ```
 
-A quick lookup, no forecast. The table confirms it: Ankeny's Hy-Vees peaked at about $4.9 million in 2020 and have
-fallen every year since, to $3.9 million in 2025, about 20% down.
+A quick lookup with no forecast, and the results confirm the concern: Ankeny's Hy-Vees peaked at about $4.9 million
+in 2020 and have fallen every year since, to $3.9 million in 2025, about 20% down.
 
 **2. Test a hunch with a forecast**
 
