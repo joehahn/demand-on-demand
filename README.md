@@ -109,7 +109,9 @@ misses included, and when a model does not beat last year its dashboard says so.
 You manage the Hy-Vee stores in Ankeny, and you are worried your liquor sales are going down. Start Claude Code in this
 folder and paste these five requests one at a time. Claude Code is the assistant you talk to: it hands forecast
 requests to the forecasting agent (about 30 seconds each), and answers quick lookups and chart requests itself, from
-the database (read-only) or from the forecast just made.
+the database (read-only) or from the forecast just made. Other coding assistants that can run commands in this folder
+should be able to follow the same steps: the instructions they need are in [AGENTS.md](AGENTS.md). Chat-only
+assistants would use the forecaster through an MCP server (see From any AI assistant).
 
 **1. Confirm the worry**
 
@@ -211,6 +213,7 @@ forecasting agent's part: its SQL and how it read the request.
 | `evals/`, `benchmark/` | the answer key and SQL score, summary grounding, forecast-accuracy benchmark and experiments |
 | `make_examples.py`, `demo.py` | the published example dashboards; canned requests for a live demo |
 | `CLAUDE.md`, `PLAN.md` | the working notes Claude Code built this from |
+| `AGENTS.md` | the same answering rules for other AI coding assistants |
 
 ## About the author
 
