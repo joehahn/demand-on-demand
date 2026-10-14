@@ -94,7 +94,7 @@ defined only by store name); *Monthly Tito's sales dollars for each of the 5 lar
 agent finds the counties); *What tequila revenue should Polk County stores expect next quarter?* (a turning point, where the
 page says plainly the model is no better than last year's numbers).
 
-**From any AI assistant.** At a firm, employees would ask their own assistant, not open this repo. The next step
+<a id="from-any-ai-assistant"></a>**From any AI assistant.** At a firm, employees would ask their own assistant, not open this repo. The next step
 (not built yet) is a small MCP server: MCP is the open standard for giving AI assistants tools, supported by Claude
 Desktop, Claude Code and Microsoft Copilot Studio among others. It would offer one tool, "forecast demand from a
 plain-English request", running on a firm machine with the warehouse, and return the summary and a link to the
@@ -104,14 +104,14 @@ check stay in this governed, tested code, whichever assistant the firm uses.
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
 
-## Using an AI agent and forecasting for market analysis
+## Using an AI agent + forecasting for market analysis
 
 You manage the Hy-Vee stores in Ankeny, and you are worried your liquor sales are going down. Start Claude Code in this
 folder and paste these five requests one at a time. Claude Code is the assistant you talk to: it hands forecast
-requests to the forecasting agent (about 30 seconds each), and answers quick lookups and chart requests itself, from
+requests to the forecasting agent (taking about 30 seconds to generate a forecast), and answers quick lookups and chart requests itself, from
 the database (read-only) or from the forecast just made. Other coding assistants that can run commands in this folder
 should be able to follow the same steps: the instructions they need are in [AGENTS.md](AGENTS.md). Chat-only
-assistants would use the forecaster through an MCP server (see From any AI assistant).
+assistants would use the forecaster through an MCP server (see [From any AI assistant](#from-any-ai-assistant)).
 
 **1. Confirm the worry**
 
