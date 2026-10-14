@@ -89,7 +89,7 @@ included, the 48 model configurations compared, every tool call the agent made, 
 Requests can ask for weeks, fortnights, months, calendar quarters, half-years or the next 12 months, and can select
 anything SQL can express, such as the stores in the last example.
 
-More requests to try: *Monthly liquor dollars for each Hy-Vee store in Ankeny, next 6 months* (one forecast per store, ranked); *Monthly Hy-Vee bottles of each Jose Cuervo product, next 6 months* (dozens of products, ranked by forecast change); *Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months* (two chains
+Other requests to paste into Claude Code: *Monthly liquor dollars for each Hy-Vee store in Ankeny, next 6 months* (one forecast per store, ranked); *Monthly Hy-Vee bottles of each Jose Cuervo product, next 6 months* (dozens of products, ranked by forecast change); *Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months* (two chains
 defined only by store name); *Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months* (the agent
 finds the counties); *What tequila revenue should Polk County stores expect next quarter?* (a turning point, where the
 page says plainly the model is no better than last year's numbers).
