@@ -3,7 +3,7 @@
 **Ask for a demand forecast in plain English. Get a tested forecast and dashboard in under a minute.**
 
 A business user types a question like *"monthly forecast of Tito's minis in Des Moines for the next 5 months"*.
-A single Claude agent (the Claude API, Claude Sonnet 5) with read-only tools turns the words into one SQL query that
+A single Claude agent, the forecasting agent (the Claude API, Claude Sonnet 5), with read-only tools turns the words into one SQL query that
 picks the right orders from a company-style Postgres warehouse of 26 million Iowa liquor orders (2016 to 2026). Fixed
 Python code then adds them up by week or month, tunes and tests the models against the simplest honest benchmark, the
 same period last year, and publishes a dashboard that says how far to trust the answer.
@@ -30,7 +30,7 @@ flowchart LR
     H -. reads .-> W
 ```
 
-**The AI decides what to forecast; code decides how.** The agent has four tools: search names, run one checked
+**The AI decides what to forecast; code decides how.** The forecasting agent has four tools: search names, run one checked
 read-only SELECT, ask one clarifying question, and submit its query. It resolves "Tito's minis" to the right products,
 "Des Moines" to the city and "revenue" to dollars, and writes one SQL query that selects the sales records: which
 records, which measure, how to label each series. It follows three rules for the warehouse's traps and a short glossary of the
@@ -61,7 +61,7 @@ on the sales records, by product and then store, lets a request like "Fireball i
 instead of all 1.2 million Fireball sales in Iowa: those queries went from about a minute to under a second, with
 identical results. A typical forecast now builds from plain English in under 35 seconds.
 
-**Least privilege.** Postgres runs with password authentication and separate roles. The agent's login can only read
+**Least privilege.** Postgres runs with password authentication and separate roles. The forecasting agent's login can only read
 the clean tables, with a query time limit. Credentials live in `.env`, are read by Python, and never appear in a prompt.
 
 ## See it live
@@ -73,7 +73,7 @@ the clean tables, with a query time limit. Credentials live in `.env`, are read 
 - **[Data dictionary](https://joehahn.github.io/demand-on-demand/data_dictionary.html)**: every table and column, exactly as the
   agent is told about them at the start of each request (written once by the loader, stored as database comments).
 
-**Example forecasts.** Each was made by the agent from the plain-English request shown.
+**Example forecasts.** Each was made by the forecasting agent from the plain-English request shown.
 Each dashboard is one page with how the request was read, the forecast chart and table (with an 80% range), the
 backtest against the same period last year, the table the model learns from, which inputs helped, a map of the stores
 included, the 48 model configurations compared, every tool call the agent made, and the exact SQL that ran.
@@ -90,16 +90,16 @@ Requests can ask for weeks, fortnights, months, calendar quarters, half-years or
 anything SQL can express, such as the stores in the last example.
 
 Other requests to paste into Claude Code: *Monthly liquor dollars for each Hy-Vee store in Ankeny, next 6 months* (one forecast per store, ranked); *Monthly Hy-Vee bottles of each Jose Cuervo product, next 6 months* (dozens of products, ranked by forecast change); *Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months* (two chains
-defined only by store name); *Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months* (the agent
-finds the counties); *What tequila revenue should Polk County stores expect next quarter?* (a turning point, where the
+defined only by store name); *Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months* (the forecasting
+agent finds the counties); *What tequila revenue should Polk County stores expect next quarter?* (a turning point, where the
 page says plainly the model is no better than last year's numbers).
 
 **From any AI assistant.** At a firm, employees would ask their own assistant, not open this repo. The next step
 (not built yet) is a small MCP server: MCP is the open standard for giving AI assistants tools, supported by Claude
 Desktop, Claude Code and Microsoft Copilot Studio among others. It would offer one tool, "forecast demand from a
 plain-English request", running on a firm machine with the warehouse, and return the summary and a link to the
-dashboard. The assistant then only passes the question along: the SQL, the models and the trust check stay in this
-governed, tested code, whichever assistant the firm uses.
+dashboard. The assistant then only passes the question along: the forecasting agent's SQL, the models and the trust
+check stay in this governed, tested code, whichever assistant the firm uses.
 
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
@@ -107,9 +107,9 @@ misses included, and when a model does not beat last year its dashboard says so.
 ## Using an AI agent and forecasting for market analysis
 
 You manage the Hy-Vee stores in Ankeny, and you are worried your liquor sales are going down. Start Claude Code in this
-folder and paste these five requests one at a time. Forecasts go to the governed forecaster (about 30 seconds each);
-quick lookups and charts are answered by Claude Code itself, from the database (read-only) or from the forecast it just
-made.
+folder and paste these five requests one at a time. Claude Code is the assistant you talk to: it hands forecast
+requests to the forecasting agent (about 30 seconds each), and answers quick lookups and chart requests itself, from
+the database (read-only) or from the forecast just made.
 
 **1. Confirm the worry**
 
@@ -128,8 +128,9 @@ Costco arrived in Ankeny in 2023 I think, so show monthly liquor dollars in Anke
 Hy-Vee vs Costco vs all other stores, next 6 months, but have all charts start in year 2017
 ```
 
-The forecaster builds a dashboard with one forecast per group. Costco's chart is empty until its line appears, and the
-agent points out that Costco actually started selling liquor in October 2022, a little earlier than remembered.
+The forecasting agent builds a dashboard with one forecast per group. Costco's chart is empty until its line appears,
+and the agent points out that Costco actually started selling liquor in October 2022, a little earlier than
+remembered.
 
 **3. See the years side by side**
 
@@ -168,13 +169,13 @@ ask about. The tool shows where, how much and how far to trust each forecast; th
   The model beat "same month last year" on 18, with a median and mean error 8% lower. Iowa liquor
   demand is very regular year to year, so last year is a hard baseline, and on the other 12 it was not beaten. The report lists every forecast, the
   misses included.
-- [evals/sql_report.md](evals/sql_report.md): the agent's SQL scored against an answer key: 34 requests (brands, categories, minis, cities, counties, a 207-store chain, weeks,
+- [evals/sql_report.md](evals/sql_report.md): the forecasting agent's SQL scored against an answer key: 34 requests (brands, categories, minis, cities, counties, a 207-store chain, weeks,
   quarters, a year, and requests it should decline), 3 runs each. The sales records its SQL selected, summed by month,
   matched the key in every month in all 102 runs, and all 102 read the grain and horizon right.
 - [evals/grounding.md](evals/grounding.md): each dashboard's summary opens with one sentence written by Claude from the
   forecast's computed numbers (the accuracy sentence and every other number come from fixed code). This check traces
   every number in such sentences back to the computed results: 60 of 60 matched.
-- How the agent got there: an earlier version had the AI fill in a request form and fixed code write the SQL (slot
+- How the forecasting agent got there: an earlier version had the AI fill in a request form and fixed code write the SQL (slot
   filling). [Comparing AI-written SQL with it](https://joehahn.github.io/demand-on-demand/differential.html) month by
   month found three warehouse traps (renumbered products, recoded categories, brand names with extra words), fixed with
   three short rules; the answer key then showed every remaining miss was a business definition, fixed with a short
@@ -196,7 +197,7 @@ cp .env.example .env          # add ANTHROPIC_API_KEY and the two Postgres conne
 ```
 
 The dashboard lands in `out/<title>/dashboard.html`. `python -m dod.agent "<request>" --sql-only` shows only the
-agent's part: its SQL and how it read the request.
+forecasting agent's part: its SQL and how it read the request.
 
 ## Repo map
 
