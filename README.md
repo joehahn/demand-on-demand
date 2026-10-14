@@ -3,15 +3,15 @@
 **Ask for a demand forecast in plain English. Get a tested forecast and dashboard in under a minute.**
 
 A business user types a question like *"monthly forecast of Tito's minis in Des Moines for the next 5 months"*.
-A single Claude agent, the forecasting agent (the Claude API, Claude Sonnet 5), with read-only tools turns the words into one SQL query that
-picks the right orders from a company-style Postgres warehouse of 26 million Iowa liquor orders (2016 to 2026). Fixed
+A single Claude agent with read-only tools (the forecasting agent: Claude Sonnet 5 via the Claude API) turns the words
+into one SQL query that picks the right orders from a company-style Postgres warehouse of 26 million Iowa liquor orders (2016 to 2026). Fixed
 Python code then adds them up by week or month, tunes and tests the models against the simplest honest benchmark, the
 same period last year, and publishes a dashboard that says how far to trust the answer.
 
 | | |
 |---|---|
 | Plain English to dashboard | about 25 seconds (median of the five examples; all under 35 seconds) |
-| Claude API cost per request | about $0.02 |
+| Claude API cost per request | about $0.03 |
 | Forecast accuracy | beats "same month last year" on 18 of 30 sampled forecasts; median and mean error 8% lower |
 | Agent accuracy | on 34 test requests run 3 times each, its SQL added up to the answer key in 102 of 102 runs |
 
@@ -21,14 +21,7 @@ same period last year, and publishes a dashboard that says how far to trust the 
 
 ## How it works
 
-```mermaid
-flowchart LR
-    Q["Business question<br/>plain English"] --> A["Claude agent<br/>read-only tools<br/>writes SQL selecting<br/>the sales records"]
-    A --> H["Fixed Python code<br/>sums, tuning, backtest<br/>vs same period last year"]
-    H --> D["Dashboard<br/>forecast, 80% range,<br/>how far to trust it"]
-    A -. reads .-> W[("Clean Postgres warehouse<br/>26M orders, fixed once")]
-    H -. reads .-> W
-```
+![A plain-English request goes from you to the forecasting agent, which writes SQL; fixed Python code sums, tunes and backtests; a dashboard shows the forecast. Both read the clean Postgres warehouse.](docs/how_it_works.svg)
 
 **The AI decides what to forecast; code decides how.** The forecasting agent has four tools: search names, run one checked
 read-only SELECT, ask one clarifying question, and submit its query. It resolves "Tito's minis" to the right products,
@@ -43,7 +36,8 @@ dashboard summary, using only numbers the models computed.
 **Honest accuracy.** Every forecast is backtested on the last 24 months, which no choice ever saw. Settings are
 tuned on the two years before: 48 configurations (LightGBM and ridge; level, month-over-month or year-over-year
 targets; lags and history lengths), then the single best or the average of the top three, blended with "same month
-last year" only as far as that helps. Every forecast, weekly or monthly, is offered the same four inputs (time of year,
+last year" only as far as that helps. For the forecast itself, the same tuning is repeated on the latest two years, so
+the settings used are chosen on the most recent data. Every forecast, weekly or monthly, is offered the same four inputs (time of year,
 business days and holidays, county population, active stores), each kept only if it helps; ridge regression sees time
 of year as a smooth yearly wave (sine and cosine), LightGBM as the month number ([benchmark/menu.md](benchmark/menu.md)). The baseline is always a candidate, so a
 model is used only when it beats it.
@@ -71,7 +65,7 @@ the clean tables, with a query time limit. Credentials live in `.env`, are read 
   problem found while loading.
 - **[Data fixes](https://joehahn.github.io/demand-on-demand/data_fixes.html)**: each problem, the fix applied once in the warehouse, and before and after.
 - **[Data dictionary](https://joehahn.github.io/demand-on-demand/data_dictionary.html)**: every table and column, exactly as the
-  agent is told about them at the start of each request (written once by the loader, stored as database comments).
+  forecasting agent is told about them at the start of each request (written once by the loader, stored as database comments).
 
 **Example forecasts.** Each was made by the forecasting agent from the plain-English request shown.
 Each dashboard is one page with how the request was read, the forecast chart and table (with an 80% range), the
@@ -86,23 +80,11 @@ included, the 48 model configurations compared, every tool call the agent made, 
 | [show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out](https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_by_week_next_12_weeks.html) | 18% more accurate | 32 s, $0.01 |
 | [Quarterly forecast of Tito's sales dollars at stores that have never ordered Fireball, next 4 quarters](https://joehahn.github.io/demand-on-demand/examples/titos_at_stores_without_fireball_next_4_quarters.html) | 11% more accurate | 26 s, $0.05 |
 
-Requests can ask for weeks, fortnights, months, calendar quarters, half-years or the next 12 months, and can select
-anything SQL can express, such as the stores in the last example.
-
-Other requests to paste into Claude Code: *Monthly liquor dollars for each Hy-Vee store in Ankeny, next 6 months* (one forecast per store, ranked); *Monthly Hy-Vee bottles of each Jose Cuervo product, next 6 months* (dozens of products, ranked by forecast change); *Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months* (two chains
-defined only by store name); *Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months* (the forecasting
-agent finds the counties); *What tequila revenue should Polk County stores expect next quarter?* (a turning point, where the
-page says plainly the model is no better than last year's numbers).
-
-<a id="from-any-ai-assistant"></a>**From any AI assistant.** At a firm, employees would ask their own assistant, not open this repo. The next step
-(not built yet) is a small MCP server: MCP is the open standard for giving AI assistants tools, supported by Claude
-Desktop, Claude Code and Microsoft Copilot Studio among others. It would offer one tool, "forecast demand from a
-plain-English request", running on a firm machine with the warehouse, and return the summary and a link to the
-dashboard. The assistant then only passes the question along: the forecasting agent's SQL, the models and the trust
-check stay in this governed, tested code, whichever assistant the firm uses.
-
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
+
+Requests can ask for weeks, fortnights, months, calendar quarters, half-years, the next 12 months or the calendar
+year in progress, and can select anything SQL can express, such as the stores in the last example.
 
 ## Using an AI agent + forecasting for market analysis
 
@@ -158,10 +140,32 @@ Which other Ankeny stores grew the most?
 ```
 
 Another quick lookup, and the twist: not just Costco. Five new local liquor stores opened since late 2021, led by one
-that went from nothing in 2023 to $1.1 million in 2025, while Sam's Club lost about $1 million a year to Costco.
+that went from nothing in 2023 to $1.1 million in 2025, while Sam's Club lost about $1 million a year, likely to Costco.
 
 Five plain-English questions take a manager from "I think it's Costco" to a new set of competitors they didn't know to
 ask about. The tool shows where, how much and how far to trust each forecast; the person works out what to do.
+
+**Other requests to try**
+
+- *Monthly liquor dollars for each Hy-Vee store in Ankeny, next 6 months*: one forecast per store, ranked.
+- *Monthly Hy-Vee bottles of each Jose Cuervo product, next 6 months*: dozens of products, ranked by forecast change.
+- *Monthly Fireball mini bottles at Casey's stores vs Hy-Vee stores, next 6 months*: two chains defined only by store
+  name.
+- *Monthly Tito's sales dollars for each of the 5 largest counties, next 6 months*: the forecasting agent finds the
+  counties.
+- *What tequila revenue should Polk County stores expect next quarter?*: a turning point, where the page says plainly
+  the model is no better than last year's numbers.
+
+## From any AI assistant
+
+At a firm, employees would ask their own assistant, not open this repo. Coding assistants that can run commands in this
+folder (Claude Code, Codex, Copilot and others) get their instructions from [CLAUDE.md](CLAUDE.md) or
+[AGENTS.md](AGENTS.md). For chat-only assistants the next step (not built yet) is a small MCP server: MCP is the open
+standard for giving AI assistants tools, supported by Claude Desktop, Claude Code and Microsoft Copilot Studio among
+others. It would offer one tool, "forecast demand from a plain-English request", running on a firm machine with the
+warehouse, and return the summary and a link to the dashboard. The assistant then only passes the question along: the
+forecasting agent's SQL, the models and the trust check stay in this governed, tested code, whichever assistant the
+firm uses.
 
 ## Results
 
@@ -176,12 +180,8 @@ ask about. The tool shows where, how much and how far to trust each forecast; th
 - [evals/grounding.md](evals/grounding.md): each dashboard's summary opens with one sentence written by Claude from the
   forecast's computed numbers (the accuracy sentence and every other number come from fixed code). This check traces
   every number in such sentences back to the computed results: 60 of 60 matched.
-- How the forecasting agent got there: an earlier version had the AI fill in a request form and fixed code write the SQL (slot
-  filling). [Comparing AI-written SQL with it](https://joehahn.github.io/demand-on-demand/differential.html) month by
-  month found three warehouse traps (renumbered products, recoded categories, brand names with extra words), fixed with
-  three short rules; the answer key then showed every remaining miss was a business definition, fixed with a short
-  glossary (baseline 90 of 102, then 102 of 102 once the agent was also told where the data ends). Measured before slot filling was retired: pooling with other counties
-  added little and unevenly ([benchmark/pooling.md](benchmark/pooling.md)), so it was dropped.
+- [HISTORY.md](HISTORY.md): how the forecasting agent got there, from an AI-filled request form to AI-written SQL
+  checked against an answer key.
 
 ## Run it yourself
 
@@ -206,12 +206,14 @@ forecasting agent's part: its SQL and how it read the request.
 |---|---|
 | `load_data.py` | one-time pull of Iowa Liquor Sales 2016 onward into Postgres: raw, curated star schema, Census reference tables, the clean stage, and the data dictionary |
 | `explore_data.py`, `data_fixes.py`, `data_dictionary.py` | the three data pages in `docs/` |
-| `dod/agent.py`, `dod/tools.py`, `dod/plan.py` | the Claude agent, its read-only tools, and its reading of the request |
-| `dod/forecast.py`, `dod/history.py`, `dod/features.py`, `dod/model.py`, `dod/dashboard.py` | fixed code: sums, inputs, models, dashboard |
+| `dod/agent.py`, `dod/tools.py`, `dod/plan.py` | the forecasting agent, its read-only tools, and its reading of the request |
+| `dod/db.py`, `dod/sqlcheck.py` | the read-only database login and the check that every query is one read-only SELECT |
+| `dod/forecast.py`, `dod/history.py`, `dod/features.py`, `dod/model.py`, `dod/periods.py`, `dod/dashboard.py`, `dod/viz.py` | fixed code: sums, inputs, models, report periods (quarters, half-years, years), dashboard and chart style |
+| `dod/results.py` | a finished forecast's actuals and forecasts as tidy tables, for follow-up charts |
 | `dod/spec.py`, `dod/panel.py` | reference queries from hand-checked request forms, for the answer key and the benchmark |
 | `evals/`, `benchmark/` | the answer key and SQL score, summary grounding, forecast-accuracy benchmark and experiments |
 | `make_examples.py`, `demo.py` | the published example dashboards; canned requests for a live demo |
-| `CLAUDE.md`, `PLAN.md` | the working notes Claude Code built this from |
+| `CLAUDE.md`, `PLAN.md`, `HISTORY.md` | the working notes Claude Code built this from, and how the agent's design evolved |
 | `AGENTS.md` | the same answering rules for other AI coding assistants |
 
 ## About the author

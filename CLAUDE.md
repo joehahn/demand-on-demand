@@ -1,6 +1,6 @@
 # CLAUDE.md
 **Author:** Joe Hahn  
-**Email:** jmh.datasciences@gmail.com  
+**Email:** joe.hahn@jmh-datasciences.com  
 **Date:** 2026-September-26 <br>
 **branch** main
 
