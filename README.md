@@ -94,11 +94,11 @@ folder and type these five requests one at a time. Forecasts go to the governed 
 answered by Claude Code itself, from the database (read-only) or from the forecast it just made.
 
 ```text
-1. I manage the Hy-Vee stores in Ankeny and I'm worried my liquor sales are going down. Show a table of total liquor sales by year for all Hy-Vee stores in Ankeny, no forecast.
-2. Costco arrived in Ankeny in 2023 I think, so show monthly liquor dollars in Ankeny: Hy-Vee vs Costco vs all other stores, next 6 months, but have all charts start in year 2019
-3. Plot annual liquor sales of Hy-Vee vs Costco vs all other stores in Ankeny, with 2026 showing actuals plus forecast
-4. Also overlay Hy-Vee's market share on that plot
-5. Which other Ankeny stores grew the most?
+I manage the Hy-Vee stores in Ankeny and I'm worried my liquor sales are going down. Show a table of total liquor sales by year for all Hy-Vee stores in Ankeny, no forecast.
+Costco arrived in Ankeny in 2023 I think, so show monthly liquor dollars in Ankeny: Hy-Vee vs Costco vs all other stores, next 6 months, but have all charts start in year 2019
+Plot annual liquor sales of Hy-Vee vs Costco vs all other stores in Ankeny, with 2026 showing actuals plus forecast
+Also overlay Hy-Vee's market share on that plot
+Which other Ankeny stores grew the most?
 ```
 
 1. **Confirm the worry.** A lookup, no forecast: Ankeny's Hy-Vees peaked at about $4.8 million in 2020 and 2021 and have
