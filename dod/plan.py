@@ -23,6 +23,7 @@ class Plan(BaseModel):
     assumptions: list[str] = Field(default_factory=list)
     start: str = "2016-01-01"
     features: list[str] = Field(default_factory=list)   # input groups offered to model selection (set by fixed code)
+    chart_from: str = ""              # where the charts should start, if the request says so (YYYY-MM-DD); display only
 
     @property
     def slug(self):

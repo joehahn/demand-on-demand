@@ -741,11 +741,13 @@ def periods_section(res, wide, unit, plot, labels=None):
             f"{units()} ahead, compared with what actually sold.</p>{plot(fig)}{table(t)}")
 
 
-def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
+def fig_series(code, label, wide, bt, fc, windows, unit, train_start, view_from=""):
     """Actuals, what the model would have said 1 to N months ahead during the test (one at a time, picked with
     buttons), and the forecast."""
     full = wide[code].dropna()                 # every period since the first sale, for the "all years" view
     hist = full.iloc[-W["history"]:]           # the recent years the chart opens on
+    if view_from and pd.Timestamp(view_from) < full.index[-1]:   # the request said where the charts start
+        hist = full[full.index >= pd.Timestamp(view_from)]
     mine = bt[bt.series == code]
     steps = sorted(mine.step.unique())
     one = mine[mine.step == 1]
@@ -792,10 +794,12 @@ def fig_series(code, label, wide, bt, fc, windows, unit, train_start):
     fig.update_traces(hovertemplate="%{y:,.0f}", selector=dict(type="scatter"))
     fig = style(fig, label, f"{unit} per {W['unit']}", height=410, legend=True)
     # opens on the recent years; a button shows every year since the first sale
-    fig.update_xaxes(range=[hist.index[0], end], rangeselector=dict(
-        buttons=[dict(label="recent years", count=len(hist) + len(f), step="month" if W["grain"] != "week" else "day",
+    # a start asked for applies to every chart, even one whose sales begin later (an empty stretch is the point)
+    view_start = pd.Timestamp(view_from) if view_from else hist.index[0]
+    fig.update_xaxes(range=[view_start, end], rangeselector=dict(
+        buttons=[dict(label=f"from {view_start:%Y}", count=len(hist) + len(f), step="month" if W["grain"] != "week" else "day",
                       stepmode="backward") if W["grain"] != "week" else
-                 dict(label="recent years", count=7 * (len(hist) + len(f)), step="day", stepmode="backward"),
+                 dict(label=f"from {view_start:%Y}", count=7 * (len(hist) + len(f)), step="day", stepmode="backward"),
                  dict(label="all years", step="all")],
         x=1, xanchor="right", y=-0.32, yanchor="top", font=dict(size=11), bgcolor="rgba(0,0,0,0)"))
     fig.update_yaxes(range=[0, max(full.max(), f.hi.max()) * 1.3])
@@ -921,7 +925,7 @@ def build(spec, panel, res, usage=None, agent=None, harness_seconds=None):
     by_size = sorted([c for c in wide.columns if c in set(fc.series)],
                      key=lambda c: -wide[c].iloc[-W["season"]:].sum())
     charts = "".join(plot(fig_series(c, labels.get(c, c), wide, bt, fc, (res["tune_window"], res["test_window"]), unit,
-                                    panel.start))
+                                    panel.start, getattr(spec, "chart_from", "")))
                      for c in by_size[:MAX_PANELS])
     more = f'<p class="note">{len(wide.columns) - MAX_PANELS} more series are in the table only.</p>' \
         if len(wide.columns) > MAX_PANELS else ""

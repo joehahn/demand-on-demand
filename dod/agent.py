@@ -123,7 +123,9 @@ calendar year in progress (months already sold plus the rest forecast), for requ
 year's forecast", "this year" or the current year by number, with horizon 1. Fortnights start with the
 first week forecast. Describe the periods that way in your assumptions. measure: bottles, dollars or
 liters. product and place: short readable names. breakout: "none" for one total, else what each series is (county,
-city, item, category, store, ...). title: a short title for the dashboard.
+city, item, category, store, ...). title: a short title for the dashboard. chart_from: if the request says where the
+charts should start (e.g. "charts start in 2019"), that date as YYYY-MM-DD, else an empty string; it only changes the
+view (the SQL still includes all history from 2016-01-01).
 
 {rules}## Warehouse tables (read-only)
 {schema}
@@ -139,8 +141,10 @@ SUBMIT = {"name": "submit_query",
               "product": {"type": "string"}, "place": {"type": "string"}, "breakout": {"type": "string"},
               "grain": {"type": "string", "enum": ["week", "fortnight", "month", "quarter", "half", "year",
                                                                        "calendar_year"]},
-              "horizon": {"type": "integer"}, "assumptions": {"type": "array", "items": {"type": "string"}}},
-              "required": ["sql", "title", "measure", "product", "place", "breakout", "grain", "horizon", "assumptions"],
+              "horizon": {"type": "integer"}, "chart_from": {"type": "string"},
+              "assumptions": {"type": "array", "items": {"type": "string"}}},
+              "required": ["sql", "title", "measure", "product", "place", "breakout", "grain", "horizon", "chart_from",
+                           "assumptions"],
               "additionalProperties": False},
           "strict": True}
 TOOLS = tools.TOOLS + [SUBMIT]
@@ -205,7 +209,7 @@ def submitted(request, a):
         return None, err
     plan = Plan(title=a["title"], sql=sql, target="sales_" + a["measure"], grain=a["grain"], horizon=a["horizon"],
                 product=a["product"], place=a["place"], series_by=a["breakout"].strip().lower() or "none",
-                request=request, assumptions=a["assumptions"])
+                request=request, assumptions=a["assumptions"], chart_from=a["chart_from"].strip())
     return plan, None
 
 
