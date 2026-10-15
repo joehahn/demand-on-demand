@@ -56,10 +56,10 @@ help the agent disambiguate requests: "whiskey" does not include whiskey liqueur
 **Fixed code does the arithmetic.** The agent's query only decides which records to pull from the database. Fixed
 code then aggregates them over all the selected products and stores (or separately for each group compared, such as
 Hy-Vee vs Costco) into weekly or monthly time buckets, plus totals by store and by product for the dashboard's map and
-tables, so the AI never computes the numbers the models learn from.
+tables. So the AI never computes the numbers the models learn from.
 
-The models always work in weeks or months. A request for fortnights, quarters, half-years or years is answered by
-adding up the weekly or monthly forecasts: fortnights from weeks, the rest from months. Quarters and half-years follow
+The models always work in weeks or months. A request for two-week (biweekly) periods, quarters, half-years or years is answered by
+adding up the weekly or monthly forecasts: two-week periods from weeks, the rest from months. Quarters and half-years follow
 the calendar, so the one in progress combines the months already sold with the months still to come. "Next year"
 means the next 12 months and "this year" the calendar year in progress. The models look at most 12 months (52 weeks)
 ahead, the furthest that can still be tested honestly, and the dashboard says so when a request reaches further.
@@ -69,7 +69,7 @@ every request. The AI's only contributions to it are its reading of the request 
 SQL, shown exactly as run, and the one-sentence summary, written by a second short Claude call using only numbers the
 models computed.
 
-**The machine learning, the same for every request.** Fixed code trains, tunes and tests the models, and splits the
+**The machine learning (ML) pipeline is the same for every request.** Fixed code trains, tunes and tests the models, and splits the
 sales history into three periods:
 
 - **Tuning** (the two years before the last two): 48 model configurations are compared. Two kinds of ML model,
