@@ -84,7 +84,7 @@ ML models are tested on the data's final two years, after being tuned on the two
   reported on the dashboard are derived by comparing these predictions, and the baseline model's, to actual sales
   during the testing period.
 - **The forecast** reruns the same tuning on the latest two years (the testing period), so the final choice of model,
-  inputs and blend reflects the most recent sales; it may differ from the choice that was tested. The chosen models
+  inputs and blend reflects the most recent sales. The chosen models
   are then trained on all the data through August 2026 to make the forecast.
 
 The baseline model simply predicts whatever sold in the same period one year earlier. It is always one of the
