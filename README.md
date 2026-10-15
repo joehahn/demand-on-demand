@@ -71,10 +71,9 @@ tables. AI never computes the numbers that the ML models train on.
 The ML pipeline is fixed code that runs the same way for every request: it trains, tunes and tests the models. The
 ML models are tested on the data's final two years, after being tuned on the two years prior to that:
 
-- **ML tuning** is done on records spanning September 2022 to August 2024. Model tuning is done by comparing 48 different
-  configurations of two kinds of ML model, LightGBM (gradient-boosted trees) and ridge regression, which predict
-  either the sales level, the change from last month or the change from last year, with different lags and lengths of
-  history. The best one, or the average of the best
+- **ML tuning** is done on records spanning September 2022 to August 2024 by comparing 48 different configurations of
+  two kinds of ML model, LightGBM (gradient-boosted trees) and ridge regression. Each configuration predicts either the
+  sales level, the change from last month or the change from last year, with its own lags and length of history. The best one, or the average of the best
   three, is kept, then blended with the baseline model only as far as that helps. Every forecast, weekly or monthly,
   is offered the same four inputs (time of year, business days and holidays, county population, active stores), and
   each is kept only if it helps; ridge regression sees time of year as a smooth yearly wave (sine and cosine),
