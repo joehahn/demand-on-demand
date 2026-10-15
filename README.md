@@ -43,11 +43,9 @@ problems, but nothing confidential.
 (i) search the database for relevant products and places, (ii) try a test query on the data to see what it returns,
 (iii) ask the user a clarifying question, and (iv) submit its SQL query to the fixed code. Take *"monthly forecast of
 Tito's minis in Des Moines for the next 5 months"*. The search finds Tito's in seven bottle sizes, so the agent keeps
-only the 50 ml minis: the single mini (sold under product IDs 38194, 38180 and 938180 over the years) and the mini
-4-pack (38185). "Des Moines" is trickier: it could mean the city (131 stores), the city plus its neighbor West Des
-Moines (66 more), or all of Polk County, and a county-name search would even match Des Moines County, in southeast
-Iowa around Burlington. The agent picks the city and says so on the dashboard ("Des Moines means the city of Des
-Moines, not West Des Moines or all of Polk County"), where the requester can check it. It then writes one SQL query that selects the sales records:
+only the 50 ml minis: the single mini and the mini
+4-pack. "Des Moines" is trickier: it could mean the city (131 stores), the city plus its neighbor West Des
+Moines (66 more), or all of Polk County, and a county-name search would even match Des Moines County. But the agent picks the city and says so on the dashboard, where the requester can check it. It then writes one SQL query that selects the sales records:
 which records, which measure, and how to label each series. It follows three rules for the warehouse's traps and a short glossary of the
 company's business definitions ("minis" are 50 ml bottles; whiskey does not include whiskey liqueur); both are part of
 its instructions in [dod/agent.py](dod/agent.py), and its tools are in [dod/tools.py](dod/tools.py). Fixed code never
