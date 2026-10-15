@@ -78,7 +78,7 @@ ML models are tested on the data's final two years, after being tuned on the two
   helps. Every forecast, weekly or monthly,
   is offered the same four inputs (time of year, business days and holidays, county population, active stores), and
   each is kept only if it helps; ridge regression sees time of year as a smooth yearly wave (sine and cosine),
-  LightGBM as the month number ([benchmark/menu.md](benchmark/menu.md)).
+  while the LightGBM models see the month number instead.
 - **ML testing** is done on records spanning September 2024 to August 2026. The chosen models forecast each week or month using only data from before it, and their
   errors are compared with the baseline's. These are the accuracy figures on every dashboard, and nothing in this
   period was used to make any choice.
