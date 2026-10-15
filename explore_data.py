@@ -58,10 +58,12 @@ QUERIES = {
                                 GROUP BY 1 HAVING count(DISTINCT category_name) > 1)
         GROUP BY 1, 2 ORDER BY 1, 3""",
 
+    # 2016 is split at the reorganization (2016-08-29) so neither half mixes the old and new taxonomies
     "categories_per_year": """
-        SELECT left(ordered_on, 4)::int AS year,
+        SELECT CASE WHEN ordered_on < '2016-08-29' THEN '2016 to Aug 28'
+                    WHEN ordered_on < '2017-01-01' THEN '2016 from Aug 29' ELSE left(ordered_on, 4) END AS period,
                count(DISTINCT category_name) AS category_names, count(DISTINCT category_code) AS category_codes
-        FROM raw.liquor_sales WHERE category_code <> '' GROUP BY 1 ORDER BY 1""",
+        FROM raw.liquor_sales WHERE category_code <> '' GROUP BY 1 ORDER BY min(ordered_on)""",
 
     # one real product, many item numbers: what "Tito's" has to resolve to
     "titos": """
@@ -395,12 +397,14 @@ def fig_blanks(d):
 
 
 def fig_categories(d):
-    c = d["categories_per_year"]
-    f = go.Figure([line(c.year, c.category_names, "Distinct category names", BLUE),
-                   line(c.year, c.category_codes, "Distinct category codes", ORANGE, dash="dot")])
+    c = d["categories_per_year"].set_index("period")   # '2016 to Aug 28', '2016 from Aug 29', '2017', ...
+    before, after = c.category_codes.iloc[0], c.category_codes.iloc[1]
+    f = go.Figure([line(c.index, c.category_names, "Distinct category names", BLUE),
+                   line(c.index, c.category_codes, "Distinct category codes", ORANGE, dash="dot")])
     f.update_traces(mode="lines+markers", marker=dict(size=8))
-    f.update_xaxes(dtick=1)
-    return style(f, "The product taxonomy was reorganized", "count", legend=True)
+    f.update_xaxes(type="category")
+    return style(f, f"Categories were consolidated in August 2016 (about {before:.0f} codes became {after:.0f})", "count",
+                 legend=True)
 
 
 def fig_rtd(d):
@@ -520,7 +524,7 @@ month, so 100% is a normal month and 300% is three times normal.</p>
 {fixed('checked', 'No fix needed: unit price is computed as sales dollars divided by bottles, which are always filled. Blank counties affect only a few percent of early lines, and county comes from the store table instead.')}
 
 <h2>Category codes were reused for different categories</h2>
-<p>Distinct category names and codes per year, and the first 24 reassigned codes.</p>
+<p>Distinct category names and codes per year (2016 split at the August 29 reorganization), and the first 24 reassigned codes.</p>
 {plot(fig_categories(d))}
 {table(cat.head(24).rename(columns={"lines": "records"}), {"records": comma})}
 {fixed('categories', 'Every order line takes its product\'s current category, and retired codes map to the live code with the same name, so all ten years are in today\'s taxonomy.')}
