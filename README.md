@@ -81,8 +81,8 @@ prediction interval is the green band. Gray shading indicates the tuning, testin
 - **ML tuning** uses records from September 2022 to August 2024 and is achieved by comparing 48 different configurations of
   two kinds of ML model, LightGBM (gradient-boosted trees) and ridge regression. Each configuration predicts either the
   sales level, the change from last month or the change from last year, with its own lags and length of history. The best configuration is then compared with
-  the average of the best three, the better of the two is kept, and it is blended with the baseline model if that
-  helps. Every forecast, weekly or monthly,
+  the average of the best three, the better of the two is then kept, and that is blended with the baseline model when
+  that is helpful. Every forecast, weekly or monthly,
   is offered the same four inputs (time of year, business days and holidays, county population, active stores), and
   each is kept only if it helps; ridge regression sees time of year as a smooth yearly wave (sine and cosine),
   while the LightGBM models see the month number instead.
