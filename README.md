@@ -28,9 +28,10 @@ wine) must buy it from the state's Alcoholic Beverages Division (ABD). ABD track
 publishes each as one record at the link above: date, store, product, bottles, dollars and liters. So the "sales"
 here are what stores order, presumed to be a close proxy for what they sell, and they cover spirits only.
 
-This project loads the January 2016 through August 2026 data into a Postgres warehouse (see the diagram below): about
-26 million sales records from almost 3,200 stores ordering about 13,000 distinct products. The warehouse stands in for
-a company's own sales data, with real volume, real seasonality and real data problems, but nothing confidential.
+This project loads the January 2016 through August 2026 data into a Postgres warehouse (see the diagram below)
+containing about 26 million sales records for almost 3,200 stores that are ordering about 13,000 distinct products.
+This warehouse is representative of a real company's sales data, with real volume, real seasonality and real data
+problems, but nothing confidential.
 
 ## How it works
 
