@@ -66,15 +66,6 @@ code then aggregates them over all the selected products and stores (or separate
 Hy-Vee vs Costco) into weekly or monthly time buckets, plus totals by store and by product for the dashboard's map and
 tables. AI never computes the numbers that the ML models train on.
 
-**This solution is fast because of the database, not the model.** AI-written SQL is only as fast as the database it runs on. One index
-on the sales records, by product and then store, lets a request like "Fireball in Linn County" read its 98,000 sales
-instead of all 1.2 million Fireball sales in Iowa: those queries went from about a minute to under a second, with
-identical results. A typical forecast now builds from plain English in under 35 seconds.
-
-**Least privilege.** Postgres runs with password authentication and separate roles. The forecasting agent's login can only read
-the clean tables, with a query time limit. Credentials live in `.env`, are read by Python, and never appear in a prompt.
-
-
 ## The machine learning (ML) pipeline
 
 The ML pipeline is fixed code, the same for every request: it trains, tunes and tests the models. The ML models
@@ -234,6 +225,16 @@ firm uses.
   every number in such sentences back to the computed results: 144 of 144 matched (48 forecasts, 3 runs each, 2026-10-13).
 - [HISTORY.md](HISTORY.md): how the forecasting agent got there, from an AI-filled request form to AI-written SQL
   checked against an answer key.
+
+## Speed and security
+
+**This solution is fast because of the database, not the model.** AI-written SQL is only as fast as the database it runs on. One index
+on the sales records, by product and then store, lets a request like "Fireball in Linn County" read its 98,000 sales
+instead of all 1.2 million Fireball sales in Iowa: those queries went from about a minute to under a second, with
+identical results. A typical forecast now builds from plain English in under 35 seconds.
+
+**Least privilege.** Postgres runs with password authentication and separate roles. The forecasting agent's login can only read
+the clean tables, with a query time limit. Credentials live in `.env`, are read by Python, and never appear in a prompt.
 
 ## Run it yourself
 
