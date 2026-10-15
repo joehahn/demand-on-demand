@@ -339,12 +339,14 @@ def fig_rtd_step(d):
     c = by_category(d)
     c = c[c.index.year <= 2025]  # complete years only
     y = c.groupby(c.index.year)[["ALL LIQUOR", "COCKTAILS/RTD"]].sum()
+    share = 100 * y["COCKTAILS/RTD"].iloc[-1] / y["ALL LIQUOR"].iloc[-1]   # RTD's share of all bottles, latest year
     y = 100 * y / y.loc[2019]
     f = go.Figure([line(y.index, y["ALL LIQUOR"], "All liquor", BLUE),
                    line(y.index, y["COCKTAILS/RTD"], "Cocktails/RTD", ORANGE)])
     f.update_traces(mode="lines+markers", marker=dict(size=8), hovertemplate="%{y:.0f}")
     f.update_xaxes(dtick=1)
-    return style(f, "Bottles per year, 2019 = 100", "index (2019 = 100)", legend=True)
+    return style(f, f"Bottles per year, 2019 = 100 (RTD is about {share:.0f}% of all bottles)", "index (2019 = 100)",
+                 legend=True)
 
 
 def fig_mini_units(d):
