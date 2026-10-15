@@ -21,8 +21,8 @@ answer.
 
 ## The data
 
-[Iowa Liquor Sales](https://data.iowa.gov/catalog?q=liquor+sales) is published by the State of Iowa on the
-[Iowa Data Hub](https://data.iowa.gov/). Iowa is an alcohol control state, so stores that sell liquor (spirits, not
+The [Iowa Liquor Sales](https://data.iowa.gov/catalog?q=liquor+sales) dataset is published by the State of Iowa and
+made available via the [Iowa Data Hub](https://data.iowa.gov/). Iowa is an alcohol control state, so stores that sell liquor (spirits, not
 including beer or wine) must buy it from the state's Alcoholic Beverages Division (ABD). ABD tracks every one of those
 purchases and publishes each as one record at the link above: date, store, product, bottles, dollars and liters. So
 the "sales" here are what stores order, and are assumed here to be a close proxy for what those stores actually sell.
@@ -36,8 +36,8 @@ with real volume, real seasonality and real data problems, but this example cont
 those issues are documented in this project's
 [data exploration page](https://joehahn.github.io/demand-on-demand/data_exploration.html): the state's export repeats
 1.5 million rows; category codes were reassigned in 2016 and a category was recoded in 2022; 254 products were
-renumbered; a sleeve of 12 minis is counted as one bottle; liters were rounded down to whole liters for three
-months; cities are spelled several ways. The data loader, [load_data.py](load_data.py), fixes each one once, in the warehouse, and the
+renumbered; a sleeve of 12 minis was counted as one bottle; liters were rounded down to whole liters for three
+months; cities are spelled several ways. The data loader, [load_data.py](load_data.py), fixes each one once and in the warehouse, and the
 [data fixes page](https://joehahn.github.io/demand-on-demand/data_fixes.html) shows before and after, so that
 every forecast reads clean data.
 
