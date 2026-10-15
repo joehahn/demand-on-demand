@@ -82,31 +82,31 @@ prediction interval is the green band. Gray shading indicates the tuning, testin
   two kinds of ML model, LightGBM (gradient-boosted trees) and ridge regression. Each configuration predicts either the
   sales level, the change from last month or the change from last year, with its own lags and length of history. The best configuration is then compared with
   the average of the best three, the better of the two is then kept, and that is blended with the baseline model when
-  that is helpful. Every forecast, whether it is weekly or monthly, is offered the same four inputs (time of year, business days and
+  that is helpful. Every forecast, whether it is weekly or monthly, is offered the same four features (model inputs: time of year, business days and
   holidays, county population, and the number of stores that placed orders in the past year), and each is kept only
-  if it helps. Ridge regression sees time of year as a smooth yearly wave (sine and cosine), while the LightGBM models
+  if it helps. Ridge regression sees time of year as a smooth yearly wave (sine and cosine) while the LightGBM models
   see the month number instead.
 - **ML testing** uses records from September 2024 to August 2026 and is achieved by having the chosen models forecast
   using only the data that was available when each forecast was made, so no test forecast is contaminated by future data. In Figure 2 they track the holiday peaks closely. The accuracy figures
-  reported on the dashboard are derived by comparing these predictions, and the baseline model's, to actual sales
+  reported on the dashboard are derived by comparing these predictions to actual sales
   during the testing period.
 - **The forecast** reruns the same tuning on the latest two years (the testing period), so the final choice of model,
-  inputs and blend reflects the most recent sales. The chosen models
+  inputs and blend reflects the most recent sales data. The chosen models
   are then trained on all the data through August 2026 (the arrow in Figure 2) to make the forecast.
 
 The baseline model simply predicts whatever sold in the same period one year earlier. It is always one of the
 candidates, and the dashboard shows an ML forecast only when it was more accurate than the baseline model over the
 latest two years.
 
-The models always work in weeks or months. A request for a biweekly, quarterly, half-year or yearly forecast is computed by
+The models always forecast across weeks or months. A request for a biweekly, quarterly, half-year or yearly forecast is computed by
 adding up the weekly or monthly forecasts: biweekly from weeks, the rest from months. Quarters and half-years follow
 the calendar, so the one in progress combines the months already sold with the months still to come. "Next year"
 means the next 12 months and "this year" the calendar year in progress. The models look at most 12 months (52 weeks)
 ahead, the furthest that can still be tested honestly, and the dashboard says so when a request reaches further.
 
-**The dashboard is fixed code too**, with the same layout for
-every request. The AI's only contributions to it are its reading of the request (the title and its assumptions), the
-SQL that was executed in the database, and a one-sentence summary.
+**The dashboard is fixed code too**, and displays results using the same layout
+for every request. The AI's only contributions to it are its read of the request (the title and its assumptions), the
+SQL that was executed in the database, and a one-sentence summary of results.
 
 ## See it live
 
