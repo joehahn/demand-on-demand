@@ -72,17 +72,18 @@ the calendar, so the one in progress combines the months already sold with the m
 means the next 12 months and "this year" the calendar year in progress. The models look at most 12 months (52 weeks)
 ahead, the furthest that can still be tested honestly, and the dashboard says so when a request reaches further.
 
-**The machine learning (ML) pipeline is the same for every request.** Fixed code trains, tunes and tests the models, and splits the
-sales history into three periods:
+**The machine learning (ML) pipeline is the same for every request.** Fixed code trains, tunes and tests the models. The ML models
+are tested on the data's final two years (September 2024 to August 2026), after being tuned on the two years before
+that (September 2022 to August 2024):
 
-- **Tuning** (the two years before the last two): 48 model configurations are compared. Two kinds of ML model,
+- **Tuning** (September 2022 to August 2024): 48 model configurations are compared. Two kinds of ML model,
   LightGBM (gradient-boosted trees) and ridge regression, predict either the sales level, the change from last month
   or the change from last year, with different lags and lengths of history. The best one, or the average of the best
   three, is kept, then blended with the baseline model only as far as that helps. Every forecast, weekly or monthly,
   is offered the same four inputs (time of year, business days and holidays, county population, active stores), and
   each is kept only if it helps; ridge regression sees time of year as a smooth yearly wave (sine and cosine),
   LightGBM as the month number ([benchmark/menu.md](benchmark/menu.md)).
-- **Testing** (the last 24 months): the chosen models forecast each week or month using only data from before it, and their
+- **Testing** (September 2024 to August 2026): the chosen models forecast each week or month using only data from before it, and their
   errors are compared with the baseline's. These are the accuracy figures on every dashboard, and nothing in this
   period was used to make any choice.
 - **Forecast**: the same tuning is repeated on the latest two years, so the settings behind the forecast come from
