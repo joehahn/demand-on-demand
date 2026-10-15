@@ -78,7 +78,7 @@ Figure 2.
 curve). Actual sales are blue, the test forecasts made one month ahead are dotted orange, and the forecast's 80%
 prediction interval is the green band. Gray shading indicates the tuning, testing and forecast intervals.</em></p>
 
-- **ML tuning** is done on records spanning September 2022 to August 2024 by comparing 48 different configurations of
+- **ML tuning** uses records from September 2022 to August 2024 and is achieved by comparing 48 different configurations of
   two kinds of ML model, LightGBM (gradient-boosted trees) and ridge regression. Each configuration predicts either the
   sales level, the change from last month or the change from last year, with its own lags and length of history. The best configuration is then compared with
   the average of the best three, the better of the two is kept, and it is blended with the baseline model if that
@@ -86,8 +86,8 @@ prediction interval is the green band. Gray shading indicates the tuning, testin
   is offered the same four inputs (time of year, business days and holidays, county population, active stores), and
   each is kept only if it helps; ridge regression sees time of year as a smooth yearly wave (sine and cosine),
   while the LightGBM models see the month number instead.
-- **ML testing** is done on records spanning September 2024 to August 2026. The chosen models forecast using only the data that was
-  available when each forecast was made, so no test forecast is contaminated by future data. In Figure 2 they track the holiday peaks closely. The accuracy figures
+- **ML testing** uses records from September 2024 to August 2026 and is achieved by having the chosen models forecast
+  using only the data that was available when each forecast was made, so no test forecast is contaminated by future data. In Figure 2 they track the holiday peaks closely. The accuracy figures
   reported on the dashboard are derived by comparing these predictions, and the baseline model's, to actual sales
   during the testing period.
 - **The forecast** reruns the same tuning on the latest two years (the testing period), so the final choice of model,
