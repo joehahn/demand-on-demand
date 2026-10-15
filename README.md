@@ -53,9 +53,18 @@ more than one way, such as Crown Royal barrel picks listed as "BP CROWN ROYAL"),
 help the agent disambiguate requests: "whiskey" does not include whiskey liqueurs such as Fireball, and "minis" are
 50 ml bottles. The agent's tools are spelled out in [dod/tools.py](dod/tools.py).
 
-**Fixed code does the arithmetic.** The agent's query only decides which records count. Fixed code adds those records
-up itself, into weekly or monthly totals (plus totals by store and by product for the dashboard's map and tables), so
-the AI never computes the numbers the models learn from. The dashboard is fixed code too, with the same layout for
+**Fixed code does the arithmetic.** The agent's query only decides which records to pull from the database. Fixed
+code then aggregates them over all the selected products and stores (or separately for each group compared, such as
+Hy-Vee vs Costco) into weekly or monthly time buckets, plus totals by store and by product for the dashboard's map and
+tables, so the AI never computes the numbers the models learn from.
+
+The models always work in weeks or months. A request for fortnights, quarters, half-years or years is answered by
+adding up the weekly or monthly forecasts: fortnights from weeks, the rest from months. Quarters and half-years follow
+the calendar, so the one in progress combines the months already sold with the months still to come. "Next year"
+means the next 12 months and "this year" the calendar year in progress. The models look at most 12 months (52 weeks)
+ahead, the furthest that can still be tested honestly, and the dashboard says so when a request reaches further.
+
+The dashboard is fixed code too, with the same layout for
 every request. The AI's only contributions to it are its reading of the request (the title and its assumptions), its
 SQL, shown exactly as run, and the one-sentence summary, written by a second short Claude call using only numbers the
 models computed.
