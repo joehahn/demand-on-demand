@@ -68,21 +68,20 @@ tables. AI never computes the numbers that the ML models train on.
 
 ## The machine learning (ML) pipeline
 
-The ML pipeline is fixed code, the same for every request: it trains, tunes and tests the models. The ML models
-are tested on the data's final two years (September 2024 to August 2026), after being tuned on the two years before
-that (September 2022 to August 2024):
+The ML pipeline is fixed code that runs the same way for every request: it trains, tunes and tests the models. The
+ML models are tested on the data's final two years, after being tuned on the two years before that:
 
-- **Tuning** (September 2022 to August 2024): 48 model configurations are compared. Two kinds of ML model,
+- **ML tuning** is done on records spanning September 2022 to August 2024. 48 model configurations are compared. Two kinds of ML model,
   LightGBM (gradient-boosted trees) and ridge regression, predict either the sales level, the change from last month
   or the change from last year, with different lags and lengths of history. The best one, or the average of the best
   three, is kept, then blended with the baseline model only as far as that helps. Every forecast, weekly or monthly,
   is offered the same four inputs (time of year, business days and holidays, county population, active stores), and
   each is kept only if it helps; ridge regression sees time of year as a smooth yearly wave (sine and cosine),
   LightGBM as the month number ([benchmark/menu.md](benchmark/menu.md)).
-- **Testing** (September 2024 to August 2026): the chosen models forecast each week or month using only data from before it, and their
+- **ML testing** is done on records spanning September 2024 to August 2026. The chosen models forecast each week or month using only data from before it, and their
   errors are compared with the baseline's. These are the accuracy figures on every dashboard, and nothing in this
   period was used to make any choice.
-- **Forecast**: the same tuning is repeated on the latest two years, so the settings behind the forecast come from
+- **The forecast** repeats the same tuning on the latest two years, so the settings behind the forecast come from
   the most recent data.
 
 The baseline model simply predicts whatever sold in the same period one year earlier. It is always one of the
