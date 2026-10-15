@@ -82,10 +82,10 @@ prediction interval is the green band. Gray shading indicates the tuning, testin
   two kinds of ML model, LightGBM (gradient-boosted trees) and ridge regression. Each configuration predicts either the
   sales level, the change from last month or the change from last year, with its own lags and length of history. The best configuration is then compared with
   the average of the best three, the better of the two is then kept, and that is blended with the baseline model when
-  that is helpful. Every forecast, weekly or monthly,
-  is offered the same four inputs (time of year, business days and holidays, county population, active stores), and
-  each is kept only if it helps; ridge regression sees time of year as a smooth yearly wave (sine and cosine),
-  while the LightGBM models see the month number instead.
+  that is helpful. Every forecast, whether it is weekly or monthly, is offered the same four inputs (time of year, business days and
+  holidays, county population, and the number of stores that placed orders in the past year), and each is kept only
+  if it helps. Ridge regression sees time of year as a smooth yearly wave (sine and cosine), while the LightGBM models
+  see the month number instead.
 - **ML testing** uses records from September 2024 to August 2026 and is achieved by having the chosen models forecast
   using only the data that was available when each forecast was made, so no test forecast is contaminated by future data. In Figure 2 they track the holiday peaks closely. The accuracy figures
   reported on the dashboard are derived by comparing these predictions, and the baseline model's, to actual sales
