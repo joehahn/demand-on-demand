@@ -69,7 +69,15 @@ tables. AI never computes the numbers that the ML models train on.
 ## The machine learning (ML) pipeline
 
 The ML pipeline is fixed code that runs the same way for every request: it trains, tunes and tests the models. The
-ML models are tested on the data's final two years, after being tuned on the two years prior to that:
+ML models are tested on the data's final two years, after being tuned on the two years prior to that, as Figure 2
+shows for one of the example forecasts:
+
+![Monthly cream liqueur bottles in Iowa: actual sales, one-month-ahead test forecasts during the testing period that track the holiday peaks, and the forecast with its 80% range](docs/ml_pipeline.png)
+
+<p align="center"><em><b>Figure 2.</b> Monthly cream liqueur bottles sold in Iowa (from the
+<a href="https://joehahn.github.io/demand-on-demand/examples/cream_liqueur_holidays.html">holiday cream liqueur dashboard</a>):
+actual sales (blue), the test forecasts made one month ahead (dotted orange) and the forecast with its 80% range
+(green). Shading marks the tuning, testing and forecast periods.</em></p>
 
 - **ML tuning** is done on records spanning September 2022 to August 2024 by comparing 48 different configurations of
   two kinds of ML model, LightGBM (gradient-boosted trees) and ridge regression. Each configuration predicts either the
@@ -80,12 +88,12 @@ ML models are tested on the data's final two years, after being tuned on the two
   each is kept only if it helps; ridge regression sees time of year as a smooth yearly wave (sine and cosine),
   while the LightGBM models see the month number instead.
 - **ML testing** is done on records spanning September 2024 to August 2026. The chosen models forecast using only the data that was
-  available when each forecast was made, so no test forecast is contaminated by future data. The accuracy figures
+  available when each forecast was made, so no test forecast is contaminated by future data. In Figure 2 they track the holiday peaks closely. The accuracy figures
   reported on the dashboard are derived by comparing these predictions, and the baseline model's, to actual sales
   during the testing period.
 - **The forecast** reruns the same tuning on the latest two years (the testing period), so the final choice of model,
   inputs and blend reflects the most recent sales. The chosen models
-  are then trained on all the data through August 2026 to make the forecast.
+  are then trained on all the data through August 2026 (the arrow in Figure 2) to make the forecast.
 
 The baseline model simply predicts whatever sold in the same period one year earlier. It is always one of the
 candidates, and the dashboard shows an ML forecast only when it was more accurate than the baseline model over the
@@ -99,7 +107,7 @@ ahead, the furthest that can still be tested honestly, and the dashboard says so
 
 **The dashboard is fixed code too**, with the same layout for
 every request. The AI's only contributions to it are its reading of the request (the title and its assumptions), the
-SQL that was executed in the database, and the one-sentence summary.
+SQL that was executed in the database, and a one-sentence summary.
 
 ## See it live
 
