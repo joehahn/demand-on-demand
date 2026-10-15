@@ -64,11 +64,6 @@ the calendar, so the one in progress combines the months already sold with the m
 means the next 12 months and "this year" the calendar year in progress. The models look at most 12 months (52 weeks)
 ahead, the furthest that can still be tested honestly, and the dashboard says so when a request reaches further.
 
-The dashboard is fixed code too, with the same layout for
-every request. The AI's only contributions to it are its reading of the request (the title and its assumptions), its
-SQL, shown exactly as run, and the one-sentence summary, written by a second short Claude call using only numbers the
-models computed.
-
 **The machine learning (ML) pipeline is the same for every request.** Fixed code trains, tunes and tests the models, and splits the
 sales history into three periods:
 
@@ -86,6 +81,11 @@ sales history into three periods:
   the most recent data.
 
 The baseline model is always one of the candidates, so the dashboard uses an ML model only when it beats the baseline.
+
+**The dashboard is fixed code too**, with the same layout for
+every request. The AI's only contributions to it are its reading of the request (the title and its assumptions), its
+SQL, shown exactly as run, and the one-sentence summary, written by a second short Claude call using only numbers the
+models computed.
 
 **Clean data, fixed once.** The public data has real problems, documented on the
 [data exploration page](https://joehahn.github.io/demand-on-demand/data_exploration.html): the state's export repeats
