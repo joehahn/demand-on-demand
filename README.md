@@ -128,7 +128,7 @@ included, the 48 model configurations compared, every tool call the agent made, 
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
 
-Requests can ask for weeks, fortnights, months, calendar quarters, half-years, the next 12 months or the calendar
+Requests can ask for weeks, two-week (biweekly) periods, months, calendar quarters, half-years, the next 12 months or the calendar
 year in progress, and can select anything SQL can express, such as the stores in the last example.
 
 ## Using an AI agent + forecasting for market analysis
