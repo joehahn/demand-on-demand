@@ -17,27 +17,29 @@
   <!-- the forecasting agent -->
   <rect x="240" y="55" width="220" height="140" rx="10" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.5"/>
   <text x="350" y="85" text-anchor="middle" font-size="14" font-weight="600" fill="#1f1e1c">Forecasting agent</text>
-  <text x="350" y="107" text-anchor="middle" font-size="12.5" fill="#4a4844">an AI that looks up the</text>
-  <text x="350" y="124" text-anchor="middle" font-size="12.5" fill="#4a4844">products and places named,</text>
-  <text x="350" y="141" text-anchor="middle" font-size="12.5" fill="#4a4844">then writes SQL selecting</text>
-  <text x="350" y="158" text-anchor="middle" font-size="12.5" fill="#4a4844">the sales records to forecast</text>
+  <text x="350" y="107" text-anchor="middle" font-size="12.5" fill="#4a4844">AI looks up products and</text>
+  <text x="350" y="124" text-anchor="middle" font-size="12.5" fill="#4a4844">places, writes SQL to select</text>
+  <text x="350" y="141" text-anchor="middle" font-size="12.5" fill="#4a4844">the records needed by</text>
+  <text x="350" y="158" text-anchor="middle" font-size="12.5" fill="#4a4844">the ML models</text>
   <text x="350" y="180" text-anchor="middle" font-size="11.5" fill="#6b6964">about 15 seconds</text>
 
   <!-- fixed code -->
   <rect x="530" y="55" width="220" height="140" rx="10" fill="#f6f5f2" stroke="#c9c7c1"/>
   <text x="640" y="85" text-anchor="middle" font-size="14" font-weight="600" fill="#1f1e1c">Fixed Python code</text>
-  <text x="640" y="108" text-anchor="middle" font-size="12.5" fill="#4a4844">sums, inputs, tuning,</text>
-  <text x="640" y="127" text-anchor="middle" font-size="12.5" fill="#4a4844">backtest vs the same</text>
-  <text x="640" y="145" text-anchor="middle" font-size="12.5" fill="#4a4844">period last year</text>
-  <text x="640" y="172" text-anchor="middle" font-size="11.5" fill="#6b6964">about 10 seconds</text>
+  <text x="640" y="107" text-anchor="middle" font-size="12.5" fill="#4a4844">sums records by week or month,</text>
+  <text x="640" y="124" text-anchor="middle" font-size="12.5" fill="#4a4844">trains and tunes ML models,</text>
+  <text x="640" y="141" text-anchor="middle" font-size="12.5" fill="#4a4844">tests them against last</text>
+  <text x="640" y="158" text-anchor="middle" font-size="12.5" fill="#4a4844">year's sales (the baseline)</text>
+  <text x="640" y="180" text-anchor="middle" font-size="11.5" fill="#6b6964">about 10 seconds</text>
 
   <!-- dashboard -->
   <rect x="800" y="55" width="180" height="140" rx="10" fill="#f6f5f2" stroke="#c9c7c1"/>
   <text x="890" y="85" text-anchor="middle" font-size="14" font-weight="600" fill="#1f1e1c">Dashboard</text>
-  <text x="890" y="108" text-anchor="middle" font-size="12.5" fill="#4a4844">forecast, 80% range,</text>
-  <text x="890" y="127" text-anchor="middle" font-size="12.5" fill="#4a4844">how far to trust it</text>
-  <text x="890" y="150" text-anchor="middle" font-size="11.5" fill="#6b6964">+ one summary sentence</text>
-  <text x="890" y="166" text-anchor="middle" font-size="11.5" fill="#6b6964">written by Claude</text>
+  <text x="890" y="107" text-anchor="middle" font-size="12.5" fill="#4a4844">forecast, test results</text>
+  <text x="890" y="124" text-anchor="middle" font-size="12.5" fill="#4a4844">and accuracy metrics</text>
+  <rect x="812" y="138" width="156" height="44" rx="7" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.2"/>
+  <text x="890" y="156" text-anchor="middle" font-size="11.5" fill="#1f1e1c">AI writes a</text>
+  <text x="890" y="172" text-anchor="middle" font-size="11.5" fill="#1f1e1c">one-sentence summary</text>
 
   <!-- warehouse -->
   <rect x="380" y="255" width="300" height="56" rx="10" fill="#ffffff" stroke="#c9c7c1" stroke-dasharray="5 4"/>
