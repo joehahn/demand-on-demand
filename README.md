@@ -4,8 +4,8 @@
 
 A business user types a question like *"monthly forecast of Tito's minis in Des Moines for the next 5 months"*.
 A single Claude agent with read-only tools (the forecasting agent: Claude Sonnet 5 via the Claude API) turns the words
-into one SQL query that picks the right orders from a company-style Postgres warehouse of 26 million Iowa liquor orders (2016 to 2026). Fixed
-Python code then adds them up by week or month, tunes and tests the models against the simplest honest benchmark, the
+into one SQL query that picks the right sales records from a company-style Postgres warehouse built from the State of
+Iowa's public liquor sales data ([details below](#the-data)). Fixed Python code then adds them up by week or month, tunes and tests the models against the simplest honest benchmark, the
 same period last year, and publishes a dashboard that says how far to trust the answer.
 
 | | |
@@ -18,6 +18,19 @@ same period last year, and publishes a dashboard that says how far to trust the 
 **Author:** Joseph M. Hahn, Ph.D., independent AI and machine learning consultant  
 [jmh-datasciences.com](https://jmh-datasciences.com) · [LinkedIn](https://www.linkedin.com/in/hahnjoe) · joe.hahn@jmh-datasciences.com  
 **Built end-to-end with Claude Code.** · **License:** [MIT](#license-and-data)
+
+## The data
+
+[Iowa Liquor Sales](https://data.iowa.gov/catalog?q=liquor+sales), published by the State of Iowa on the Iowa Data Hub
+(one dataset per year, CC BY 4.0). Iowa is an alcohol control state: every store licensed to sell liquor for off-premises
+consumption (liquor stores, grocery stores, convenience stores, big-box clubs) buys its spirits from the state's
+Alcoholic Beverages Division, and each purchase is published as one record: date, store, product, bottles, dollars
+and liters. So the "sales" here are what stores order, a close proxy for what they sell, and they cover spirits only
+(no beer or wine).
+
+This project loads January 2016 through August 2026: 26.4 million sales records from 3,199 stores and 13,443
+products. It plays the part of a company's sales warehouse: real volume, real seasonality and real data problems,
+with no confidential data.
 
 ## How it works
 
@@ -235,7 +248,7 @@ time series) · [diplomacy-A2A](https://github.com/joehahn/diplomacy-A2A) (seven
 
 Code and writing: [MIT](LICENSE).
 
-**Data:** [Iowa Liquor Sales](https://catalog.data.gov/dataset?q=iowa+liquor+sales), State of Iowa, via the Iowa Data
+**Data:** [Iowa Liquor Sales](https://data.iowa.gov/catalog?q=liquor+sales), State of Iowa, via the Iowa Data
 Hub, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); modified (duplicates removed, cleaned,
 aggregated). County population and income: U.S. Census Bureau. Not endorsed by the State of Iowa. Brand names appear
 only as they do in the public data. Raw data is not stored in this repo; the loader downloads it.
