@@ -8,7 +8,7 @@
   <rect y="40" width="1000" height="290" rx="12" fill="#ffffff"/>
 
   <!-- the person and their assistant -->
-  <rect x="20" y="55" width="170" height="140" rx="10" fill="#f6f5f2" stroke="#c9c7c1"/>
+  <rect x="20" y="55" width="170" height="140" rx="10" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.5"/>
   <text x="105" y="85" text-anchor="middle" font-size="14" font-weight="600" fill="#1f1e1c">You</text>
   <text x="105" y="114" text-anchor="middle" font-size="12.5" fill="#4a4844">enter a plain-English</text>
   <text x="105" y="133" text-anchor="middle" font-size="12.5" fill="#4a4844">request into an</text>
@@ -18,9 +18,9 @@
   <rect x="240" y="55" width="220" height="140" rx="10" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.5"/>
   <text x="350" y="85" text-anchor="middle" font-size="14" font-weight="600" fill="#1f1e1c">Forecasting agent</text>
   <text x="350" y="107" text-anchor="middle" font-size="12.5" fill="#4a4844">AI looks up products and</text>
-  <text x="350" y="124" text-anchor="middle" font-size="12.5" fill="#4a4844">places, writes SQL to select</text>
-  <text x="350" y="141" text-anchor="middle" font-size="12.5" fill="#4a4844">the records needed by</text>
-  <text x="350" y="158" text-anchor="middle" font-size="12.5" fill="#4a4844">the ML models</text>
+  <text x="350" y="124" text-anchor="middle" font-size="12.5" fill="#4a4844">places and writes SQL to</text>
+  <text x="350" y="141" text-anchor="middle" font-size="12.5" fill="#4a4844">select the records needed</text>
+  <text x="350" y="158" text-anchor="middle" font-size="12.5" fill="#4a4844">by the ML models</text>
   <text x="350" y="180" text-anchor="middle" font-size="11.5" fill="#6b6964">about 15 seconds</text>
 
   <!-- fixed code -->
@@ -28,23 +28,24 @@
   <text x="640" y="85" text-anchor="middle" font-size="14" font-weight="600" fill="#1f1e1c">Fixed Python code</text>
   <text x="640" y="107" text-anchor="middle" font-size="12.5" fill="#4a4844">sums records by week or month,</text>
   <text x="640" y="124" text-anchor="middle" font-size="12.5" fill="#4a4844">trains and tunes ML models,</text>
-  <text x="640" y="141" text-anchor="middle" font-size="12.5" fill="#4a4844">tests them against last</text>
-  <text x="640" y="158" text-anchor="middle" font-size="12.5" fill="#4a4844">year's sales (the baseline)</text>
+  <text x="640" y="141" text-anchor="middle" font-size="12.5" fill="#4a4844">tests the models and</text>
+  <text x="640" y="158" text-anchor="middle" font-size="12.5" fill="#4a4844">compares them to the baseline</text>
   <text x="640" y="180" text-anchor="middle" font-size="11.5" fill="#6b6964">about 10 seconds</text>
 
   <!-- dashboard -->
   <rect x="800" y="55" width="180" height="140" rx="10" fill="#f6f5f2" stroke="#c9c7c1"/>
   <text x="890" y="85" text-anchor="middle" font-size="14" font-weight="600" fill="#1f1e1c">Dashboard</text>
-  <text x="890" y="107" text-anchor="middle" font-size="12.5" fill="#4a4844">forecast, test results</text>
-  <text x="890" y="124" text-anchor="middle" font-size="12.5" fill="#4a4844">and accuracy metrics</text>
-  <rect x="812" y="138" width="156" height="44" rx="7" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.2"/>
-  <text x="890" y="156" text-anchor="middle" font-size="11.5" fill="#1f1e1c">AI writes a</text>
-  <text x="890" y="172" text-anchor="middle" font-size="11.5" fill="#1f1e1c">one-sentence summary</text>
+  <text x="890" y="104" text-anchor="middle" font-size="12.5" fill="#4a4844">visualizes the forecast,</text>
+  <text x="890" y="120" text-anchor="middle" font-size="12.5" fill="#4a4844">test results and accuracy</text>
+  <rect x="812" y="130" width="156" height="38" rx="7" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.2"/>
+  <text x="890" y="145" text-anchor="middle" font-size="11.5" fill="#1f1e1c">AI writes a</text>
+  <text x="890" y="160" text-anchor="middle" font-size="11.5" fill="#1f1e1c">one-sentence summary</text>
+  <text x="890" y="182" text-anchor="middle" font-size="11.5" fill="#6b6964">about 2 seconds</text>
 
   <!-- warehouse -->
   <rect x="380" y="255" width="300" height="56" rx="10" fill="#ffffff" stroke="#c9c7c1" stroke-dasharray="5 4"/>
-  <text x="530" y="279" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f1e1c">Clean Postgres warehouse</text>
-  <text x="530" y="298" text-anchor="middle" font-size="11.5" fill="#6b6964">26M sales records, fixed once at load time</text>
+  <text x="530" y="279" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f1e1c">Postgres warehouse</text>
+  <text x="530" y="298" text-anchor="middle" font-size="11.5" fill="#6b6964">26M sales records</text>
 
   <!-- request and data flow -->
   <g stroke="#6b6964" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
@@ -52,7 +53,7 @@
     <line x1="460" y1="125" x2="526" y2="125"/>
     <line x1="750" y1="125" x2="796" y2="125"/>
   </g>
-  <text x="493" y="116" text-anchor="middle" font-size="10.5" fill="#6b6964">its SQL +</text>
+  <text x="493" y="116" text-anchor="middle" font-size="10.5" fill="#6b6964">SQL +</text>
   <text x="493" y="145" text-anchor="middle" font-size="10.5" fill="#6b6964">how it read</text>
   <text x="493" y="158" text-anchor="middle" font-size="10.5" fill="#6b6964">the request</text>
 
@@ -62,6 +63,6 @@
     <line x1="640" y1="195" x2="590" y2="252"/>
   </g>
   <text x="408" y="236" text-anchor="end" font-size="10.5" fill="#6b6964">reads (read-only)</text>
-  <text x="620" y="236" font-size="10.5" fill="#6b6964">reads</text>
+  <text x="620" y="236" font-size="10.5" fill="#6b6964">reads (read-only)</text>
 
 </svg>
