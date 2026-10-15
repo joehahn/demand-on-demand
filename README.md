@@ -83,8 +83,9 @@ ML models are tested on the data's final two years, after being tuned on the two
   available when each forecast was made, so no test forecast is contaminated by future data. The accuracy figures
   reported on the dashboard are derived by comparing these predictions, and the baseline model's, to actual sales
   during the testing period.
-- **The forecast** repeats the same tuning on the latest two years, so the settings behind the forecast come from
-  the most recent data.
+- **The forecast** reruns the same tuning on the latest two years (the testing period), so the final choice of model,
+  inputs and blend reflects the most recent sales; it may differ from the choice that was tested. The chosen models
+  are then trained on all the data through August 2026 to make the forecast.
 
 The baseline model simply predicts whatever sold in the same period one year earlier. It is always one of the
 candidates, so the dashboard uses an ML model only when it beats the baseline.
