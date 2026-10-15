@@ -69,14 +69,14 @@ tables. AI never computes the numbers that the ML models train on.
 ## The machine learning (ML) pipeline
 
 The ML pipeline is fixed code that runs the same way for every request: it trains, tunes and tests the models. The
-ML models are tested on the data's final two years, after being tuned on the two years prior to that, as Figure 2
-shows for one of the example forecasts:
+ML models are tested on the data's final two years, after being tuned on the two years prior to that; see
+Figure 2.
 
 ![Monthly cream liqueur bottles in Iowa: actual sales, one-month-ahead test forecasts during the testing period that track the holiday peaks, and the forecast with its 80% range](docs/ml_pipeline.png)
 
-<p align="center"><em><b>Figure 2.</b> Monthly cream liqueur bottles sold across Iowa, forecast 4 months out. Actual
-sales are blue, the test forecasts made one month ahead are dotted orange, and the forecast with its 80% range is
-green. Shading marks the tuning, testing and forecast periods.</em></p>
+<p align="center"><em><b>Figure 2.</b> Monthly cream liqueur bottles sold across Iowa, forecasted 4 months out (green
+curve). Actual sales are blue, the test forecasts made one month ahead are dotted orange, and the forecast's 80%
+prediction interval is the green band. Gray shading indicates the tuning, testing and forecast intervals.</em></p>
 
 - **ML tuning** is done on records spanning September 2022 to August 2024 by comparing 48 different configurations of
   two kinds of ML model, LightGBM (gradient-boosted trees) and ridge regression. Each configuration predicts either the
