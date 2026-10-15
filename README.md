@@ -98,9 +98,8 @@ means the next 12 months and "this year" the calendar year in progress. The mode
 ahead, the furthest that can still be tested honestly, and the dashboard says so when a request reaches further.
 
 **The dashboard is fixed code too**, with the same layout for
-every request. The AI's only contributions to it are its reading of the request (the title and its assumptions), its
-SQL, shown exactly as run, and the one-sentence summary, written by a second short Claude call using only numbers the
-models computed.
+every request. The AI's only contributions to it are its reading of the request (the title and its assumptions), the
+SQL that was executed in the database, and the one-sentence summary.
 
 ## See it live
 
@@ -127,8 +126,8 @@ included, the 48 model configurations compared, every tool call the agent made, 
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 30 sampled forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
 
-Requests can ask for weeks, two-week (biweekly) periods, months, calendar quarters, half-years, the next 12 months or the calendar
-year in progress, and can select anything SQL can express, such as the stores in the last example.
+Requests can ask for weeks, biweekly periods, months, calendar quarters, half-years, the next 12 months or the
+calendar year in progress, and can select anything SQL can express, such as the stores in the last example.
 
 ## Using an AI agent + forecasting for market analysis
 
