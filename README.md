@@ -46,11 +46,11 @@ Tito's minis in Des Moines for the next 5 months"*. The search finds Tito's in s
 only the 50 ml minis: the single mini and the mini 4-pack. "Des Moines" is trickier: it could mean the city (131
 stores), the city plus its neighbor West Des Moines (66 more), or all of Polk County, and a county-name search would
 even match Des Moines County. And in this case the agent picks the city and says so on the dashboard, where the
-requester can check it. It then writes one SQL query that selects all of the relevant records and their measure,
-which can be dollars, bottles or liters. Its instructions ([dod/agent.py](dod/agent.py)) warn it about three traps in
-this warehouse (products that were renumbered, categories whose codes changed, and brand names that also start other
-brands' names) and include a short glossary of the company's definitions, such as "minis are 50 ml bottles" and
-"whiskey does not include whiskey liqueur". Its tools are in [dod/tools.py](dod/tools.py).
+requester can check it. It then writes one SQL query to select all of the relevant records and their measure,
+which can be dollars, bottles or liters. The agent's instructions, [dod/agent.py](dod/agent.py), warn it about the
+data's known peculiarities (product IDs that changed, category codes that changed, and brand names that also start
+other brands' names), and also include a short glossary of the company's definitions, such as "minis are 50 ml
+bottles" and "whiskey is distinct from whiskey liqueur". Its tools are in [dod/tools.py](dod/tools.py).
 
 **Fixed code does the arithmetic.** The agent's query only decides which records count. Fixed code adds those records
 up itself, into weekly or monthly totals (plus totals by store and by product for the dashboard's map and tables), so
