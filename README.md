@@ -111,16 +111,17 @@ SQL that was executed in the database, and a one-sentence summary of results.
 ## See it live
 
 - **[Data exploration](https://joehahn.github.io/demand-on-demand/data_exploration.html)**: what 26 million orders look like: volume by day, month and
-  year, seasonality (flat statewide, 3x to 8x swings in slices like cream liqueurs and gift packs), and every data
-  problem found while loading.
-- **[Data fixes](https://joehahn.github.io/demand-on-demand/data_fixes.html)**: each problem, the fix applied once in the warehouse, and before and after.
-- **[Data dictionary](https://joehahn.github.io/demand-on-demand/data_dictionary.html)**: every table and column, exactly as the
-  forecasting agent is told about them at the start of each request (written once by the loader, stored as database comments).
+  year, seasonality (flat statewide but 3x to 8x swings in slices like cream liqueurs and gift packs), and every known
+  data problem.
+- **[Data fixes](https://joehahn.github.io/demand-on-demand/data_fixes.html)**: each problem and the fix applied once in the warehouse.
+- **[Data dictionary](https://joehahn.github.io/demand-on-demand/data_dictionary.html)**: every table and column, and what the
+  forecasting agent is told about them at the beginning of each request.
 
 **Example forecasts.** Each was made by the forecasting agent from the plain-English request shown.
-Each dashboard is one page with how the request was read, the forecast chart and table (with an 80% range), the
-backtest against the same period last year, the table the model learns from, which inputs helped, a map of the stores
-included, the 48 model configurations compared, every tool call the agent made, and the exact SQL that ran.
+Each request's dashboard shows how its request was interpreted, the resulting forecast chart and table with the
+forecast's 80% interval, the backtested forecast against actuals from one year prior, the table the model learns from,
+which features improved model accuracy, a map of the stores included, the 48 model configurations compared, every
+tool call the agent made, and the SQL the AI composed to pull data from the warehouse.
 
 | request | backtest vs same period last year | built from scratch |
 |---|---|---|
