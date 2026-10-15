@@ -48,9 +48,10 @@ stores), the city plus its neighbor West Des Moines (66 more), or all of Polk Co
 even match Des Moines County. And in this case the agent picks the city and says so on the dashboard, where the
 requester can check it. It then writes one SQL query to select all of the relevant records and their measure,
 which can be dollars, bottles or liters. The agent's instructions, [dod/agent.py](dod/agent.py), warn it about the
-data's known peculiarities (product IDs that changed, category codes that changed, and brand names that also start
-other brands' names), and also include a short glossary of the company's definitions for words a request could
-read two ways: "whiskey" does not include whiskey liqueurs such as Fireball, and "minis" are 50 ml bottles. The agent's tools are spelled out in [dod/tools.py](dod/tools.py).
+data's known peculiarities (product IDs and category codes that change at various times, and brand names written in
+more than one way, such as Crown Royal barrel picks listed as "BP CROWN ROYAL"), and also include a short glossary to
+help the agent disambiguate requests: "whiskey" does not include whiskey liqueurs such as Fireball, and "minis" are
+50 ml bottles. The agent's tools are spelled out in [dod/tools.py](dod/tools.py).
 
 **Fixed code does the arithmetic.** The agent's query only decides which records count. Fixed code adds those records
 up itself, into weekly or monthly totals (plus totals by store and by product for the dashboard's map and tables), so
