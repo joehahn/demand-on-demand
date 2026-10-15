@@ -16,11 +16,12 @@
 
   <!-- the forecasting agent -->
   <rect x="240" y="55" width="220" height="140" rx="10" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.5"/>
-  <text x="350" y="85" text-anchor="middle" font-size="14" font-weight="600" fill="#1f1e1c">Forecasting agent (Claude)</text>
-  <text x="350" y="108" text-anchor="middle" font-size="12.5" fill="#4a4844">read-only lookup tools</text>
-  <text x="350" y="127" text-anchor="middle" font-size="12.5" fill="#4a4844">writes SQL selecting</text>
-  <text x="350" y="145" text-anchor="middle" font-size="12.5" fill="#4a4844">the sales records</text>
-  <text x="350" y="172" text-anchor="middle" font-size="11.5" fill="#6b6964">about 4 calls, 15 seconds</text>
+  <text x="350" y="85" text-anchor="middle" font-size="14" font-weight="600" fill="#1f1e1c">Forecasting agent</text>
+  <text x="350" y="107" text-anchor="middle" font-size="12.5" fill="#4a4844">an AI that looks up the</text>
+  <text x="350" y="124" text-anchor="middle" font-size="12.5" fill="#4a4844">products and places named,</text>
+  <text x="350" y="141" text-anchor="middle" font-size="12.5" fill="#4a4844">then writes SQL selecting</text>
+  <text x="350" y="158" text-anchor="middle" font-size="12.5" fill="#4a4844">the sales records to forecast</text>
+  <text x="350" y="180" text-anchor="middle" font-size="11.5" fill="#6b6964">about 15 seconds</text>
 
   <!-- fixed code -->
   <rect x="530" y="55" width="220" height="140" rx="10" fill="#f6f5f2" stroke="#c9c7c1"/>
