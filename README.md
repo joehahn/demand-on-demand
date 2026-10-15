@@ -64,9 +64,9 @@ help the agent disambiguate requests, such as defining "whiskey" to exclude whis
 **Fixed code does the arithmetic.** The agent's query only decides which records to pull from the database. Fixed
 code then aggregates them over all the selected products and stores (or separately for each group compared, such as
 Hy-Vee vs Costco) into weekly or monthly time buckets, plus totals by store and by product for the dashboard's map and
-tables. So the AI never computes the numbers the models learn from.
+tables. AI never computes the numbers that the ML models train on.
 
-**Fast because of the database, not the model.** AI-written SQL is only as fast as the database it runs on. One index
+**This solution is fast because of the database, not the model.** AI-written SQL is only as fast as the database it runs on. One index
 on the sales records, by product and then store, lets a request like "Fireball in Linn County" read its 98,000 sales
 instead of all 1.2 million Fireball sales in Iowa: those queries went from about a minute to under a second, with
 identical results. A typical forecast now builds from plain English in under 35 seconds.
