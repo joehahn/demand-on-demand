@@ -38,10 +38,10 @@ problems, but nothing confidential.
 1.5 million rows; category codes were reassigned in 2016 and a category was recoded in 2022; 254 products were
 renumbered; a sleeve of 12 minis is counted as one bottle; liters were rounded down to whole liters for three
 months; cities are spelled several ways. The data loader, [load_data.py](load_data.py), fixes each one once, in the warehouse, and the
-[data fixes page](https://joehahn.github.io/demand-on-demand/data_fixes.html) shows before and after, so every
-forecast reads cleaned data.
+[data fixes page](https://joehahn.github.io/demand-on-demand/data_fixes.html) shows before and after, so that
+every forecast reads clean data.
 
-## How it works
+## How the forecasting agent works
 
 ![A plain-English request goes from you to the forecasting agent, which writes SQL; fixed Python code sums, tunes and backtests; a dashboard shows the forecast. Both read the Postgres warehouse.](docs/how_it_works.svg)
 
