@@ -88,7 +88,8 @@ ML models are tested on the data's final two years, after being tuned on the two
   are then trained on all the data through August 2026 to make the forecast.
 
 The baseline model simply predicts whatever sold in the same period one year earlier. It is always one of the
-candidates, so the dashboard uses an ML model only when it beats the baseline.
+candidates, and the dashboard shows an ML forecast only when it was more accurate than the baseline model over the
+latest two years.
 
 The models always work in weeks or months. A request for two-week (biweekly) periods, quarters, half-years or years is answered by
 adding up the weekly or monthly forecasts: two-week periods from weeks, the rest from months. Quarters and half-years follow
