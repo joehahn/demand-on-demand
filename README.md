@@ -4,9 +4,8 @@
 
 A business user types a question like *"monthly forecast of Tito's minis in Des Moines for the next 5 months"*.
 A single Claude agent with read-only tools turns the words into one SQL query that selects the required sales
-records from a company-style Postgres warehouse built from the State of Iowa's public liquor sales data,
-[details below](#the-data). Deterministic Python code then sums those transactions by week or month, tunes and tests
-various machine learning models against a baseline model, and publishes a dashboard that says how far to trust the
+records from a company-style Postgres warehouse built from the [State of Iowa's public liquor sales data](#the-data). Deterministic Python code then sums those transactions by week or month, tunes and tests
+various machine learning models against a simple baseline model, and publishes a dashboard that says how far to trust the
 answer.
 
 | | |
@@ -22,18 +21,19 @@ answer.
 
 ## The data
 
-[Iowa Liquor Sales](https://data.iowa.gov/catalog?q=liquor+sales), published by the State of Iowa on the Iowa Data Hub.
-Iowa is an alcohol control state, so liquor, grocery and convenience stores that sell liquor (spirits, not beer or
-wine) must buy it from the state's Alcoholic Beverages Division (ABD). ABD tracks every one of those purchases and
-publishes each as one record at the link above: date, store, product, bottles, dollars and liters. So the "sales"
-here are what stores order, presumed to be a close proxy for what they sell, and they cover spirits only.
+[Iowa Liquor Sales](https://data.iowa.gov/catalog?q=liquor+sales) is published by the State of Iowa on the
+[Iowa Data Hub](https://data.iowa.gov/). Iowa is an alcohol control state, so stores that sell liquor (spirits, not
+including beer or wine) must buy it from the state's Alcoholic Beverages Division (ABD). ABD tracks every one of those
+purchases and publishes each as one record at the link above: date, store, product, bottles, dollars and liters. So
+the "sales" here are what stores order, and are assumed here to be a close proxy for what those stores actually sell.
 
-This project loads the January 2016 through August 2026 data into a Postgres warehouse (see Figure 1 below)
-containing about 26 million sales records for almost 3,200 stores that are ordering about 13,000 distinct products.
-This warehouse is representative of a real company's sales data, with real volume, real seasonality and real data
-problems, but nothing confidential.
+This project loads the January 2016 through August 2026 Iowa liquor sales data into a Postgres warehouse (see Figure 1
+below) containing about 26 million sales records for almost 3,200 stores in all 99 Iowa counties that are ordering
+about 13,000 distinct products. This data warehouse is intended to be representative of a real company's sales data,
+with real volume, real seasonality and real data problems, but this example contains nothing confidential.
 
-**Clean data, fixed once.** The public data has real problems, documented in this project's
+**Clean data, fixed once.** The public data also has the usual problems that many other business datasets have, and
+those issues are documented in this project's
 [data exploration page](https://joehahn.github.io/demand-on-demand/data_exploration.html): the state's export repeats
 1.5 million rows; category codes were reassigned in 2016 and a category was recoded in 2022; 254 products were
 renumbered; a sleeve of 12 minis is counted as one bottle; liters were rounded down to whole liters for three
