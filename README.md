@@ -47,19 +47,19 @@ every forecast reads clean data.
 
 <p align="center"><em><b>Figure 1.</b> How a plain-English request becomes a tested forecast. Blue indicates where AI is used.</em></p>
 
-**The AI decides what to forecast while fixed code handles everything else.** The forecasting agent (Claude Sonnet 5 via the Claude API) has four tools:
+**The AI decides what to forecast while fixed code handles everything else.** The forecasting agent (this example uses Claude Sonnet 5 via the Claude API) has four tools:
 (i) search the database for relevant products and places, (ii) try a test query on the data to see what it returns,
 (iii) ask the user a clarifying question, and (iv) submit its SQL query to the fixed code. Take *"monthly forecast of
 Tito's minis in Des Moines for the next 5 months"*. The search finds Tito's in seven bottle sizes, so the agent keeps
 only the 50 ml minis: the single mini and the mini 4-pack. "Des Moines" is trickier: it could mean the city (131
 stores), the city plus its neighbor West Des Moines (66 more), or all of Polk County, and a county-name search would
-even match Des Moines County. And in this case the agent picks the city and says so on the dashboard, where the
-requester can check it. It then writes one SQL query to select all of the relevant records and their measure,
+even match Des Moines County. But in this case the agent picks the city and says so on the dashboard, which is
+where the requester would check the agent's results. It then writes one SQL query to select all of the relevant records and their measure,
 which can be dollars, bottles or liters. The agent's instructions, [dod/agent.py](dod/agent.py), warn it about the
 data's known peculiarities (product IDs and category codes that change at various times, and brand names written in
 more than one way, such as Crown Royal barrel picks listed as "BP CROWN ROYAL"), and also include a short glossary to
-help the agent disambiguate requests: "whiskey" does not include whiskey liqueurs such as Fireball, and "minis" are
-50 ml bottles. The agent's tools are spelled out in [dod/tools.py](dod/tools.py).
+help the agent disambiguate requests, such as defining "whiskey" to exclude whiskey liqueurs (like Fireball) and
+"minis" as 50 ml bottles. The agent's tools are spelled out in [dod/tools.py](dod/tools.py).
 
 **Fixed code does the arithmetic.** The agent's query only decides which records to pull from the database. Fixed
 code then aggregates them over all the selected products and stores (or separately for each group compared, such as
