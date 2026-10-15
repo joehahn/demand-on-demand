@@ -50,7 +50,7 @@ requester can check it. It then writes one SQL query to select all of the releva
 which can be dollars, bottles or liters. The agent's instructions, [dod/agent.py](dod/agent.py), warn it about the
 data's known peculiarities (product IDs that changed, category codes that changed, and brand names that also start
 other brands' names), and also include a short glossary of the company's definitions, such as "minis are 50 ml
-bottles" and "whiskey is distinct from whiskey liqueur". Its tools are in [dod/tools.py](dod/tools.py).
+bottles" and "whiskey is distinct from whiskey liqueur". The agent's tools are spelled out in [dod/tools.py](dod/tools.py).
 
 **Fixed code does the arithmetic.** The agent's query only decides which records count. Fixed code adds those records
 up itself, into weekly or monthly totals (plus totals by store and by product for the dashboard's map and tables), so
