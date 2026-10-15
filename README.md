@@ -91,8 +91,8 @@ The baseline model simply predicts whatever sold in the same period one year ear
 candidates, and the dashboard shows an ML forecast only when it was more accurate than the baseline model over the
 latest two years.
 
-The models always work in weeks or months. A request for two-week (biweekly) periods, quarters, half-years or years is answered by
-adding up the weekly or monthly forecasts: two-week periods from weeks, the rest from months. Quarters and half-years follow
+The models always work in weeks or months. A request for a biweekly, quarterly, half-year or yearly forecast is computed by
+adding up the weekly or monthly forecasts: biweekly from weeks, the rest from months. Quarters and half-years follow
 the calendar, so the one in progress combines the months already sold with the months still to come. "Next year"
 means the next 12 months and "this year" the calendar year in progress. The models look at most 12 months (52 weeks)
 ahead, the furthest that can still be tested honestly, and the dashboard says so when a request reaches further.
