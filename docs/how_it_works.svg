@@ -8,11 +8,10 @@
   <rect y="40" width="1000" height="290" rx="12" fill="#ffffff"/>
 
   <!-- the person and their assistant -->
-  <rect x="20" y="55" width="170" height="140" rx="10" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.5"/>
+  <rect x="20" y="55" width="170" height="140" rx="10" fill="#fdf6d8" stroke="#d9c26a" stroke-width="1.5"/>
   <text x="105" y="85" text-anchor="middle" font-size="14" font-weight="600" fill="#1f1e1c">You</text>
-  <text x="105" y="114" text-anchor="middle" font-size="12.5" fill="#4a4844">enter a plain-English</text>
-  <text x="105" y="133" text-anchor="middle" font-size="12.5" fill="#4a4844">request into an</text>
-  <text x="105" y="152" text-anchor="middle" font-size="12.5" fill="#4a4844">AI assistant</text>
+  <text x="105" y="122" text-anchor="middle" font-size="12.5" fill="#4a4844">enter a plain-English</text>
+  <text x="105" y="141" text-anchor="middle" font-size="12.5" fill="#4a4844">request</text>
 
   <!-- the forecasting agent -->
   <rect x="240" y="55" width="220" height="140" rx="10" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.5"/>
@@ -62,7 +61,7 @@
     <line x1="350" y1="195" x2="455" y2="252"/>
     <line x1="640" y1="195" x2="590" y2="252"/>
   </g>
-  <text x="408" y="236" text-anchor="end" font-size="10.5" fill="#6b6964">reads (read-only)</text>
-  <text x="620" y="236" font-size="10.5" fill="#6b6964">reads (read-only)</text>
+  <text x="408" y="236" text-anchor="end" font-size="10.5" fill="#6b6964">read only</text>
+  <text x="620" y="236" font-size="10.5" fill="#6b6964">read only</text>
 
 </svg>
