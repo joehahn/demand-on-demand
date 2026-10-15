@@ -1,17 +1,17 @@
 # demand-on-demand
 
-**Ask for a demand forecast in plain English. Get a tested forecast and dashboard in under a minute.**
+**Ask for a demand forecast in plain English, get a tested forecast and dashboard in under a minute.**
 
 A business user types a question like *"monthly forecast of Tito's minis in Des Moines for the next 5 months"*.
-A single Claude agent with read-only tools (the forecasting agent: Claude Sonnet 5 via the Claude API) turns the words
-into one SQL query that picks the right sales records from a company-style Postgres warehouse built from the State of
-Iowa's public liquor sales data ([details below](#the-data)). Fixed Python code then adds them up by week or month,
-tunes and tests various machine learning (ML) models against a baseline model (which predicts whatever was
-sold in the same period one year earlier), and publishes a dashboard that says how far to trust the answer.
+A single Claude agent with read-only tools turns the words into one SQL query that selects the required sales
+records from a company-style Postgres warehouse built from the State of Iowa's public liquor sales data,
+[details below](#the-data). Deterministic Python code then sums those transactions by week or month, tunes and tests
+various machine learning models against a baseline model, and publishes a dashboard that says how far to trust the
+answer.
 
 | | |
 |---|---|
-| Plain English to dashboard | about 30 seconds |
+| Plain English request to dashboarded results | about 30 seconds |
 | Claude API cost per request | about $0.03 |
 | Forecast accuracy | median error 8% smaller than the baseline model |
 | Agent accuracy | correct SQL on all 34 test requests, each run 3 times |
@@ -47,7 +47,7 @@ every forecast reads clean data.
 
 <p align="center"><em><b>Figure 1.</b> How a plain-English request becomes a tested forecast. Blue indicates where AI is used.</em></p>
 
-**The AI decides what to forecast while fixed code handles everything else.** The forecasting agent has four tools:
+**The AI decides what to forecast while fixed code handles everything else.** The forecasting agent (Claude Sonnet 5 via the Claude API) has four tools:
 (i) search the database for relevant products and places, (ii) try a test query on the data to see what it returns,
 (iii) ask the user a clarifying question, and (iv) submit its SQL query to the fixed code. Take *"monthly forecast of
 Tito's minis in Des Moines for the next 5 months"*. The search finds Tito's in seven bottle sizes, so the agent keeps
@@ -94,7 +94,8 @@ that (September 2022 to August 2024):
 - **Forecast**: the same tuning is repeated on the latest two years, so the settings behind the forecast come from
   the most recent data.
 
-The baseline model is always one of the candidates, so the dashboard uses an ML model only when it beats the baseline.
+The baseline model simply predicts whatever sold in the same period one year earlier. It is always one of the
+candidates, so the dashboard uses an ML model only when it beats the baseline.
 
 The models always work in weeks or months. A request for two-week (biweekly) periods, quarters, half-years or years is answered by
 adding up the weekly or monthly forecasts: two-week periods from weeks, the rest from months. Quarters and half-years follow
