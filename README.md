@@ -28,20 +28,27 @@ wine) must buy it from the state's Alcoholic Beverages Division (ABD). ABD track
 publishes each as one record at the link above: date, store, product, bottles, dollars and liters. So the "sales"
 here are what stores order, presumed to be a close proxy for what they sell, and they cover spirits only.
 
-This project loads the January 2016 through August 2026 data into a Postgres warehouse (see the diagram below)
+This project loads the January 2016 through August 2026 data into a Postgres warehouse (see Figure 1 below)
 containing about 26 million sales records for almost 3,200 stores that are ordering about 13,000 distinct products.
 This warehouse is representative of a real company's sales data, with real volume, real seasonality and real data
 problems, but nothing confidential.
 
 ## How it works
 
-![A plain-English request goes from you to the forecasting agent, which writes SQL; fixed Python code sums, tunes and backtests; a dashboard shows the forecast. Both read the clean Postgres warehouse.](docs/how_it_works.svg)
+![A plain-English request goes from you to the forecasting agent, which writes SQL; fixed Python code sums, tunes and backtests; a dashboard shows the forecast. Both read the Postgres warehouse.](docs/how_it_works.svg)
+
+**Figure 1.** How a plain-English request becomes a tested forecast. Blue marks where AI is used.
 
 **The AI decides what to forecast while fixed code handles everything else.** The forecasting agent has four tools:
-(i) search for products and places, (ii) try a test query on the data to see what it returns, (iii) ask one clarifying question, and
-(iv) submit its SQL query to the fixed code. It resolves "Tito's minis" to the right products,
-"Des Moines" to the city and "revenue" to dollars, and writes one SQL query that selects the sales records: which
-records, which measure, how to label each series. It follows three rules for the warehouse's traps and a short glossary of the
+(i) search the database for relevant products and places, (ii) try a test query on the data to see what it returns,
+(iii) ask the user a clarifying question, and (iv) submit its SQL query to the fixed code. Take *"monthly forecast of
+Tito's minis in Des Moines for the next 5 months"*. The search finds Tito's in seven bottle sizes, so the agent keeps
+only the 50 ml minis: the single mini (sold under product IDs 38194, 38180 and 938180 over the years) and the mini
+4-pack (38185). "Des Moines" is trickier: it could mean the city (131 stores), the city plus its neighbor West Des
+Moines (66 more), or all of Polk County, and a county-name search would even match Des Moines County, in southeast
+Iowa around Burlington. The agent picks the city and says so on the dashboard ("Des Moines means the city of Des
+Moines, not West Des Moines or all of Polk County"), where the requester can check it. It then writes one SQL query that selects the sales records:
+which records, which measure, and how to label each series. It follows three rules for the warehouse's traps and a short glossary of the
 company's business definitions ("minis" are 50 ml bottles; whiskey does not include whiskey liqueur); both are part of
 its instructions in [dod/agent.py](dod/agent.py), and its tools are in [dod/tools.py](dod/tools.py). Fixed code never
 runs that query as is: it wraps it in its own sums, by week or month, by store and by product. The train/test split,
@@ -105,10 +112,11 @@ year in progress, and can select anything SQL can express, such as the stores in
 
 Suppose you manage the Hy-Vee stores in Ankeny and worry that your liquor sales are going down. Start Claude Code in this
 folder and paste these five requests one at a time. Claude Code is the assistant you talk to: it hands forecast
-requests to the forecasting agent (taking about 30 seconds to generate a forecast), and answers quick lookups and chart requests itself, from
-the database (read-only) or from the forecast just made. Other coding assistants that can run commands in this folder
+requests to the forecasting agent (taking about 30 seconds to generate a forecast). It answers quick lookups and
+chart requests itself, from the database (read-only) or from the forecast just made. Other coding assistants that can run commands in this folder
 should be able to follow the same steps: the instructions they need are in [AGENTS.md](AGENTS.md). Chat-only
-assistants would use the forecaster through an MCP server (see [From any AI assistant](#from-any-ai-assistant)).
+assistants would reach the forecasting agent through an MCP server, which would sit between the first two boxes of
+Figure 1 (see [From any AI assistant](#from-any-ai-assistant)).
 
 **1. Confirm the worry**
 
@@ -178,7 +186,8 @@ folder (Claude Code, Codex, Copilot and others) get their instructions from [CLA
 [AGENTS.md](AGENTS.md). For chat-only assistants the next step (not built yet) is a small MCP server: MCP is the open
 standard for giving AI assistants tools, supported by Claude Desktop, Claude Code and Microsoft Copilot Studio among
 others. It would offer one tool, "forecast demand from a plain-English request", running on a firm machine with the
-warehouse, and return the summary and a link to the dashboard. The assistant then only passes the question along: the
+warehouse, and return the summary and a link to the dashboard. In Figure 1 it would sit between the first two boxes:
+the request goes from the employee's assistant, through the MCP server, to the forecasting agent. The assistant then only passes the question along: the
 forecasting agent's SQL, the models and the trust check stay in this governed, tested code, whichever assistant the
 firm uses.
 
