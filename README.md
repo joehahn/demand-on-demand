@@ -37,8 +37,9 @@ problems, but nothing confidential.
 
 ![A plain-English request goes from you to the forecasting agent, which writes SQL; fixed Python code sums, tunes and backtests; a dashboard shows the forecast. Both read the clean Postgres warehouse.](docs/how_it_works.svg)
 
-**The AI decides what to forecast; code decides how.** The forecasting agent has four tools: search names, run one checked
-read-only SELECT, ask one clarifying question, and submit its query. It resolves "Tito's minis" to the right products,
+**The AI decides what to forecast while fixed code handles everything else.** The forecasting agent has four tools:
+(i) search for products and places, (ii) run one checked read-only SELECT, (iii) ask one clarifying question, and
+(iv) submit its SQL query to the fixed code. It resolves "Tito's minis" to the right products,
 "Des Moines" to the city and "revenue" to dollars, and writes one SQL query that selects the sales records: which
 records, which measure, how to label each series. It follows three rules for the warehouse's traps and a short glossary of the
 company's business definitions ("minis" are 50 ml bottles; whiskey does not include whiskey liqueur); both are part of
