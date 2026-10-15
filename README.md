@@ -5,8 +5,9 @@
 A business user types a question like *"monthly forecast of Tito's minis in Des Moines for the next 5 months"*.
 A single Claude agent with read-only tools (the forecasting agent: Claude Sonnet 5 via the Claude API) turns the words
 into one SQL query that picks the right sales records from a company-style Postgres warehouse built from the State of
-Iowa's public liquor sales data ([details below](#the-data)). Fixed Python code then adds them up by week or month, tunes and tests the models against the simplest honest benchmark, the
-same period last year, and publishes a dashboard that says how far to trust the answer.
+Iowa's public liquor sales data ([details below](#the-data)). Fixed Python code then adds them up by week or month,
+tunes and tests various machine learning (ML) models against the simplest possible model, which predicts whatever sold
+in the same period one year earlier, and publishes a dashboard that says how far to trust the answer.
 
 | | |
 |---|---|
