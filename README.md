@@ -43,24 +43,39 @@ problems, but nothing confidential.
 (i) search the database for relevant products and places, (ii) try a test query on the data to see what it returns,
 (iii) ask the user a clarifying question, and (iv) submit its SQL query to the fixed code. Take *"monthly forecast of
 Tito's minis in Des Moines for the next 5 months"*. The search finds Tito's in seven bottle sizes, so the agent keeps
-only the 50 ml minis: the single mini and the mini
-4-pack. "Des Moines" is trickier: it could mean the city (131 stores), the city plus its neighbor West Des
-Moines (66 more), or all of Polk County, and a county-name search would even match Des Moines County. But the agent picks the city and says so on the dashboard, where the requester can check it. It then writes one SQL query that selects all of the relevant
-records and their measure, which can be dollars, bottles or liters. It follows three rules for the warehouse's traps and a short glossary of the
-company's business definitions ("minis" are 50 ml bottles; whiskey does not include whiskey liqueur); both are part of
-its instructions in [dod/agent.py](dod/agent.py), and its tools are in [dod/tools.py](dod/tools.py). Fixed code never
-runs that query as is: it wraps it in its own sums, by week or month, by store and by product. The train/test split,
-the metrics and the charts are fixed code too, the same for every request. A second short Claude call writes the
-dashboard summary, using only numbers the models computed.
+only the 50 ml minis: the single mini and the mini 4-pack. "Des Moines" is trickier: it could mean the city (131
+stores), the city plus its neighbor West Des Moines (66 more), or all of Polk County, and a county-name search would
+even match Des Moines County. And in this case the agent picks the city and says so on the dashboard, where the
+requester can check it. It then writes one SQL query that selects all of the relevant records and their measure,
+which can be dollars, bottles or liters. Its instructions ([dod/agent.py](dod/agent.py)) warn it about three traps in
+this warehouse (products that were renumbered, categories whose codes changed, and brand names that also start other
+brands' names) and include a short glossary of the company's definitions, such as "minis are 50 ml bottles" and
+"whiskey does not include whiskey liqueur". Its tools are in [dod/tools.py](dod/tools.py).
 
-**Honest accuracy.** Every forecast is backtested on the last 24 months, which no choice ever saw. Settings are
-tuned on the two years before: 48 configurations (LightGBM and ridge; level, month-over-month or year-over-year
-targets; lags and history lengths), then the single best or the average of the top three, blended with "same month
-last year" only as far as that helps. For the forecast itself, the same tuning is repeated on the latest two years, so
-the settings used are chosen on the most recent data. Every forecast, weekly or monthly, is offered the same four inputs (time of year,
-business days and holidays, county population, active stores), each kept only if it helps; ridge regression sees time
-of year as a smooth yearly wave (sine and cosine), LightGBM as the month number ([benchmark/menu.md](benchmark/menu.md)). The baseline is always a candidate, so a
-model is used only when it beats it.
+**Fixed code does the arithmetic.** The agent's query only decides which records count. Fixed code adds those records
+up itself, into weekly or monthly totals (plus totals by store and by product for the dashboard's map and tables), so
+the AI never computes the numbers the models learn from. The dashboard is fixed code too, with the same layout for
+every request. The AI's only contributions to it are its reading of the request (the title and its assumptions), its
+SQL, shown exactly as run, and the one-sentence summary, written by a second short Claude call using only numbers the
+models computed.
+
+**The machine learning, the same for every request.** Fixed code trains, tunes and tests the models, and splits the
+sales history into three periods:
+
+- **Tuning** (the two years before the last two): 48 model configurations are compared. Two kinds of ML model,
+  LightGBM (gradient-boosted trees) and ridge regression, predict either the sales level, the change from last month
+  or the change from last year, with different lags and lengths of history. The best one, or the average of the best
+  three, is kept, then blended with the baseline model only as far as that helps. Every forecast, weekly or monthly,
+  is offered the same four inputs (time of year, business days and holidays, county population, active stores), and
+  each is kept only if it helps; ridge regression sees time of year as a smooth yearly wave (sine and cosine),
+  LightGBM as the month number ([benchmark/menu.md](benchmark/menu.md)).
+- **Testing** (the last 24 months): the chosen models forecast each week or month using only data from before it, and their
+  errors are compared with the baseline's. These are the accuracy figures on every dashboard, and nothing in this
+  period was used to make any choice.
+- **Forecast**: the same tuning is repeated on the latest two years, so the settings behind the forecast come from
+  the most recent data.
+
+The baseline model is always one of the candidates, so the dashboard uses an ML model only when it beats the baseline.
 
 **Clean data, fixed once.** The public data has real problems, documented on the
 [data exploration page](https://joehahn.github.io/demand-on-demand/data_exploration.html): the state's export repeats
