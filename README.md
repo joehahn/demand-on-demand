@@ -22,16 +22,15 @@ sold in the same period one year earlier), and publishes a dashboard that says h
 
 ## The data
 
-[Iowa Liquor Sales](https://data.iowa.gov/catalog?q=liquor+sales), published by the State of Iowa on the Iowa Data Hub
-(one dataset per year, CC BY 4.0). Iowa is an alcohol control state: every store licensed to sell liquor for off-premises
-consumption (liquor stores, grocery stores, convenience stores, big-box clubs) buys its spirits from the state's
-Alcoholic Beverages Division, and each purchase is published as one record: date, store, product, bottles, dollars
-and liters. So the "sales" here are what stores order, a close proxy for what they sell, and they cover spirits only
-(no beer or wine).
+[Iowa Liquor Sales](https://data.iowa.gov/catalog?q=liquor+sales), published by the State of Iowa on the Iowa Data Hub.
+Iowa is an alcohol control state, so liquor, grocery and convenience stores that sell liquor (spirits, not beer or
+wine) must buy it from the state's Alcoholic Beverages Division (ABD). ABD tracks every one of those purchases and
+publishes each as one record at the link above: date, store, product, bottles, dollars and liters. So the "sales"
+here are what stores order, a close proxy for what they sell, and they cover spirits only.
 
-This project loads January 2016 through August 2026: 26.4 million sales records from 3,199 stores and 13,443
-products. It plays the part of a company's sales warehouse: real volume, real seasonality and real data problems,
-with no confidential data.
+This project loads January 2016 through August 2026: about 26 million sales records from almost 3,200 stores and
+about 13,000 products. It plays the part of a company's sales warehouse: real volume, real seasonality and real data
+problems, with no confidential data.
 
 ## How it works
 
