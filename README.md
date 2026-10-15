@@ -33,11 +33,11 @@ containing about 26 million sales records for almost 3,200 stores that are order
 This warehouse is representative of a real company's sales data, with real volume, real seasonality and real data
 problems, but nothing confidential.
 
-**Clean data, fixed once.** The public data has real problems, documented on the
+**Clean data, fixed once.** The public data has real problems, documented in this project's
 [data exploration page](https://joehahn.github.io/demand-on-demand/data_exploration.html): the state's export repeats
 1.5 million rows; category codes were reassigned in 2016 and a category was recoded in 2022; 254 products were
 renumbered; a sleeve of 12 minis is counted as one bottle; liters were rounded down to whole liters for three
-months; cities are spelled several ways. The loader fixes each one once, in the warehouse, and the
+months; cities are spelled several ways. The data loader, [load_data.py](load_data.py), fixes each one once, in the warehouse, and the
 [data fixes page](https://joehahn.github.io/demand-on-demand/data_fixes.html) shows before and after, so every
 forecast reads cleaned data.
 
