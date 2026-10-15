@@ -6,14 +6,14 @@ A business user types a question like *"monthly forecast of Tito's minis in Des 
 A single Claude agent with read-only tools (the forecasting agent: Claude Sonnet 5 via the Claude API) turns the words
 into one SQL query that picks the right sales records from a company-style Postgres warehouse built from the State of
 Iowa's public liquor sales data ([details below](#the-data)). Fixed Python code then adds them up by week or month,
-tunes and tests various machine learning (ML) models against the simplest possible model, which predicts whatever sold
+tunes and tests various machine learning (ML) models against a baseline model, which predicts whatever sold
 in the same period one year earlier, and publishes a dashboard that says how far to trust the answer.
 
 | | |
 |---|---|
-| Plain English to dashboard | about 25 seconds (median of the five examples; all under 35 seconds) |
+| Plain English to dashboard | about 30 seconds |
 | Claude API cost per request | about $0.03 |
-| Forecast accuracy | beats "same month last year" on 18 of 30 sampled forecasts; median and mean error 8% lower |
+| Forecast accuracy | median error 8% smaller than the baseline model |
 | Agent accuracy | on 34 test requests run 3 times each, its SQL added up to the answer key in 102 of 102 runs |
 
 **Author:** Joseph M. Hahn, Ph.D., independent AI and machine learning consultant  
