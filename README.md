@@ -37,7 +37,7 @@ problems, but nothing confidential.
 
 ![A plain-English request goes from you to the forecasting agent, which writes SQL; fixed Python code sums, tunes and backtests; a dashboard shows the forecast. Both read the Postgres warehouse.](docs/how_it_works.svg)
 
-**Figure 1.** How a plain-English request becomes a tested forecast. Blue marks where AI is used.
+<p align="center"><em><b>Figure 1.</b> How a plain-English request becomes a tested forecast. Blue indicates where AI is used.</em></p>
 
 **The AI decides what to forecast while fixed code handles everything else.** The forecasting agent has four tools:
 (i) search the database for relevant products and places, (ii) try a test query on the data to see what it returns,
