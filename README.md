@@ -26,11 +26,11 @@ sold in the same period one year earlier), and publishes a dashboard that says h
 Iowa is an alcohol control state, so liquor, grocery and convenience stores that sell liquor (spirits, not beer or
 wine) must buy it from the state's Alcoholic Beverages Division (ABD). ABD tracks every one of those purchases and
 publishes each as one record at the link above: date, store, product, bottles, dollars and liters. So the "sales"
-here are what stores order, a close proxy for what they sell, and they cover spirits only.
+here are what stores order, presumed to be a close proxy for what they sell, and they cover spirits only.
 
-This project loads January 2016 through August 2026: about 26 million sales records from almost 3,200 stores and
-about 13,000 products. It plays the part of a company's sales warehouse: real volume, real seasonality and real data
-problems, with no confidential data.
+This project loads the January 2016 through August 2026 data into a Postgres warehouse (see the diagram below): about
+26 million sales records from almost 3,200 stores ordering about 13,000 distinct products. The warehouse stands in for
+a company's own sales data, with real volume, real seasonality and real data problems, but nothing confidential.
 
 ## How it works
 
