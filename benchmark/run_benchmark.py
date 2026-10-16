@@ -60,11 +60,10 @@ def bottles_per_month(title):
     return db.query(f"SELECT sum(value) AS b FROM ({sql}) q", timeout="300s").b.iloc[0] / months
 
 
-def scatter_svg(ok, hv=None):
+def scatter_svg(ok):
     """Relative error vs bottles per month (log scale), one dot per forecast, as a small standalone SVG."""
     W, H, L, R, T, B = 640, 360, 60, 36, 20, 50          # size and margins in pixels
-    hv = hv if hv is not None else ok.iloc[:0]
-    allr = pd.concat([ok.assign(ring=False), hv.assign(ring=True)])
+    allr = ok
     xs = allr.bottles_per_month.clip(lower=1)
     x0, x1 = math.floor(math.log10(xs.min())), math.ceil(math.log10(xs.max()))   # powers of ten around the data
     y0, y1 = 0, max(1.6, math.ceil(allr.rel_mae.max() * 5) / 5)
@@ -84,10 +83,10 @@ def scatter_svg(ok, hv=None):
         s.append(f'<text x="{L - 8}" y="{py(v) + 4:.1f}" text-anchor="end" fill="{grey}">{v:.1f}</text>')
     s.append(f'<line x1="{L}" y1="{py(1):.1f}" x2="{W - R}" y2="{py(1):.1f}" stroke="{grey}" stroke-dasharray="5 4"/>')
     s.append(f'<text x="{W - R - 4}" y="{T + 14}" text-anchor="end" fill="{grey}">dashed line: baseline (same month last '
-             f'year); rings: high-volume and brand sets</text>')
-    for r in allr.itertuples():   # blue beats the baseline, orange does not; rings are the high-volume set
+             f'year)</text>')
+    for r in allr.itertuples():   # blue beats the baseline, orange does not
         color = "#2a78d6" if r.rel_mae < 1 else "#e8692e"
-        paint = f'fill="none" stroke="{color}" stroke-width="2"' if r.ring else f'fill="{color}" fill-opacity="0.85"'
+        paint = f'fill="{color}" fill-opacity="0.85"'
         s.append(f'<circle cx="{px(max(r.bottles_per_month, 1)):.1f}" cy="{py(r.rel_mae):.1f}" r="5" {paint}>'
                  f'<title>{html.escape(r.forecast)}: {r.rel_mae:.2f}</title></circle>')
     s.append(f'<text x="{(L + W - R) / 2}" y="{H - 12}" text-anchor="middle" fill="{ink}">bottles per month (log scale)</text>')
@@ -96,64 +95,48 @@ def scatter_svg(ok, hv=None):
     (HERE / "volume.svg").write_text("\n".join(s) + "\n</svg>\n")
 
 
-def table(rows):
-    """Markdown table rows, best relative error first."""
-    md = ["| forecast | horizon | bottles per month | relative error | model error | baseline error | model |",
-          "|---|---|---|---|---|---|---|"]
-    for r in rows.sort_values("rel_mae").itertuples():
-        md.append(f"| {r.forecast} | {r.horizon} | {r.bottles_per_month:,.0f} | {r.rel_mae:.2f} | {r.model_error:.1%} | "
-                  f"{r.baseline_error:.1%} | {r.model} |")
-    return md
+BANDS = [0, 1_000, 50_000, float("inf")]   # bottles per month: light, medium, heavy
 
 
 def write_report(df):
-    """benchmark/report.md: the random sample is the headline; a high-volume set, if run, is reported beside it."""
-    df = df.assign(sample=df["sample"].fillna("random") if "sample" in df else "random")
-    rnd_all = df[df["sample"] == "random"]
-    ok = rnd_all.dropna(subset=["rel_mae"])
-    hv = df[(df["sample"] == "high volume")].dropna(subset=["rel_mae"])
-    br = df[(df["sample"] == "brands")].dropna(subset=["rel_mae"])
+    """benchmark/report.md: every forecast in one table and one plot, summarized by volume band. The forecasts come
+    from three sets (a random sample, a high-volume set, popular brands), but accuracy depends on volume, not on
+    how a forecast was picked, so the report groups them by volume."""
+    ok = df.dropna(subset=["rel_mae"])
     better = (ok.rel_mae < 1).sum()
+    band = pd.cut(ok.bottles_per_month, BANDS, labels=["under 1,000", "1,000 to 50,000", "over 50,000"])
+    by = ok.groupby(band, observed=True)
     md = [f"# Forecast-accuracy benchmark\n",
-          f"{len(rnd_all)} forecasts sampled from the warehouse (seed 0), {len(ok)} completed, in {ok.seconds.sum():.0f}s "
-          f"({ok.seconds.median():.0f}s median each).\n",
-          f"- Beat \"same month last year\" on the 24-month test window: **{better} of {len(ok)}** ({better / len(ok):.0%})",
-          f"- Median error relative to that baseline: **{ok.rel_mae.median():.2f}** (below 1 is better)",
-          f"- Median monthly error (WAPE, weighted absolute percentage error: total absolute error divided by total actual sales): model {ok.model_error.median():.1%}, baseline {ok.baseline_error.median():.1%}",
-          f"- Volume matters: the 10 forecasts with the fewest bottles per month beat the baseline "
-          f"{(ok.nsmallest(10, 'bottles_per_month').rel_mae < 1).sum()} times, the 10 with the most "
-          f"{(ok.nlargest(10, 'bottles_per_month').rel_mae < 1).sum()} times. With a handful of orders a month, one "
-          f"order more or less swings the total, and neither the model nor the baseline can predict that.\n"]
-    if len(hv):
-        both = pd.concat([ok, hv])
-        big = pd.concat([both, br])[lambda x: x.bottles_per_month > HIGH_BOTTLES]
-        md += [f"**High-volume check.** {len(hv)} more forecasts were picked for high volume (over {MIN_RECORDS:,} sales "
-               f"records a month, which here is over {HIGH_BOTTLES:,} bottles a month; statewide and big-county "
-               f"categories, vendors and products; seed 1). They beat the baseline **{(hv.rel_mae < 1).sum()} of "
-               f"{len(hv)}** times, median relative error **{hv.rel_mae.median():.2f}**. Counting every set, "
-               f"{(big.rel_mae < 1).sum()} of {len(big)} forecasts over {HIGH_BOTTLES:,} bottles a month beat the "
-               f"baseline (ringed dots below are the high-volume and brand sets).\n"]
-    if len(br):
-        md += [f"**Popular brands by quarter and by year.** {len(br)} brands statewide ({', '.join(b[0] for b in BRANDS)}), "
-               f"asked for by quarter or as one year. They are forecast by month and the months added up, so their "
-               f"relative error is the monthly forecasts' test score, the same figure their dashboards show. They beat "
-               f"the baseline **{(br.rel_mae < 1).sum()} of {len(br)}** times, median relative error "
-               f"**{br.rel_mae.median():.2f}**.\n"]
-    md += ["![Relative error vs bottles per month: low-volume forecasts scatter around or above 1, high-volume "
-           "ones mostly below](volume.svg)\n", "## Random sample\n"] + table(ok)
-    for r in rnd_all[rnd_all.rel_mae.isna()].itertuples():
+          f"{len(ok)} forecasts, each scored against \"same month last year\" (the baseline) over a 24-month test "
+          f"window they never trained on, {ok.seconds.median():.0f}s median each. They come from a random sample of the "
+          f"warehouse (30: products, categories and vendors, statewide and by county), a set picked for high volume "
+          f"(10) and five popular brands statewide asked for by quarter or by year (forecast by month and summed).\n",
+          f"- Beat the baseline: **{better} of {len(ok)}**; median relative error **{ok.rel_mae.median():.2f}** (below 1 "
+          f"is better); median monthly error (WAPE, weighted absolute percentage error: total absolute error divided "
+          f"by total actual sales) model {ok.model_error.median():.1%}, baseline {ok.baseline_error.median():.1%}.",
+          f"- **Volume decides it.** With a handful of orders a month, one order more or less swings the total, and "
+          f"neither the model nor the baseline can predict that. With high volume, the model wins most of the time, "
+          f"and its losses are narrow:\n",
+          "| bottles per month | forecasts | beat the baseline | median relative error | median model error | "
+          "median baseline error |", "|---|---|---|---|---|---|"]
+    for name, g in by:
+        md.append(f"| {name} | {len(g)} | {(g.rel_mae < 1).sum()} | {g.rel_mae.median():.2f} | "
+                  f"{g.model_error.median():.1%} | {g.baseline_error.median():.1%} |")
+    md += ["", "![Relative error vs bottles per month: low-volume forecasts scatter around or above 1, high-volume "
+           "ones mostly below](volume.svg)\n",
+           "| forecast | horizon | bottles per month | relative error | model error | baseline error | model |",
+           "|---|---|---|---|---|---|---|"]
+    for r in ok.sort_values("bottles_per_month", ascending=False).itertuples():
+        md.append(f"| {r.forecast} | {r.horizon} | {r.bottles_per_month:,.0f} | {r.rel_mae:.2f} | {r.model_error:.1%} | "
+                  f"{r.baseline_error:.1%} | {r.model} |")
+    for r in df[df.rel_mae.isna()].itertuples():
         md.append(f"| {r.forecast} | {r.horizon} | | not run: {r.error} | | | |")
-    if len(hv):
-        md += ["", f"## High-volume set (over {HIGH_BOTTLES:,} bottles a month)\n"] + table(hv)
-    if len(br):
-        md += ["", "## Popular brands, statewide, by quarter and by year\n"] + table(br)
-    scatter_svg(ok, pd.concat([hv, br]))
+    scatter_svg(ok)
     (HERE / "report.md").write_text("\n".join(md) + "\n")
-    print("\n".join(md[:8]))
+    print("\n".join(md[:12]))
 
 
 MIN_RECORDS = 3000     # sales records per month: how the high-volume set is picked (a quick count)
-HIGH_BOTTLES = 50_000  # what that comes to in bottles here (the set's smallest is 52,000), the line used in the report
 
 
 def high_volume_specs(n, skip, seed=1):
