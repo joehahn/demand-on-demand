@@ -142,7 +142,7 @@ calendar year in progress, and can select anything SQL can express, such as the 
 Suppose you manage the Hy-Vee stores in Ankeny and worry that your liquor sales are going down. Start an AI coding
 assistant such as Claude Code in this folder (using a different assistant? see
 [From any AI assistant](#from-any-ai-assistant)) and paste these five requests one at a time. The assistant hands
-forecast requests to the forecasting agent (taking about 30 seconds to generate a forecast). This solution also answers
+forecast requests to the forecasting agent, and takes about 30 seconds to generate and dashboard the forecast. This solution also answers
 quick lookups and chart requests, with data pulled from the warehouse or from the forecast just made.
 
 **1. Confirm the worry**
