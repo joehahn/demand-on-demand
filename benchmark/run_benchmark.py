@@ -114,7 +114,7 @@ def write_report(df):
           f"- Beat the baseline: **{better} of {len(ok)}**; median relative error **{ok.rel_mae.median():.2f}** (below 1 "
           f"is better); median monthly error (WAPE, weighted absolute percentage error: total absolute error divided "
           f"by total actual sales) model {ok.model_error.median():.1%}, baseline {ok.baseline_error.median():.1%}.",
-          f"- **Volume decides it.** With a handful of orders a month, one order more or less swings the total, and "
+          f"- **Sales volume decides when ML succeeds.** With a handful of orders a month, one order more or less swings the total, and "
           f"neither the model nor the baseline can predict that. With high volume, the model wins most of the time, "
           f"and its losses are narrow:\n",
           "| bottles per month | forecasts | beat the baseline | median relative error | median model error | "

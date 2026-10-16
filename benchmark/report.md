@@ -3,7 +3,7 @@
 45 forecasts, each scored against "same month last year" (the baseline) over a 24-month test window they never trained on, 6s median each. They come from a random sample of the warehouse (30: products, categories and vendors, statewide and by county), a set picked for high volume (10) and five popular brands statewide asked for by quarter or by year (forecast by month and summed).
 
 - Beat the baseline: **26 of 45**; median relative error **0.92** (below 1 is better); median monthly error (WAPE, weighted absolute percentage error: total absolute error divided by total actual sales) model 12.8%, baseline 13.4%.
-- **Volume decides it.** With a handful of orders a month, one order more or less swings the total, and neither the model nor the baseline can predict that. With high volume, the model wins most of the time, and its losses are narrow:
+- **Sales volume decides when ML succeeds.** With a handful of orders a month, one order more or less swings the total, and neither the model nor the baseline can predict that. With high volume, the model wins most of the time, and its losses are narrow:
 
 | bottles per month | forecasts | beat the baseline | median relative error | median model error | median baseline error |
 |---|---|---|---|---|---|
