@@ -561,7 +561,10 @@ mid-2019 (orange). So only the bookkeeping changed, not what stores bought. The 
 separate rounding error (Figure 18).</p>
 {plot(fig_mini_units(d))}
 {fixed('units', 'Where the pack size is known, a sleeve or pack counts each mini as a bottle, and liters are bottles times one mini\'s volume. Items with no evidence of their pack size stay in selling units and are flagged.')}
-<p>Recorded liters vs bottles times bottle volume, statewide.</p>
+<p>From November 2025 to January 2026 the state rounded each record's liters sold down to a whole liter (bottle sizes
+were unaffected). A case of six 750 ml bottles (4.5 L) became 4 L, and a sleeve of 12 minis (0.6 L) became 0 L.
+Statewide that loses about 3.5% of liters in those months: the orange line dips below the blue one, which is
+recomputed as bottles times bottle volume.</p>
 {plot(fig_liters_recorded(d))}
 {fixed('liters', 'Liters are recomputed as bottles times bottle volume on every line, which restores Nov 2025 to Jan 2026, when liters were rounded down to whole liters.')}
 
