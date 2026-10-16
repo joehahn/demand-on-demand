@@ -54,7 +54,9 @@ only the 50 ml minis: the single mini and the mini 4-pack. "Des Moines" is trick
 stores), the city plus its neighbor West Des Moines (66 more), or all of Polk County, and a county-name search would
 even match Des Moines County. But in this case the agent picks the city and says so on the dashboard, which is
 where the requester would check the agent's results. It then writes one SQL query to select all of the relevant records and their measure,
-which can be dollars, bottles or liters. The agent's instructions, [dod/agent.py](dod/agent.py), warn it about the
+which can be dollars, bottles or liters.
+
+The agent's instructions, [dod/agent.py](dod/agent.py), warn it about the
 data's known peculiarities (product IDs and category codes that change at various times, and brand names written in
 more than one way, such as Crown Royal barrel picks listed as "BP CROWN ROYAL"), and also include a short glossary to
 help the agent disambiguate requests, such as defining "whiskey" to exclude whiskey liqueurs (like Fireball) and
@@ -109,7 +111,7 @@ SQL that was executed in the database, and a one-sentence summary of results.
 
 ## See it live
 
-- **[Data exploration](https://joehahn.github.io/demand-on-demand/data_exploration.html)**: what 26 million orders look like: volume by day, month and
+- **[Data exploration](https://joehahn.github.io/demand-on-demand/data_exploration.html)**: what 26 million sales records look like: volume by day, month and
   year, seasonality (flat statewide but 3x to 8x swings in slices like cream liqueurs and gift packs), geography and the
   largest categories, vendors and stores.
 - **[Data problems and fixes](https://joehahn.github.io/demand-on-demand/data_fixes.html)**: each known problem in the
@@ -119,7 +121,7 @@ SQL that was executed in the database, and a one-sentence summary of results.
 
 **Example forecasts.** Each was made by the forecasting agent from the following plain-English requests.
 Each request's dashboard shows how its request was interpreted, the resulting forecast chart and table with the
-forecast's 80% interval, the backtested forecast against actuals from one year prior, the table the model learns from,
+forecast's 80% interval, the backtest against actual sales and the baseline, the table the model learns from,
 which features improved model accuracy, a map of the stores included, the 48 model configurations compared, every
 tool call the agent made, and the SQL the AI composed to pull data from the warehouse.
 
@@ -134,10 +136,9 @@ tool call the agent made, and the SQL the AI composed to pull data from the ware
 Not every forecast beats last year: the [benchmark report](benchmark/report.md) lists all 45 benchmark forecasts,
 misses included, and when a model does not beat last year its dashboard says so.
 
-Requests can ask for weeks, biweekly periods, months, calendar quarters, half-years, the next 12 months or the
-calendar year in progress, and can select anything SQL can express, such as the stores in the last example.
+Requests can select anything SQL can express, such as the stores in the last example.
 
-## Using an AI agent + forecasting for market analysis
+## Using an AI assistant + forecasting for market analysis
 
 Suppose you manage the Hy-Vee stores in Ankeny and worry that your liquor sales are going down. Start an AI coding
 assistant such as Claude Code in this folder (using a different assistant? see
@@ -161,7 +162,7 @@ Costco arrived in Ankeny in 2023 I think, so show monthly liquor dollars in Anke
 Hy-Vee vs Costco vs all other stores, next 6 months, but have all charts start in year 2017
 ```
 
-The forecasting agent builds a dashboard with one forecast per group. Costco's chart is empty until its line appears,
+The forecasting agent builds [a dashboard](https://joehahn.github.io/demand-on-demand/examples/market_analysis/step2_forecast_dashboard.html) with one forecast per group. Costco's chart is empty until its line appears,
 and the agent points out that Costco actually started selling liquor in October 2022, a little earlier than
 remembered.
 
@@ -173,7 +174,7 @@ with 2026 showing actuals plus forecast,
 make connected-line chart not barchart
 ```
 
-The assistant builds this chart from the forecast it just made, with no new forecasting. Hy-Vee shrinks after 2020, Costco
+The assistant builds [this chart](https://joehahn.github.io/demand-on-demand/examples/market_analysis/step3_annual_sales.html) from the forecast it just made, with no new forecasting. Hy-Vee shrinks after 2020, Costco
 climbs to about $2.1 million a year, and all the other stores grow until 2024, then level off.
 
 **4. Measure it**
@@ -182,7 +183,7 @@ climbs to about $2.1 million a year, and all the other stores grow until 2024, t
 Also overlay Hy-Vee's market share on that plot
 ```
 
-Hy-Vee was already slowly losing market share to other Ankeny stores, and the loss sped up when Costco arrived in
+[The chart](https://joehahn.github.io/demand-on-demand/examples/market_analysis/step4_hy_vee_share.html) shows Hy-Vee was already slowly losing market share to other Ankeny stores, and the loss sped up when Costco arrived in
 2022: from about 43% of Ankeny's liquor sales to 29% in four years.
 
 **5. Find the cause**
@@ -254,12 +255,25 @@ accurate. Blue dots beat the baseline model, orange dots do not.</em></p>
   forecast's computed numbers (the accuracy sentence and every other number come from fixed code). This check traces
   every number in such sentences back to the computed results: 144 of 144 matched (48 forecasts, 3 runs each, 2026-10-13).
 
+## Limitations
+
+- **Wholesale, not retail.** The data is what stores order from the state, a close proxy for what they sell but not
+  the same thing.
+- **Volume matters.** Below about 1,000 bottles a month the model usually does not beat last year (Figure 3), and the
+  dashboard says so.
+- **One year ahead at most.** Forecasts reach 12 months (52 weeks), the furthest that can be tested honestly.
+- **A snapshot.** The warehouse holds January 2016 through August 2026 and is not refreshed on a schedule.
+- **Comparisons can shift slightly with wording.** When a request compares groups (Hy-Vee vs Costco vs everyone else),
+  the agent's name for a group can move that forecast by about 1%; single-series forecasts are unaffected.
+- **Lookups are not scored.** The assistant's own data questions and charts use a read-only login and the data
+  dictionary, but unlike the forecasting agent's SQL they are not checked against an answer key.
+
 ## Speed and security
 
 **This solution is fast because of the database, not the model.** AI-written SQL is only as fast as the database it runs on. One index
 on the sales records, by product and then store, lets a request like "Fireball in Linn County" read its 98,000 sales
 instead of all 1.2 million Fireball sales in Iowa: those queries went from about a minute to under a second, with
-identical results. A typical forecast now builds from plain English in under 35 seconds.
+identical results.
 
 **Least privilege.** Postgres runs with password authentication and separate roles. The forecasting agent's login can only read
 the clean tables, with a query time limit. Credentials live in `.env`, are read by Python, and never appear in a prompt.
@@ -271,15 +285,20 @@ Needs Python 3.12, Postgres 17, about 20 GB of disk, and an Anthropic API key.
 ```bash
 brew install postgresql@17 python@3.12 && brew services start postgresql@17
 python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
-# create the database and roles (see "Database access" in CLAUDE.md), then:
+# create the database and its roles, then:
 cp .env.example .env          # add ANTHROPIC_API_KEY and the two Postgres connection strings
 .venv/bin/python load_data.py                    # download, load, clean: about 20 minutes, 13 GB
 .venv/bin/python explore_data.py && .venv/bin/python data_fixes.py
 .venv/bin/python -m dod.forecast "weekly forecast of Tito's minis in Des Moines for the next 8 weeks"
 ```
 
-The dashboard lands in `out/<title>/dashboard.html`. `python -m dod.agent "<request>" --sql-only` shows only the
-forecasting agent's part: its SQL and how it read the request.
+The dashboard lands in `out/<title>/dashboard.html`, on your machine only (`out/` is not part of the repo).
+`python -m dod.agent "<request>" --sql-only` shows only the forecasting agent's part: its SQL and how it read the
+request. New months of data mean rerunning `load_data.py` (about 20 minutes for the whole load).
+
+This is an outline, not a turnkey install. Standing it up on your own data (the warehouse and its access roles, the
+data fixes, and the agent's business glossary) is the part where [JMH DataSciences](https://jmh-datasciences.com) can
+help.
 
 ## Repo map
 
