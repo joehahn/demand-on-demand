@@ -65,13 +65,6 @@ QUERIES = {
                count(DISTINCT category_name) AS category_names, count(DISTINCT category_code) AS category_codes
         FROM raw.liquor_sales WHERE category_code <> '' GROUP BY 1 ORDER BY min(ordered_on)""",
 
-    # one real product, many item numbers: what "Tito's" has to resolve to
-    "titos": """
-        SELECT l.item_no, i.item_desc, i.bottle_volume_ml, count(*) AS lines, sum(l.sales_bottles) AS bottles,
-               min(l.ordered_on) AS first_order, max(l.ordered_on) AS last_order
-        FROM sales.invoice_line l JOIN sales.item i USING (item_no)
-        WHERE i.item_desc ILIKE '%tito%' GROUP BY 1, 2, 3 ORDER BY bottles DESC""",
-
     # city spellings that differ only by abbreviation
     "city_variants": """
         SELECT x.city_recorded AS spelling, x.city AS same_city_as, count(DISTINCT s.store_no) AS stores
@@ -476,10 +469,6 @@ def build_page(d):
     for c in ("first_seen", "last_seen"):
         cat[c] = cat[c].astype(str)
 
-    titos = d["titos"].copy()
-    for c in ("first_order", "last_order"):
-        titos[c] = titos[c].astype(str)
-
     sus = d["suspect_lines"]
     comma = lambda v: f"{int(v):,}"
 
@@ -536,10 +525,8 @@ month, so 100% is a normal month and 300% is three times normal.</p>
 
 <h2>One product, many item numbers</h2>
 <p>The state sometimes gives a product a new item number. Tito's 50 ml mini was item 38180 until July 2020 and 38194
-after, so selecting today's number alone would lose four years of sales. The first table lists every Tito's item
-number (most are different bottle sizes, which are genuinely different products); the second lists the largest of the
-{len(d["renumbered"])} renumbered items.</p>
-{table(titos.rename(columns={"lines": "records"}), {"records": comma, "bottles": comma})}
+after, so selecting today's number alone would lose four years of sales. The table lists the largest of the
+{len(d["renumbered"])} renumbered items: each old item number, its new one, and when the switch happened.</p>
 {table(d["renumbered"].head(12).astype({"old_last_order": str, "new_first_order": str}), {"old_bottles": comma})}
 {fixed('renumbering', 'The loader links each old item number to its product\'s current number (a product family), so a product\'s history continues across a renumbering. Tito\'s minis are one series from 2016 on.')}
 
