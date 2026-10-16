@@ -7,7 +7,9 @@
 - Median monthly error (WAPE, weighted absolute percentage error: total absolute error divided by total actual sales): model 15.4%, baseline 16.0%
 - Volume matters: the 10 forecasts with the fewest bottles per month beat the baseline 3 times, the 10 with the most 9 times. With a handful of orders a month, one order more or less swings the total, and neither the model nor the baseline can predict that.
 
-**High-volume check.** 10 more forecasts were picked for high volume (over 3,000 sales records a month, which here is over 50,000 bottles a month; statewide and big-county categories, vendors and products; seed 1). They beat the baseline **6 of 10** times, median relative error **0.86**. Counting both sets, 12 of 16 forecasts over 50,000 bottles a month beat the baseline (ringed dots below are the high-volume set).
+**High-volume check.** 10 more forecasts were picked for high volume (over 3,000 sales records a month, which here is over 50,000 bottles a month; statewide and big-county categories, vendors and products; seed 1). They beat the baseline **6 of 10** times, median relative error **0.86**. Counting every set, 14 of 21 forecasts over 50,000 bottles a month beat the baseline (ringed dots below are the high-volume and brand sets).
+
+**Popular brands by quarter and by year.** 5 brands statewide (Tito's, Fireball, Crown Royal, Jack Daniel's, Captain Morgan), asked for by quarter or as one year. They are forecast by month and the months added up, so their relative error is the monthly forecasts' test score, the same figure their dashboards show. They beat the baseline **2 of 5** times, median relative error **1.00**.
 
 ![Relative error vs bottles per month: low-volume forecasts scatter around or above 1, high-volume ones mostly below](volume.svg)
 
@@ -60,3 +62,13 @@
 | Brown Forman Corp., Iowa, bottles, 6 months | 6 | 98,575 | 1.05 | 5.5% | 5.3% | ridge |
 | Canadian Whiskies, Iowa, dollars, 6 months | 6 | 303,077 | 1.06 | 15.2% | 14.4% | ridge |
 | American Cordials & Liqueur, Iowa, liters, 12 months | 12 | 58,633 | 1.07 | 9.3% | 8.7% | ridge |
+
+## Popular brands, statewide, by quarter and by year
+
+| forecast | horizon | bottles per month | relative error | model error | baseline error | model |
+|---|---|---|---|---|---|---|
+| Tito's, Iowa, bottles, next 4 quarters | 4 quarters | 128,867 | 0.67 | 5.2% | 7.7% | ridge |
+| Fireball, Iowa, dollars, next 12 months, as one year | 1 year | 509,007 | 0.86 | 5.0% | 5.8% | ridge |
+| Jack Daniel's, Iowa, liters, next 12 months, as one year | 1 year | 90,069 | 1.00 | 13.4% | 13.4% | ridge |
+| Captain Morgan, Iowa, bottles, next 4 quarters | 4 quarters | 133,453 | 1.03 | 10.3% | 10.0% | ridge |
+| Crown Royal, Iowa, dollars, next 4 quarters | 4 quarters | 122,481 | 1.12 | 20.9% | 18.6% | ridge |

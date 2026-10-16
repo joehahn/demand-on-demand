@@ -3,6 +3,7 @@ chosen model beats "same month last year" on the 24-month test window it never t
 
     python benchmark/run_benchmark.py [--n 30]
     python benchmark/run_benchmark.py --report    # rewrite report.md from results.csv and the saved runs, no forecasting
+    python benchmark/run_benchmark.py --brands    # add five popular brands, statewide, by quarter and by year
     python benchmark/run_benchmark.py --high-volume [--n 10]   # add a separate set of forecasts with > 3,000 sales
                                                                # records a month (the random 30 stay the headline)
 
@@ -31,9 +32,11 @@ from dod.spec import Spec  # noqa: E402
 HERE = Path(__file__).parent
 
 
-def run_spec(spec, out_root):
-    """A request form through the same fixed code as every forecast, with its reference query instead of the AI's."""
-    plan = Plan(title=spec.title, sql=panel.reference_sql(spec), target=spec.target, horizon=spec.horizon,
+def run_spec(spec, out_root, period=None):
+    """A request form through the same fixed code as every forecast, with its reference query instead of the AI's.
+    period: (grain, horizon) for a request by quarter or by year, e.g. ("quarter", 4) or ("year", 1)."""
+    grain, horizon = period or ("month", spec.horizon)
+    plan = Plan(title=spec.title, sql=panel.reference_sql(spec), target=spec.target, horizon=horizon, grain=grain,
                 product=spec.product.label, place=spec.region.label, series_by=spec.series_by)
     return forecast.run(plan, narrate=False, out_root=out_root, log=lambda *a: None)
 
@@ -81,7 +84,7 @@ def scatter_svg(ok, hv=None):
         s.append(f'<text x="{L - 8}" y="{py(v) + 4:.1f}" text-anchor="end" fill="{grey}">{v:.1f}</text>')
     s.append(f'<line x1="{L}" y1="{py(1):.1f}" x2="{W - R}" y2="{py(1):.1f}" stroke="{grey}" stroke-dasharray="5 4"/>')
     s.append(f'<text x="{W - R - 4}" y="{T + 14}" text-anchor="end" fill="{grey}">dashed line: baseline (same month last '
-             f'year); rings: high-volume set</text>')
+             f'year); rings: high-volume and brand sets</text>')
     for r in allr.itertuples():   # blue beats the baseline, orange does not; rings are the high-volume set
         color = "#2a78d6" if r.rel_mae < 1 else "#e8692e"
         paint = f'fill="none" stroke="{color}" stroke-width="2"' if r.ring else f'fill="{color}" fill-opacity="0.85"'
@@ -109,6 +112,7 @@ def write_report(df):
     rnd_all = df[df["sample"] == "random"]
     ok = rnd_all.dropna(subset=["rel_mae"])
     hv = df[(df["sample"] == "high volume")].dropna(subset=["rel_mae"])
+    br = df[(df["sample"] == "brands")].dropna(subset=["rel_mae"])
     better = (ok.rel_mae < 1).sum()
     md = [f"# Forecast-accuracy benchmark\n",
           f"{len(rnd_all)} forecasts sampled from the warehouse (seed 0), {len(ok)} completed, in {ok.seconds.sum():.0f}s "
@@ -122,20 +126,28 @@ def write_report(df):
           f"order more or less swings the total, and neither the model nor the baseline can predict that.\n"]
     if len(hv):
         both = pd.concat([ok, hv])
-        big = both[both.bottles_per_month > HIGH_BOTTLES]
+        big = pd.concat([both, br])[lambda x: x.bottles_per_month > HIGH_BOTTLES]
         md += [f"**High-volume check.** {len(hv)} more forecasts were picked for high volume (over {MIN_RECORDS:,} sales "
                f"records a month, which here is over {HIGH_BOTTLES:,} bottles a month; statewide and big-county "
                f"categories, vendors and products; seed 1). They beat the baseline **{(hv.rel_mae < 1).sum()} of "
-               f"{len(hv)}** times, median relative error **{hv.rel_mae.median():.2f}**. Counting both sets, "
+               f"{len(hv)}** times, median relative error **{hv.rel_mae.median():.2f}**. Counting every set, "
                f"{(big.rel_mae < 1).sum()} of {len(big)} forecasts over {HIGH_BOTTLES:,} bottles a month beat the "
-               f"baseline (ringed dots below are the high-volume set).\n"]
+               f"baseline (ringed dots below are the high-volume and brand sets).\n"]
+    if len(br):
+        md += [f"**Popular brands by quarter and by year.** {len(br)} brands statewide ({', '.join(b[0] for b in BRANDS)}), "
+               f"asked for by quarter or as one year. They are forecast by month and the months added up, so their "
+               f"relative error is the monthly forecasts' test score, the same figure their dashboards show. They beat "
+               f"the baseline **{(br.rel_mae < 1).sum()} of {len(br)}** times, median relative error "
+               f"**{br.rel_mae.median():.2f}**.\n"]
     md += ["![Relative error vs bottles per month: low-volume forecasts scatter around or above 1, high-volume "
            "ones mostly below](volume.svg)\n", "## Random sample\n"] + table(ok)
     for r in rnd_all[rnd_all.rel_mae.isna()].itertuples():
         md.append(f"| {r.forecast} | {r.horizon} | | not run: {r.error} | | | |")
     if len(hv):
         md += ["", f"## High-volume set (over {HIGH_BOTTLES:,} bottles a month)\n"] + table(hv)
-    scatter_svg(ok, hv)
+    if len(br):
+        md += ["", "## Popular brands, statewide, by quarter and by year\n"] + table(br)
+    scatter_svg(ok, pd.concat([hv, br]))
     (HERE / "report.md").write_text("\n".join(md) + "\n")
     print("\n".join(md[:8]))
 
@@ -185,14 +197,37 @@ def high_volume_specs(n, skip, seed=1):
     return specs
 
 
+# popular brands statewide, asked for by quarter or by year: (label, words in the name, measure, period, how many)
+BRANDS = [("Tito's", ["TITOS"], "sales_bottles", "quarter", 4),
+          ("Fireball", ["FIREBALL"], "sales_dollars", "year", 1),
+          ("Crown Royal", ["CROWN", "ROYAL"], "sales_dollars", "quarter", 4),
+          ("Jack Daniel's", ["JACK", "DANIELS"], "sales_liters", "year", 1),
+          ("Captain Morgan", ["CAPTAIN", "MORGAN"], "sales_bottles", "quarter", 4)]
+
+
+def brand_specs():
+    """(request form, (grain, horizon)) for each brand: every product whose name has all the brand's words."""
+    out = []
+    for label, words, target, grain, n in BRANDS:
+        when = f"next {n} quarters" if grain == "quarter" else "next 12 months, as one year"
+        title = f"{label}, Iowa, {target.replace('sales_', '')}, {when}"
+        spec = Spec(title=title, target=target, horizon=12, product={"kind": "name", "codes": words, "label": label},
+                    region={"kind": "statewide", "label": "Iowa"})
+        out.append((spec, (grain, n)))
+    return out
+
+
 def run_all(specs, sample):
-    """Each request form through the fixed code; one results row each (a failure is a result, not a crash)."""
+    """Each request form (or (form, period) pair) through the fixed code; one results row each (a failure is a
+    result, not a crash)."""
     rows = []
-    for spec in specs:
+    for item in specs:
+        spec, period = item if isinstance(item, tuple) else (item, None)
         try:
-            s = run_spec(spec, HERE / "out")
+            s = run_spec(spec, HERE / "out", period)
             ps = pd.DataFrame(s["per_step"])
-            rows.append({"forecast": spec.title, "horizon": spec.horizon, "rel_mae": s["test_rel_mae"],
+            rows.append({"forecast": spec.title, "horizon": f"{period[1]} {period[0]}{'s' if period[1] > 1 else ''}" if period else spec.horizon,
+                         "rel_mae": s["test_rel_mae"],
                          "model_error": (ps.wape * ps.folds).sum() / ps.folds.sum(),
                          "baseline_error": (ps.wape_naive * ps.folds).sum() / ps.folds.sum(),
                          "model": s["best"].get("model"), "seconds": s["seconds"],
@@ -206,11 +241,18 @@ def run_all(specs, sample):
 
 
 if __name__ == "__main__":
+    if "--brands" in sys.argv:   # add (or redo) the brand set next to the others
+        df = pd.read_csv(HERE / "results.csv")
+        df = df[df["sample"] != "brands"]
+        df = pd.concat([df, run_all(brand_specs(), "brands")], ignore_index=True)
+        df.to_csv(HERE / "results.csv", index=False)
+        write_report(df)
+        sys.exit()
     if "--high-volume" in sys.argv:   # add (or redo) the high-volume set next to the random sample
         n = int(sys.argv[sys.argv.index("--n") + 1]) if "--n" in sys.argv else 10
         df = pd.read_csv(HERE / "results.csv")
         df["sample"] = df["sample"].fillna("random") if "sample" in df else "random"
-        df = df[df["sample"] == "random"]
+        df = df[df["sample"] != "high volume"]
         hv = run_all(high_volume_specs(n, set(df.forecast)), "high volume")
         df = pd.concat([df, hv], ignore_index=True)
         df.to_csv(HERE / "results.csv", index=False)
