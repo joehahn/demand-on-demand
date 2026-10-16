@@ -312,7 +312,7 @@ help.
 | `dod/results.py` | a finished forecast's actuals and forecasts as tidy tables, for follow-up charts |
 | `dod/spec.py`, `dod/panel.py` | reference queries from hand-checked request forms, for the answer key and the benchmark |
 | `evals/`, `benchmark/` | the answer key and SQL score, summary grounding, forecast-accuracy benchmark and experiments |
-| `make_examples.py`, `demo.py` | the published example dashboards; canned requests for a live demo |
+| `make_examples.py` | the published example dashboards |
 | `CLAUDE.md`, `PLAN.md`, `HISTORY.md` | the working notes Claude Code built this from, and how the agent's design evolved |
 | `AGENTS.md` | the same answering rules for other AI coding assistants |
 

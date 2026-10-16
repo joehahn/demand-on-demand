@@ -22,5 +22,3 @@ out/
 # Dashboards published via GitHub Pages live under docs/ and ARE tracked
 benchmark/out/
 
-# Demo rehearsal copies (local fallbacks for python demo.py N --replay)
-demo/saved/
