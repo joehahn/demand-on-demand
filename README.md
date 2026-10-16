@@ -265,8 +265,9 @@ accurate. Blue dots beat the baseline model, orange dots do not.</em></p>
 - **A snapshot.** The warehouse holds January 2016 through August 2026 and is not refreshed on a schedule.
 - **Comparisons can shift slightly with wording.** When a request compares groups (Hy-Vee vs Costco vs everyone else),
   the agent's name for a group can move that forecast by about 1%; single-series forecasts are unaffected.
-- **Lookups are not scored.** The assistant's own data questions and charts use a read-only login and the data
-  dictionary, but unlike the forecasting agent's SQL they are not checked against an answer key.
+- **Custom requests are not double-checked.** Forecasts run through tested code, and the forecasting agent's SQL was
+  checked against an answer key. Quick lookups and custom charts are written by the assistant on the spot: they are
+  read-only, so they cannot change any data, but nothing double-checks them, so treat a surprising number with care.
 
 ## Speed and security
 
