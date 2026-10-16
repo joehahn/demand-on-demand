@@ -223,10 +223,10 @@ The five market analysis steps mentioned above illustrate the three kinds of req
 
 At a firm, employees would ask their own assistant, not open this repo. Coding assistants that can run commands in this
 folder (Claude Code, Codex, Copilot and others) get their instructions from [CLAUDE.md](CLAUDE.md) or
-[AGENTS.md](AGENTS.md). For chat-only assistants the next step (not built yet) is a small MCP server: MCP is the open
+[AGENTS.md](AGENTS.md). For chat-only assistants the next step (not built here) is a small MCP server: MCP is the open
 standard for giving AI assistants tools, supported by Claude Desktop, Claude Code and Microsoft Copilot Studio among
-others. It would offer one tool, "forecast demand from a plain-English request", running on a firm machine with the
-warehouse, and return the summary and a link to the dashboard. In Figure 1 it would sit between the first two boxes:
+others. It would offer one tool, "forecast demand from a plain-English request", and return the summary and a link to
+the dashboard. In Figure 1 the MCP server would sit between the first two boxes:
 the request goes from the employee's assistant, through the MCP server, to the forecasting agent. The assistant then only passes the question along: the
 forecasting agent's SQL, the models and the trust check stay in this governed, tested code, whichever assistant the
 firm uses.
