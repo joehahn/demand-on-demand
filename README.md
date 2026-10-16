@@ -225,7 +225,8 @@ firm uses.
 **Forecast accuracy** ([benchmark/report.md](benchmark/report.md)): 45 forecasts (products, categories, vendors and
 brands; counties and statewide; bottles, dollars, liters; by month, quarter or year), run through the same fixed code
 as every forecast. The report lists every ML forecast, including the misses that did not beat the baseline model. The
-model beat "same month last year" on 26, with a median error 8% lower. Volume decides it: under 1,000 bottles a month
+ML model beat the "same month last year" baseline on 26 requests, with a median error 8% lower. Sales volume decides
+when ML succeeds: under 1,000 bottles a month
 it beat last year 2 times in 9, over 50,000 bottles a month 14 times in 21; see Figure 3. Iowa liquor demand is very
 regular year to year, so the baseline model (same as last year) is actually quite good and challenging for ML to
 beat.
