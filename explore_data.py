@@ -515,7 +515,7 @@ month, so 100% is a normal month and 300% is three times normal.</p>
 {fixed('categories', 'Every item uses its most recently recorded category code (a retired code maps to the live code with the same name), so each product\'s whole history counts toward today\'s category in Figures 9 to 11.')}
 
 <h2>The state's own export duplicates rows</h2>
-<p>The 2022, 2025 and 2026 exports repeat {dup_rows / 1e6:.1f}M rows verbatim across CSV parts: the orange in Figures 1, 2 and 5.</p>
+<p>The 2022, 2025 and 2026 exports repeat {dup_rows / 1e6:.1f}M rows verbatim (orange in Figures 1, 2 and 5).</p>
 {fixed('duplicates', f'The {dup_rows / 1e6:.1f}M repeated rows are removed when the warehouse is built.')}
 
 <h2>Missing values move around over time</h2>
