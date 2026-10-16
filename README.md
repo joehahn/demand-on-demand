@@ -238,7 +238,7 @@ year" baseline model, plotted versus sales volume. When a forecast is below the 
 accurate. Blue dots beat the baseline model, orange dots do not.</em></p>
 
 - [evals/sql_report.md](evals/sql_report.md): the forecasting agent's SQL scored against an answer key: 34 requests (brands, categories, minis, cities, counties, a 207-store chain, weeks,
-  quarters, a year, and requests it should decline), 3 runs each. The sales records its SQL selected, summed by month,
+  quarters, a year, and two requests it should turn down: a city outside Iowa and a forecast 24 months ahead), 3 runs each. The sales records its SQL selected, summed by month,
   matched the key in every month in all 102 runs, and all 102 read the grain and horizon right.
 - [evals/grounding.md](evals/grounding.md): each dashboard's summary opens with one sentence written by Claude from the
   forecast's computed numbers (the accuracy sentence and every other number come from fixed code). This check traces
