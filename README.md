@@ -139,11 +139,11 @@ calendar year in progress, and can select anything SQL can express, such as the 
 
 ## Using an AI agent + forecasting for market analysis
 
-Suppose you manage the Hy-Vee stores in Ankeny and worry that your liquor sales are going down. Start Claude Code in this
-folder and paste these five requests one at a time. Claude Code is the assistant you talk to: it hands forecast
-requests to the forecasting agent (taking about 30 seconds to generate a forecast). It answers quick lookups and
-chart requests itself, from the database (read-only) or from the forecast just made. Using a different AI
-assistant? See [From any AI assistant](#from-any-ai-assistant).
+Suppose you manage the Hy-Vee stores in Ankeny and worry that your liquor sales are going down. Start an AI coding
+assistant such as Claude Code in this folder (using a different assistant? see
+[From any AI assistant](#from-any-ai-assistant)) and paste these five requests one at a time. The assistant hands
+forecast requests to the forecasting agent (taking about 30 seconds to generate a forecast). It answers quick lookups
+and chart requests itself, from the database (read-only) or from the forecast just made.
 
 **1. Confirm the worry**
 
