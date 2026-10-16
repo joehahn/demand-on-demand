@@ -46,13 +46,24 @@ def records_per_month(title):
     return pn.records / months
 
 
+def bottles_per_month(title):
+    """Bottles per month behind one benchmark forecast: its saved query with the measure swapped to bottles, summed.
+    Shown in the report as the forecast's volume (for dollar and liter forecasts too)."""
+    slug = re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")[:60]
+    page = pickle.loads((HERE / "out" / slug / "page.pkl").read_bytes())
+    sql = re.sub(r"l\.sales_(dollars|liters|bottles) AS value", "l.sales_bottles AS value", page["spec"].sql)
+    pn = page["panel"]
+    months = max(1.0, (pd.Timestamp(pn.records_through) - pd.Timestamp(pn.series.index[0])).days / 30.4)
+    return db.query(f"SELECT sum(value) AS b FROM ({sql}) q", timeout="300s").b.iloc[0] / months
+
+
 def scatter_svg(ok, hv=None):
-    """Relative error vs sales records per month (log scale), one dot per forecast, as a small standalone SVG."""
+    """Relative error vs bottles per month (log scale), one dot per forecast, as a small standalone SVG."""
     W, H, L, R, T, B = 640, 360, 60, 36, 20, 50          # size and margins in pixels
     hv = hv if hv is not None else ok.iloc[:0]
     allr = pd.concat([ok.assign(ring=False), hv.assign(ring=True)])
-    xs = allr.records_per_month.clip(lower=1)
-    x0, x1 = 0, math.ceil(math.log10(xs.max()))          # 1 to the next power of ten
+    xs = allr.bottles_per_month.clip(lower=1)
+    x0, x1 = math.floor(math.log10(xs.min())), math.ceil(math.log10(xs.max()))   # powers of ten around the data
     y0, y1 = 0, max(1.6, math.ceil(allr.rel_mae.max() * 5) / 5)
     px = lambda v: L + (math.log10(v) - x0) / (x1 - x0) * (W - L - R)
     py = lambda v: H - B - (v - y0) / (y1 - y0) * (H - T - B)
@@ -74,9 +85,9 @@ def scatter_svg(ok, hv=None):
     for r in allr.itertuples():   # blue beats the baseline, orange does not; rings are the high-volume set
         color = "#2a78d6" if r.rel_mae < 1 else "#e8692e"
         paint = f'fill="none" stroke="{color}" stroke-width="2"' if r.ring else f'fill="{color}" fill-opacity="0.85"'
-        s.append(f'<circle cx="{px(max(r.records_per_month, 1)):.1f}" cy="{py(r.rel_mae):.1f}" r="5" {paint}>'
+        s.append(f'<circle cx="{px(max(r.bottles_per_month, 1)):.1f}" cy="{py(r.rel_mae):.1f}" r="5" {paint}>'
                  f'<title>{html.escape(r.forecast)}: {r.rel_mae:.2f}</title></circle>')
-    s.append(f'<text x="{(L + W - R) / 2}" y="{H - 12}" text-anchor="middle" fill="{ink}">sales records per month (log scale)</text>')
+    s.append(f'<text x="{(L + W - R) / 2}" y="{H - 12}" text-anchor="middle" fill="{ink}">bottles per month (log scale)</text>')
     s.append(f'<text x="16" y="{(T + H - B) / 2}" text-anchor="middle" fill="{ink}" '
              f'transform="rotate(-90 16 {(T + H - B) / 2})">relative error (below 1 beats the baseline)</text>')
     (HERE / "volume.svg").write_text("\n".join(s) + "\n</svg>\n")
@@ -84,10 +95,10 @@ def scatter_svg(ok, hv=None):
 
 def table(rows):
     """Markdown table rows, best relative error first."""
-    md = ["| forecast | horizon | sales records per month | relative error | model error | baseline error | model |",
+    md = ["| forecast | horizon | bottles per month | relative error | model error | baseline error | model |",
           "|---|---|---|---|---|---|---|"]
     for r in rows.sort_values("rel_mae").itertuples():
-        md.append(f"| {r.forecast} | {r.horizon} | {r.records_per_month:,.0f} | {r.rel_mae:.2f} | {r.model_error:.1%} | "
+        md.append(f"| {r.forecast} | {r.horizon} | {r.bottles_per_month:,.0f} | {r.rel_mae:.2f} | {r.model_error:.1%} | "
                   f"{r.baseline_error:.1%} | {r.model} |")
     return md
 
@@ -105,30 +116,32 @@ def write_report(df):
           f"- Beat \"same month last year\" on the 24-month test window: **{better} of {len(ok)}** ({better / len(ok):.0%})",
           f"- Median error relative to that baseline: **{ok.rel_mae.median():.2f}** (below 1 is better)",
           f"- Median monthly error (WAPE, weighted absolute percentage error: total absolute error divided by total actual sales): model {ok.model_error.median():.1%}, baseline {ok.baseline_error.median():.1%}",
-          f"- Volume matters: the 10 forecasts with the fewest sales records per month beat the baseline "
-          f"{(ok.nsmallest(10, 'records_per_month').rel_mae < 1).sum()} times, the 10 with the most "
-          f"{(ok.nlargest(10, 'records_per_month').rel_mae < 1).sum()} times. With a handful of orders a month, one "
+          f"- Volume matters: the 10 forecasts with the fewest bottles per month beat the baseline "
+          f"{(ok.nsmallest(10, 'bottles_per_month').rel_mae < 1).sum()} times, the 10 with the most "
+          f"{(ok.nlargest(10, 'bottles_per_month').rel_mae < 1).sum()} times. With a handful of orders a month, one "
           f"order more or less swings the total, and neither the model nor the baseline can predict that.\n"]
     if len(hv):
         both = pd.concat([ok, hv])
-        big = both[both.records_per_month > MIN_RECORDS]
-        md += [f"**High-volume check.** {len(hv)} more forecasts were picked to have over {MIN_RECORDS:,} sales records a "
-               f"month (statewide and big-county categories, vendors and products; seed 1). They beat the baseline "
-               f"**{(hv.rel_mae < 1).sum()} of {len(hv)}** times, median relative error **{hv.rel_mae.median():.2f}**. "
-               f"With the random sample's high-volume forecasts, {(big.rel_mae < 1).sum()} of {len(big)} forecasts over "
-               f"{MIN_RECORDS:,} records a month beat the baseline (ringed dots below are the high-volume set).\n"]
-    md += ["![Relative error vs sales records per month: low-volume forecasts scatter around or above 1, high-volume "
+        big = both[both.bottles_per_month > HIGH_BOTTLES]
+        md += [f"**High-volume check.** {len(hv)} more forecasts were picked for high volume (over {MIN_RECORDS:,} sales "
+               f"records a month, which here is over {HIGH_BOTTLES:,} bottles a month; statewide and big-county "
+               f"categories, vendors and products; seed 1). They beat the baseline **{(hv.rel_mae < 1).sum()} of "
+               f"{len(hv)}** times, median relative error **{hv.rel_mae.median():.2f}**. Counting both sets, "
+               f"{(big.rel_mae < 1).sum()} of {len(big)} forecasts over {HIGH_BOTTLES:,} bottles a month beat the "
+               f"baseline (ringed dots below are the high-volume set).\n"]
+    md += ["![Relative error vs bottles per month: low-volume forecasts scatter around or above 1, high-volume "
            "ones mostly below](volume.svg)\n", "## Random sample\n"] + table(ok)
     for r in rnd_all[rnd_all.rel_mae.isna()].itertuples():
         md.append(f"| {r.forecast} | {r.horizon} | | not run: {r.error} | | | |")
     if len(hv):
-        md += ["", f"## High-volume set (over {MIN_RECORDS:,} sales records a month)\n"] + table(hv)
+        md += ["", f"## High-volume set (over {HIGH_BOTTLES:,} bottles a month)\n"] + table(hv)
     scatter_svg(ok, hv)
     (HERE / "report.md").write_text("\n".join(md) + "\n")
     print("\n".join(md[:8]))
 
 
-MIN_RECORDS = 3000   # sales records per month for the high-volume set
+MIN_RECORDS = 3000     # sales records per month: how the high-volume set is picked (a quick count)
+HIGH_BOTTLES = 50_000  # what that comes to in bottles here (the set's smallest is 52,000), the line used in the report
 
 
 def high_volume_specs(n, skip, seed=1):
@@ -183,7 +196,8 @@ def run_all(specs, sample):
                          "model_error": (ps.wape * ps.folds).sum() / ps.folds.sum(),
                          "baseline_error": (ps.wape_naive * ps.folds).sum() / ps.folds.sum(),
                          "model": s["best"].get("model"), "seconds": s["seconds"],
-                         "records_per_month": records_per_month(spec.title), "sample": sample})
+                         "records_per_month": records_per_month(spec.title),
+                         "bottles_per_month": bottles_per_month(spec.title), "sample": sample})
         except Exception as e:
             rows.append({"forecast": spec.title, "horizon": spec.horizon, "error": str(e)[:120], "sample": sample})
         r = rows[-1]
@@ -204,9 +218,10 @@ if __name__ == "__main__":
         sys.exit()
     if "--report" in sys.argv:   # rewrite the report from the last run's results
         df = pd.read_csv(HERE / "results.csv")
-        if "records_per_month" not in df:   # results written before this column existed
-            df["records_per_month"] = [records_per_month(f) if pd.notna(e) else None for f, e in zip(df.forecast, df.rel_mae)]
-            df.to_csv(HERE / "results.csv", index=False)
+        for col, fn in [("records_per_month", records_per_month), ("bottles_per_month", bottles_per_month)]:
+            if col not in df:   # results written before this column existed
+                df[col] = [fn(f) if pd.notna(e) else None for f, e in zip(df.forecast, df.rel_mae)]
+                df.to_csv(HERE / "results.csv", index=False)
         write_report(df)
         sys.exit()
     n = int(sys.argv[sys.argv.index("--n") + 1]) if "--n" in sys.argv else 30
