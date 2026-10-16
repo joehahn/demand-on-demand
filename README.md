@@ -230,7 +230,7 @@ liquor demand is very regular year to year, so the baseline model (same as last 
 actually quite good and challenging for ML to beat. The report lists every forecast, the
 misses included.
 
-![Relative error vs bottles per month for 45 benchmark forecasts: low-volume forecasts scatter around or above 1, high-volume ones mostly below](benchmark/volume.svg)
+![Relative error vs bottles per month for 45 benchmark forecasts: low-volume forecasts scatter around or above 1, high-volume ones mostly below](benchmark/accuracy_vs_volume.svg)
 
 <p align="center"><em><b>Figure 3.</b> Each dot is one benchmark forecast: its error relative to the "same month last
 year" baseline model, plotted versus sales volume. When a forecast is below the dashed line, the ML model is more

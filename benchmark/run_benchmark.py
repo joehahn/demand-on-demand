@@ -92,7 +92,7 @@ def scatter_svg(ok):
     s.append(f'<text x="{(L + W - R) / 2}" y="{H - 12}" text-anchor="middle" fill="{ink}">bottles per month (log scale)</text>')
     s.append(f'<text x="18" y="{(T + H - B) / 2}" text-anchor="middle" fill="{ink}" '
              f'transform="rotate(-90 18 {(T + H - B) / 2})">relative error (below 1 beats the baseline)</text>')
-    (HERE / "volume.svg").write_text("\n".join(s) + "\n</svg>\n")
+    (HERE / "accuracy_vs_volume.svg").write_text("\n".join(s) + "\n</svg>\n")
 
 
 BANDS = [0, 1_000, 50_000, float("inf")]   # bottles per month: light, medium, heavy
@@ -123,7 +123,7 @@ def write_report(df):
         md.append(f"| {name} | {len(g)} | {(g.rel_mae < 1).sum()} | {g.rel_mae.median():.2f} | "
                   f"{g.model_error.median():.1%} | {g.baseline_error.median():.1%} |")
     md += ["", "![Relative error vs bottles per month: low-volume forecasts scatter around or above 1, high-volume "
-           "ones mostly below](volume.svg)\n",
+           "ones mostly below](accuracy_vs_volume.svg)\n",
            "| forecast | horizon | bottles per month | relative error | model error | baseline error | model |",
            "|---|---|---|---|---|---|---|"]
     for r in ok.sort_values("bottles_per_month", ascending=False).itertuples():

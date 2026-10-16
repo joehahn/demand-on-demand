@@ -11,7 +11,7 @@
 | 1,000 to 50,000 | 15 | 10 | 0.92 | 13.3% | 14.7% |
 | over 50,000 | 21 | 14 | 0.81 | 5.5% | 8.3% |
 
-![Relative error vs bottles per month: low-volume forecasts scatter around or above 1, high-volume ones mostly below](volume.svg)
+![Relative error vs bottles per month: low-volume forecasts scatter around or above 1, high-volume ones mostly below](accuracy_vs_volume.svg)
 
 | forecast | horizon | bottles per month | relative error | model error | baseline error | model |
 |---|---|---|---|---|---|---|
