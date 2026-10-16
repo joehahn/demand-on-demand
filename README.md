@@ -152,7 +152,7 @@ Show a table of total liquor sales by year for all Hy-Vee stores in Ankeny, no f
 ```
 
 A quick lookup with no forecast, and the results confirm the concern: Ankeny's Hy-Vees peaked at about $4.9 million
-in 2020 and have fallen every year since, to $3.9 million in 2025, about 20% down.
+in 2020 and have fallen every year since to $3.9 million in 2025, about 20% down.
 
 **2. Test a hunch with a forecast**
 
