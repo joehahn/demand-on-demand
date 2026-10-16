@@ -165,14 +165,14 @@ The forecasting agent builds a dashboard with one forecast per group. Costco's c
 and the agent points out that Costco actually started selling liquor in October 2022, a little earlier than
 remembered.
 
-**3. See the years side by side**
+**3. Ask for a custom chart: see the years side by side**
 
 ```text
 Plot annual liquor sales of Hy-Vee vs Costco vs all other stores in Ankeny,
 with 2026 showing actuals plus forecast
 ```
 
-A chart Claude Code builds from the forecast it just made, with no new forecasting. Hy-Vee shrinks after 2020, Costco
+The assistant builds this chart from the forecast it just made, with no new forecasting. Hy-Vee shrinks after 2020, Costco
 climbs to about $2.1 million a year, and all the other stores grow until 2024, then level off.
 
 **4. Measure it**
