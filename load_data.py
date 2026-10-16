@@ -587,7 +587,8 @@ TABLE_NOTES = {
 COLUMN_NOTES = {
     "sales.invoice_line": {
         "line_id": "Unique id of the order line.",
-        "invoice_id": "Id of the order (invoice); one order can have many lines.",
+        "invoice_id": "Order (invoice) id from 2025-09-01 on; before that, one id per order line, so it cannot count "
+                      "orders before September 2025.",
         "ordered_on": "Date the retailer placed the order with the state.",
         "store_no": "Ordering store; joins sales.store.",
         "item_no": "Product ordered; joins sales.item.",

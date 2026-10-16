@@ -103,12 +103,6 @@ QUERIES = {
         FROM sales.item_family f JOIN sales.item o ON o.item_no = f.item_no JOIN sales.item n ON n.item_no = f.family_item_no
         ORDER BY o.total_bottles DESC""",
 
-    # order ids changed meaning on 2025-09-01
-    "lines_per_invoice": """
-        SELECT date_trunc('month', ordered_on)::date AS month,
-               count(*)::float / count(DISTINCT invoice_id) AS lines_per_invoice
-        FROM sales.invoice_line WHERE ordered_on >= '2024-01-01' GROUP BY 1 ORDER BY 1""",
-
     "counties": """
         WITH c AS (SELECT s.county_fips, max(s.county_name) AS county, sum(l.sales_dollars) AS dollars
                    FROM sales.invoice_line l JOIN sales.store s USING (store_no)
@@ -417,13 +411,6 @@ def fig_rtd(d):
     return style(f, "Cocktails/RTD bottles per month by recorded category code", "bottles", legend=True)
 
 
-def fig_lines_per_invoice(d):
-    x = d["lines_per_invoice"]
-    f = go.Figure(line(x.month, x.lines_per_invoice, "Lines per invoice_id", BLUE))
-    f.update_traces(mode="lines+markers", marker=dict(size=8), hovertemplate="%{x|%b %Y}: %{y:.1f}<extra></extra>")
-    return style(f, "invoice_id changed meaning on 2025-09-01 (line id became order id)", "lines per id")
-
-
 def fig_bottle_sizes(d):
     b = d["bottle_sizes"].dropna()
     top = b.nlargest(15, "lines").sort_values("bottle_volume_ml")
@@ -569,9 +556,9 @@ recomputed as bottles times bottle volume.</p>
 {fixed('liters', 'Liters are recomputed as bottles times bottle volume on every line, which restores Nov 2025 to Jan 2026, when liters were rounded down to whole liters.')}
 
 <h2>invoice_id changed meaning</h2>
-<p>Lines per invoice_id per month: one id per line until August 2025, one per order after.</p>
-{plot(fig_lines_per_invoice(d))}
-{fixed('checked', 'The warehouse gives every order line its own new ID and never counts orders by invoice_id, so the change of meaning has no effect.')}
+<p>Until August 2025 every order line had its own invoice_id; from September 1, 2025 one invoice_id covers a whole
+order, about 20 lines. So counting distinct invoice_ids overstates orders about twentyfold before September 2025.</p>
+{fixed('checked', 'Forecasts never use invoice_id: the warehouse gives every order line its own new ID, and the data dictionary warns that invoice_id identifies orders only from September 2025.')}
 
 <h2>Geography: joins to Census reference data</h2>
 {plot(fig_counties(d))}
