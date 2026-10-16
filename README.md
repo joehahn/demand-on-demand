@@ -168,7 +168,8 @@ remembered.
 **3. See the years side by side**
 
 ```text
-Plot annual liquor sales of Hy-Vee vs Costco vs all other stores in Ankeny, with 2026 showing actuals plus forecast
+Plot annual liquor sales of Hy-Vee vs Costco vs all other stores in Ankeny,
+with 2026 showing actuals plus forecast
 ```
 
 A chart Claude Code builds from the forecast it just made, with no new forecasting. Hy-Vee shrinks after 2020, Costco
