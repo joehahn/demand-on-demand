@@ -297,7 +297,7 @@ The dashboard lands in `out/<title>/dashboard.html`, on your machine only (`out/
 `python -m dod.agent "<request>" --sql-only` shows only the forecasting agent's part: its SQL and how it read the
 request. New months of data mean rerunning `load_data.py` (about 20 minutes for the whole load).
 
-This is an outline, not a turnkey install. Standing it up on your own data (the warehouse and its access roles, the
+These steps assume the database and its access roles already exist, so this is not a turnkey install. Standing it up on your own data (the warehouse and its access roles, the
 data fixes, and the agent's business glossary) is the part where [JMH DataSciences](https://jmh-datasciences.com) can
 help.
 
