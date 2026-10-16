@@ -524,7 +524,7 @@ month, so 100% is a normal month and 300% is three times normal.</p>
 {fixed('checked', 'No fix needed: unit price is computed as sales dollars divided by bottles, which are always filled. Blank counties affect only a few percent of early lines, and county comes from the store table instead.')}
 
 <h2>Category codes were reused for different categories</h2>
-<p>Distinct category names and codes per year (2016 split at the August 29 reorganization), and the first 24 reassigned codes.</p>
+<p>Distinct category names and codes per year, with 2016 shown as two points: before and after the state reorganized its categories on August 29, 2016. The table lists the first 24 codes that were reassigned.</p>
 {plot(fig_categories(d))}
 {table(cat.head(24).rename(columns={"lines": "records"}), {"records": comma})}
 {fixed('categories', 'Every order line takes its product\'s current category, and retired codes map to the live code with the same name, so all ten years are in today\'s taxonomy.')}
