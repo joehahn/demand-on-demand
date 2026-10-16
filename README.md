@@ -182,8 +182,8 @@ climbs to about $2.1 million a year, and all the other stores grow until 2024, t
 Also overlay Hy-Vee's market share on that plot
 ```
 
-Hy-Vee held about 43 to 45% of Ankeny's liquor sales through 2021, then lost share every year from 2022, the year
-Costco arrived: 37%, 32%, 30%, and 29% in 2025. Hy-Vee lost about a third of its share in four years.
+Hy-Vee was already slowly losing market share to other Ankeny stores, and the loss sped up when Costco arrived in
+2022: from about 43% of Ankeny's liquor sales to 29% in four years.
 
 **5. Find the cause**
 
