@@ -62,7 +62,7 @@ def bottles_per_month(title):
 
 def scatter_svg(ok):
     """Relative error vs bottles per month (log scale), one dot per forecast, as a small standalone SVG."""
-    W, H, L, R, T, B = 640, 360, 60, 36, 20, 50          # size and margins in pixels
+    W, H, L, R, T, B = 1000, 420, 64, 40, 20, 50         # size and margins in pixels (as wide as the README figures)
     allr = ok
     xs = allr.bottles_per_month.clip(lower=1)
     x0, x1 = math.floor(math.log10(xs.min())), math.ceil(math.log10(xs.max()))   # powers of ten around the data
@@ -71,7 +71,7 @@ def scatter_svg(ok):
     py = lambda v: H - B - (v - y0) / (y1 - y0) * (H - T - B)
     grey, ink = "#9a9892", "#1f1e1c"
     s = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" '
-         f'font-family="system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12">',
+         f'font-family="system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="14">',
          f'<rect width="{W}" height="{H}" fill="#ffffff"/>']
     for k in range(x0, x1 + 1):                          # vertical gridlines at 1, 10, 100, ...
         x = px(10 ** k)
@@ -87,11 +87,11 @@ def scatter_svg(ok):
     for r in allr.itertuples():   # blue beats the baseline, orange does not
         color = "#2a78d6" if r.rel_mae < 1 else "#e8692e"
         paint = f'fill="{color}" fill-opacity="0.85"'
-        s.append(f'<circle cx="{px(max(r.bottles_per_month, 1)):.1f}" cy="{py(r.rel_mae):.1f}" r="5" {paint}>'
+        s.append(f'<circle cx="{px(max(r.bottles_per_month, 1)):.1f}" cy="{py(r.rel_mae):.1f}" r="7" {paint}>'
                  f'<title>{html.escape(r.forecast)}: {r.rel_mae:.2f}</title></circle>')
     s.append(f'<text x="{(L + W - R) / 2}" y="{H - 12}" text-anchor="middle" fill="{ink}">bottles per month (log scale)</text>')
-    s.append(f'<text x="16" y="{(T + H - B) / 2}" text-anchor="middle" fill="{ink}" '
-             f'transform="rotate(-90 16 {(T + H - B) / 2})">relative error (below 1 beats the baseline)</text>')
+    s.append(f'<text x="18" y="{(T + H - B) / 2}" text-anchor="middle" fill="{ink}" '
+             f'transform="rotate(-90 18 {(T + H - B) / 2})">relative error (below 1 beats the baseline)</text>')
     (HERE / "volume.svg").write_text("\n".join(s) + "\n</svg>\n")
 
 
