@@ -2,6 +2,7 @@
 chosen model beats "same month last year" on the 24-month test window it never trained on.
 
     python benchmark/run_benchmark.py [--n 30]
+    python benchmark/run_benchmark.py --report    # rewrite report.md from results.csv and the saved runs, no forecasting
 
 Requests are sampled deterministically (seed 0) from the warehouse: top products by county and statewide,
 categories statewide and by county, vendors, and the statewide total. Each is written as a request form
@@ -9,7 +10,9 @@ categories statewide and by county, vendors, and the statewide total. Each is wr
 as every forecast (dod/forecast.run): no AI calls, so the benchmark measures the forecasting, not the SQL. Writes
 benchmark/results.csv and benchmark/report.md. Each forecast takes about 10 to 20 seconds.
 """
+import pickle
 import random
+import re
 import sys
 import time
 from pathlib import Path
@@ -29,6 +32,39 @@ def run_spec(spec, out_root):
     plan = Plan(title=spec.title, sql=panel.reference_sql(spec), target=spec.target, horizon=spec.horizon,
                 product=spec.product.label, place=spec.region.label, series_by=spec.series_by)
     return forecast.run(plan, narrate=False, out_root=out_root, log=lambda *a: None)
+
+
+def records_per_month(title):
+    """Sales records per month behind one benchmark forecast, from its saved run: a low count means a noisy series."""
+    slug = re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")[:60]   # the same folder name as Plan.slug
+    pn = pickle.loads((HERE / "out" / slug / "page.pkl").read_bytes())["panel"]
+    months = max(1.0, (pd.Timestamp(pn.records_through) - pd.Timestamp(pn.series.index[0])).days / 30.4)
+    return pn.records / months
+
+
+def write_report(df):
+    """benchmark/report.md from the results table (one row per sampled forecast)."""
+    ok = df.dropna(subset=["rel_mae"])
+    better = (ok.rel_mae < 1).sum()
+    md = [f"# Forecast-accuracy benchmark\n",
+          f"{len(df)} forecasts sampled from the warehouse (seed 0), {len(ok)} completed, in {ok.seconds.sum():.0f}s "
+          f"({ok.seconds.median():.0f}s median each).\n",
+          f"- Beat \"same month last year\" on the 24-month test window: **{better} of {len(ok)}** ({better / len(ok):.0%})",
+          f"- Median error relative to that baseline: **{ok.rel_mae.median():.2f}** (below 1 is better)",
+          f"- Median monthly error (WAPE, weighted absolute percentage error: total absolute error divided by total actual sales): model {ok.model_error.median():.1%}, baseline {ok.baseline_error.median():.1%}",
+          f"- Volume matters: the 10 forecasts with the fewest sales records per month beat the baseline "
+          f"{(ok.nsmallest(10, 'records_per_month').rel_mae < 1).sum()} times, the 10 with the most "
+          f"{(ok.nlargest(10, 'records_per_month').rel_mae < 1).sum()} times. With a handful of orders a month, one "
+          f"order more or less swings the total, and neither the model nor the baseline can predict that.\n",
+          "| forecast | horizon | sales records per month | relative error | model error | baseline error | model |",
+          "|---|---|---|---|---|---|---|"]
+    for r in ok.sort_values("rel_mae").itertuples():
+        md.append(f"| {r.forecast} | {r.horizon} | {r.records_per_month:,.0f} | {r.rel_mae:.2f} | {r.model_error:.1%} | "
+                  f"{r.baseline_error:.1%} | {r.model} |")
+    for r in df[df.rel_mae.isna()].itertuples():
+        md.append(f"| {r.forecast} | {r.horizon} | | not run: {r.error} | | | |")
+    (HERE / "report.md").write_text("\n".join(md) + "\n")
+    print("\n".join(md[:7]))
 
 
 def sample_specs(n, seed=0):
@@ -68,6 +104,13 @@ def sample_specs(n, seed=0):
 
 
 if __name__ == "__main__":
+    if "--report" in sys.argv:   # rewrite the report from the last run's results
+        df = pd.read_csv(HERE / "results.csv")
+        if "records_per_month" not in df:   # results written before this column existed
+            df["records_per_month"] = [records_per_month(f) if pd.notna(e) else None for f, e in zip(df.forecast, df.rel_mae)]
+            df.to_csv(HERE / "results.csv", index=False)
+        write_report(df)
+        sys.exit()
     n = int(sys.argv[sys.argv.index("--n") + 1]) if "--n" in sys.argv else 30
     rows, t0 = [], time.time()
     out_root = HERE / "out"
@@ -78,25 +121,12 @@ if __name__ == "__main__":
             rows.append({"forecast": spec.title, "horizon": spec.horizon, "rel_mae": s["test_rel_mae"],
                          "model_error": (ps.wape * ps.folds).sum() / ps.folds.sum(),
                          "baseline_error": (ps.wape_naive * ps.folds).sum() / ps.folds.sum(),
-                         "model": s["best"].get("model"), "seconds": s["seconds"]})
+                         "model": s["best"].get("model"), "seconds": s["seconds"],
+                         "records_per_month": records_per_month(spec.title)})
         except Exception as e:  # too little history etc. is a result, not a crash
             rows.append({"forecast": spec.title, "horizon": spec.horizon, "error": str(e)[:120]})
         r = rows[-1]
         print(f"  {r.get('rel_mae', float('nan')):.3f}  {r['forecast']}" + (f"  ERROR {r['error']}" if "error" in r else ""))
     df = pd.DataFrame(rows)
     df.to_csv(HERE / "results.csv", index=False)
-    ok = df.dropna(subset=["rel_mae"])
-    better = (ok.rel_mae < 1).sum()
-    md = [f"# Forecast-accuracy benchmark\n",
-          f"{len(df)} forecasts sampled from the warehouse (seed 0), {len(ok)} completed, in {time.time() - t0:.0f}s "
-          f"({ok.seconds.median():.0f}s median each).\n",
-          f"- Beat \"same month last year\" on the 24-month test window: **{better} of {len(ok)}** ({better / len(ok):.0%})",
-          f"- Median error relative to that baseline: **{ok.rel_mae.median():.2f}** (below 1 is better)",
-          f"- Median monthly error (WAPE, weighted absolute percentage error: total absolute error divided by total actual sales): model {ok.model_error.median():.1%}, baseline {ok.baseline_error.median():.1%}\n",
-          "| forecast | horizon | relative error | model error | baseline error | model |", "|---|---|---|---|---|---|"]
-    for r in ok.sort_values("rel_mae").itertuples():
-        md.append(f"| {r.forecast} | {r.horizon} | {r.rel_mae:.2f} | {r.model_error:.1%} | {r.baseline_error:.1%} | {r.model} |")
-    for r in df[df.rel_mae.isna()].itertuples():
-        md.append(f"| {r.forecast} | {r.horizon} | not run: {r.error} | | | |")
-    (HERE / "report.md").write_text("\n".join(md) + "\n")
-    print("\n".join(md[:6]))
+    write_report(df)
