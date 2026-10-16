@@ -6,10 +6,10 @@
   "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/tito_s_minis_des_moines_next_5_months",
   "grain": "month",
   "rel_mae": 0.8374132921961794,
-  "summary": "Forecast totals about 27,000 bottles over the next 5 months, down 6% from the same months last year. This forecast is 16% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0331,
-  "agent_seconds": 14.1,
-  "harness_seconds": 9.2
+  "summary": "Tito's minis in Des Moines are forecast at about 27,000 bottles over the next five months, down 6% from the same months last year. This forecast is 16% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0345,
+  "agent_seconds": 23.8,
+  "harness_seconds": 8.8
  },
  {
   "request": "What revenue should we expect from Fireball in Linn County next quarter?",
@@ -19,9 +19,9 @@
   "grain": "month",
   "rel_mae": 0.9240903936855143,
   "summary": "Fireball in Linn County is forecast at $593,000 for Q4 2026, up 8% from the same period last year. This forecast is 8% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0454,
-  "agent_seconds": 16.2,
-  "harness_seconds": 8.3
+  "cost": 0.033,
+  "agent_seconds": 13.7,
+  "harness_seconds": 6.6
  },
  {
   "request": "How many bottles of cream liqueur will Iowa stores order for the holidays?",
@@ -31,9 +31,9 @@
   "grain": "month",
   "rel_mae": 0.699859621273913,
   "summary": "Cream liqueurs in Iowa are forecast at about 250,000 bottles through the holidays, down 6% from the same months last year. This forecast is 30% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0154,
-  "agent_seconds": 9.8,
-  "harness_seconds": 11.8
+  "cost": 0.0174,
+  "agent_seconds": 12.4,
+  "harness_seconds": 8.0
  },
  {
   "request": "show me weekly forecast of Cream liqueur bottles sold across all of iowa, twelve weeks out",
@@ -42,10 +42,10 @@
   "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/weekly_cream_liqueur_bottles_statewide",
   "grain": "week",
   "rel_mae": 0.8229315229222476,
-  "summary": "Forecast calls for about 157,000 bottles over the coming weeks, down 5% from the same weeks last year. This forecast is 18% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0138,
-  "agent_seconds": 7.6,
-  "harness_seconds": 24.9
+  "summary": "Statewide cream liqueur sales are forecast at about 157,000 bottles over the coming weeks, down 5% from the same weeks last year. This forecast is 18% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0168,
+  "agent_seconds": 9.6,
+  "harness_seconds": 21.0
  },
  {
   "request": "Quarterly forecast of Tito's sales dollars at stores that have never ordered Fireball, next 4 quarters",
@@ -54,9 +54,9 @@
   "out": "/Users/joehahn/Library/CloudStorage/Dropbox/prog/claude/demand-on-demand/out/quarterly_tito_s_dollars_at_stores_that_never_ordered_fireba",
   "grain": "month",
   "rel_mae": 0.8915317320953001,
-  "summary": "Forecast Tito's sales for Q4 2026 to Q2 2027 total $81,500, down 9% from the same quarters last year. This forecast is 11% more accurate than simply repeating last year's outcome.",
-  "cost": 0.0452,
-  "agent_seconds": 19.4,
-  "harness_seconds": 6.8
+  "summary": "Forecast Tito's dollars for Q4 2026 to Q2 2027 total about $81,500, down 9% from the same quarters last year. This forecast is 11% more accurate than simply repeating last year's outcome.",
+  "cost": 0.0524,
+  "agent_seconds": 24.7,
+  "harness_seconds": 5.5
  }
 ]
