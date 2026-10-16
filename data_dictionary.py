@@ -35,9 +35,9 @@ and it writes the SQL that selects the sales records to forecast. <strong>The de
 loader and stored in the database, so this page, the agent and any SQL client all read the same text.</strong> Raw
 tables and credentials are not described because the agent cannot reach them.</p>
 <p><a href="https://github.com/joehahn/demand-on-demand#readme">Back to demand-on-demand</a> &middot; <a href="data_exploration.html">data exploration</a>
-&middot; <a href="data_fixes.html">data fixes</a></p>
+&middot; <a href="data_fixes.html">data problems and fixes</a></p>
 {"".join(parts)}
-<footer>Data: Iowa Liquor Sales, State of Iowa, via the Iowa Data Hub, CC BY 4.0; modified (see the data fixes page).
+<footer>Data: Iowa Liquor Sales, State of Iowa, via the Iowa Data Hub, CC BY 4.0; modified (see the data problems and fixes page).
 County population and income: U.S. Census Bureau. Not endorsed by the State of Iowa.</footer>"""
     return page("Iowa Liquor Data Dictionary", body)
 

@@ -17,7 +17,7 @@ import plotly.graph_objects as go
 import psycopg
 from dotenv import load_dotenv
 
-from dod.viz import AQUA, BLUE, ORANGE, Plots, line, page, style, table
+from dod.viz import AQUA, BLUE, ORANGE, SEQ_BLUE, Plots, line, page, style, table
 
 ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
@@ -97,6 +97,51 @@ QUERIES = {
         UNION ALL
         SELECT 'median income', year, count(*) FILTER (WHERE carried_forward)
         FROM ref.county_income WHERE year >= 2023 GROUP BY 1, 2 ORDER BY 1, 2""",
+    # share of blank values per column per year, as published
+    "blanks": """
+        SELECT left(ordered_on, 4)::int AS year,
+               avg((NULLIF(trim(store_address), '') IS NULL)::int)       AS store_address,
+               avg((NULLIF(trim(county_name), '') IS NULL)::int)         AS county_name,
+               avg((NULLIF(trim(category_name), '') IS NULL)::int)       AS category_name,
+               avg((NULLIF(trim(vendor_name), '') IS NULL)::int)         AS vendor_name,
+               avg((NULLIF(trim(state_bottle_cost), '') IS NULL)::int)   AS state_bottle_cost,
+               avg((NULLIF(trim(state_bottle_retail), '') IS NULL)::int) AS state_bottle_retail
+        FROM raw.liquor_sales GROUP BY 1 ORDER BY 1""",
+    # category codes whose name changed: a naive join to sales.category mislabels history
+    "category_reuse": """
+        SELECT category_code, category_name,
+               min(ordered_on) AS first_seen, max(ordered_on) AS last_seen, count(*) AS lines
+        FROM raw.liquor_sales
+        WHERE category_code IN (SELECT category_code FROM raw.liquor_sales WHERE category_code <> ''
+                                GROUP BY 1 HAVING count(DISTINCT category_name) > 1)
+        GROUP BY 1, 2 ORDER BY 1, 3""",
+    # 2016 is split at the reorganization (2016-08-29) so neither half mixes the old and new taxonomies
+    "categories_per_year": """
+        SELECT CASE WHEN ordered_on < '2016-08-29' THEN '2016 to Aug 28'
+                    WHEN ordered_on < '2017-01-01' THEN '2016 from Aug 29' ELSE left(ordered_on, 4) END AS period,
+               count(DISTINCT category_name) AS category_names, count(DISTINCT category_code) AS category_codes
+        FROM raw.liquor_sales WHERE category_code <> '' GROUP BY 1 ORDER BY min(ordered_on)""",
+    # stores whose recorded attributes change over time
+    "store_drift": """
+        SELECT count(*) AS stores,
+               count(*) FILTER (WHERE n_name > 1)   AS changed_name,
+               count(*) FILTER (WHERE n_city > 1)   AS changed_city,
+               count(*) FILTER (WHERE n_county > 1) AS changed_county,
+               count(*) FILTER (WHERE n_addr > 1)   AS changed_address,
+               (SELECT count(*) FROM sales.store WHERE county_name IS NULL) AS no_county
+        FROM (SELECT store_no, count(DISTINCT store_name) n_name, count(DISTINCT store_city) n_city,
+                     count(DISTINCT NULLIF(trim(county_name), '')) n_county, count(DISTINCT store_address) n_addr
+              FROM raw.liquor_sales GROUP BY 1) s""",
+    "store_lifespans": """
+        SELECT date_trunc('month', first_order_on)::date AS month, count(*) AS opened
+        FROM sales.store GROUP BY 1 ORDER BY 1""",
+    # as recorded: volume and price per selling unit of the mini sleeves and packs
+    "mini_units": """
+        SELECT date_trunc('month', l.ordered_on)::date AS month,
+               1000 * sum(l.sales_liters_recorded) / sum(l.sales_bottles_recorded) AS ml_per_unit,
+               sum(l.sales_dollars) / sum(l.sales_bottles_recorded) AS dollars_per_unit
+        FROM sales.invoice_line l JOIN sales.item_units u USING (item_no)
+        WHERE u.units_per_sale IS NOT NULL GROUP BY 1 ORDER BY 1""",
     "large_lines": """
         SELECT l.item_no, i.item_desc, l.bottle_volume_ml AS ml, count(*) AS lines, sum(l.sales_liters) AS liters
         FROM sales.invoice_line l JOIN sales.item i USING (item_no) WHERE l.bottle_volume_ml >= 6000
@@ -135,6 +180,53 @@ def before_after(x, before, after, title, before_name="before (as published)", a
     return style(f, title, legend=True)
 
 
+def fig_categories(d):
+    c = d["categories_per_year"].set_index("period")   # '2016 to Aug 28', '2016 from Aug 29', '2017', ...
+    before, after = c.category_codes.iloc[0], c.category_codes.iloc[1]
+    f = go.Figure([line(c.index, c.category_names, "Distinct category names", BLUE),
+                   line(c.index, c.category_codes, "Distinct category codes", ORANGE, dash="dot")])
+    f.update_traces(mode="lines+markers", marker=dict(size=8))
+    f.update_xaxes(type="category")
+    return style(f, f"Categories were consolidated in August 2016 (about {before:.0f} codes became {after:.0f})", "count",
+                 legend=True)
+
+
+def fig_mini_units(d):
+    m = d["mini_units"]
+    # milliliters on the left axis, dollars on the right: the price stays flat while the recorded volume falls
+    ml = line(m.month, m.ml_per_unit, "ml per unit, as recorded (left)", ORANGE)
+    usd = line(m.month, m.dollars_per_unit, "dollars per unit (right)", BLUE)
+    ml.update(hovertemplate="%{y:,.0f} ml")
+    usd.update(yaxis="y2", hovertemplate="$%{y:,.2f}")
+    f = style(go.Figure([ml, usd]), "Mini sleeves: price per unit stayed flat while the recorded volume fell tenfold in 2019",
+              "ml per selling unit, as recorded", legend=True)
+    # both axes on round ticks that share gridlines (0-800 ml by 200, $0-16 by $4); legend below, clear of the title
+    return f.update_layout(margin=dict(r=60, b=70), yaxis=dict(range=[0, 800], dtick=200),
+                           yaxis2=dict(title="dollars per selling unit", overlaying="y", side="right", range=[0, 16],
+                                       dtick=4, tickprefix="$", showgrid=False, zeroline=False),
+                           legend=dict(orientation="h", y=-0.12, yanchor="top", x=0, xanchor="left"))
+
+
+def fig_blanks(d):
+    b = d["blanks"].set_index("year")
+    cols = list(b.columns)
+    f = go.Figure(go.Heatmap(
+        z=(b[cols].T.values * 100), x=b.index, y=cols, colorscale=[[i / 6, c] for i, c in enumerate(SEQ_BLUE)],
+        zmin=0, zmax=100, xgap=2, ygap=2, colorbar=dict(title="% blank", ticksuffix="%"),
+        texttemplate="%{z:.1f}%", textfont=dict(size=11),
+        hovertemplate="%{y}, %{x}: %{z:.1f}% blank<extra></extra>"))
+    f.update_xaxes(dtick=1)
+    return style(f, "Share of blank values by column and year (as published)", height=320).update_layout(hovermode="closest")
+
+
+def fig_store_openings(d):
+    s = d["store_lifespans"]
+    s = s[s.month > s.month.min()]  # the first month is "already open in 2016", not an opening
+    f = go.Figure(go.Bar(x=s.month, y=s.opened, marker_color=BLUE,
+                         hovertemplate="%{x|%b %Y}: %{y} stores first ordered<extra></extra>"))
+    return style(f, "Stores placing their first order each month", "stores").update_layout(hovermode="closest")
+
+
 def build(d):
     plot = Plots()
     comma = lambda v: f"{int(v):,}"
@@ -167,11 +259,13 @@ def build(d):
     flagged = d["units_top"][d["units_top"].bottles_per_unit.isna()].head(12).drop(columns=["bottles_per_unit", "ml"])
 
     fams = d["families"].astype({"old_last_order": str, "new_first_order": str})
+    cat = d["category_reuse"].astype({"first_seen": str, "last_seen": str}).rename(columns={"lines": "records"})
+    sd = d["store_drift"].iloc[0]
     body = f"""
-<h1>Iowa liquor sales: what was fixed</h1>
-<p>Every problem documented on <a href="data_exploration.html">the data exploration page</a> is fixed once, in the
-warehouse, by the loader's clean stage. The raw landing table stays exactly as published, so each fix below is shown
-before and after. Forecasts read only the clean tables, so none of them has to know these problems existed.</p>
+<h1>Iowa liquor sales: data problems and fixes</h1>
+<p>Every known problem in the published data: what it looks like, and how the loader fixes it once, in the warehouse.
+The raw landing table stays exactly as published, so each fix is shown before and after, and forecasts read only the
+clean tables. <a href="data_exploration.html">The data exploration page</a> shows what the clean data looks like.</p>
 {table(d["fixes"], {"rows_affected": lambda v: f"{int(v):,}" if v else "checked"})}
 
 <h2 id="duplicates">1. Duplicate rows in the state's export</h2>
@@ -179,7 +273,7 @@ before and after. Forecasts read only the clean tables, so none of them has to k
 The portal's own 2026 row count matches the de-duplicated count.</p>
 {plot(fig_dupes)}
 
-<h2 id="zero-lines">2. Zero lines</h2>
+<h2 id="zero-lines">2. Zero records</h2>
 <p>{n("zero_value_lines"):,} order lines with zero bottles or zero dollars, likely cancelled lines, were removed.</p>
 {table(d["zero_lines"], {"zero_lines_removed": comma})}
 
@@ -189,44 +283,60 @@ codes map to the live code with the same name. {n("category_taxonomy"):,} lines 
 1011400 meant "Bottled in Bond Bourbon" until 2016-08-25, so Tennessee whiskey looked like it jumped 20-fold that
 week:</p>
 {plot(fig_tn)}
+<p>The reorganization folded the categories into about half as many, and many old codes were given to different
+categories. Here 2016 is shown as two points: before and after the change on August 29, 2016. The table lists the first
+12 codes whose name changed.</p>
+{plot(fig_categories(d))}
+{table(cat.head(12), {"records": comma})}
 <p>And Cocktails/RTD, which looked discontinued in July 2022, is one continuous series:</p>
 {plot(fig_rtd)}
 {table(d["crosswalk"])}
 
-<h2 id="renumbering">4. Renumbered items</h2>
-<p>{n("item_renumbering")} items were renumbered: same description and size, the new number starting within weeks of
-the old one stopping. Each old number now belongs to a product family named after its current item, so the product's
-history is continuous. Tito's 50 ml mini, before and after:</p>
+<h2 id="renumbering">4. Renumbered products</h2>
+<p>The state sometimes gives a product a new item number. Tito's 50 ml mini was item 38180 until July 2020 and 38194
+after, so selecting today's number alone would lose four years of sales. The loader found {n("item_renumbering")}
+renumbered items (same description and size, the new number starting within weeks of the old one stopping) and links
+each old number to its product's current number, a product family, so the product's history is continuous. Tito's
+50 ml mini, before and after:</p>
 {plot(fig_tm)}
 <p>The 12 largest renumberings:</p>
 {table(fams.head(12), {"old_bottles": comma})}
 
 <h2 id="units">5. A sleeve of minis counted as one bottle</h2>
-<p>The state counts a sleeve or pack of 50 ml minis as one "bottle": Tito's mini (item 38194) sells at $19.20 per
-"bottle", a sleeve of 12. Until mid-2019 such an item was recorded at the sleeve's total volume (600 ml), and from
-then on at one mini's volume (50 ml) with the same price, so liters for minis dropped about tenfold overnight. Some
-packs switched the same way in August 2025, when the state changed source systems.
-Where the pack size is known, sales_bottles now counts real bottles and liters are bottles times volume; the originals
-stay in sales_bottles_recorded and sales_liters_recorded. {n("multi_bottle_units"):,} lines changed.</p>
+<p>The state records a sleeve of minis (e.g. Tito's 12 × 50 ml) as one "bottle". Its price per sleeve stayed about
+$13 (blue), but its recorded volume fell from the whole sleeve (about 700 ml) to one mini (about 50 to 70 ml) in
+mid-2019 (orange). So only the bookkeeping changed, not what stores bought. The dip near zero in late 2025 is a
+separate rounding error (section 6).</p>
+{plot(fig_mini_units(d))}
+<p>Where the pack size is known, the warehouse now counts each mini as a bottle and computes liters as bottles times
+one mini's volume, keeping the recorded values alongside. {n("multi_bottle_units"):,} records changed:</p>
 {plot(fig_ml)}
 {table(d["units_evidence"], {"units_as_recorded": comma, "bottles_clean": comma})}
 <p>The largest converted items:</p>
 {table(known, {"units_as_recorded": comma, "bottles_per_unit": comma})}
 <p>Items priced like a multi-pack (over $0.10 per ml) but with no evidence of the pack size are not converted, since
 a guess would put a wrong multiplier into their history. They stay in selling units and are flagged in
-<code>sales.item_units</code>. The largest:</p>
+the warehouse. The largest:</p>
 {table(flagged, {"units_as_recorded": comma})}
 
-<h2 id="liters">6. Liters truncated to whole liters</h2>
-<p>From November 2025 through January 2026 the state recorded liters rounded down to whole liters, so 10.5 liters
-became 10 and a 750 ml line became 0. {n("liters_truncated"):,} lines are affected. Liters are now bottles times
-bottle volume on every line, which matches what was recorded in every other month.</p>
+<h2 id="liters">6. Liters rounded down to whole liters</h2>
+<p>From November 2025 to January 2026 the state rounded each record's liters sold down to a whole liter (bottle sizes
+were unaffected). A case of six 750 ml bottles (4.5 L) became 4 L, and a sleeve of 12 minis (0.6 L) became 0 L.
+Statewide that loses about 3.5% of liters in those months ({n("liters_truncated"):,} records). Liters are now bottles
+times bottle volume on every record, which matches what was recorded in every other month.</p>
 {plot(fig_lt)}
 
-<h2 id="cities">7. City spellings</h2>
-<p>Each city now has one spelling in <code>store.city</code>; the source spelling is kept in
-<code>store.city_recorded</code>.</p>
+<h2 id="cities">7. Store details change, and cities are spelled several ways</h2>
+<p>{int(sd.changed_name):,} of {int(sd.stores):,} stores changed name over the years, {int(sd.changed_address):,}
+address, {int(sd.changed_city):,} city and {int(sd.changed_county):,} county. A store keeps its number for life, so its sales
+stay together through these changes; the warehouse uses each store's most recent name, address and county. The
+{int(sd.no_county)} stores whose most recent records leave the county blank count in city and statewide requests but not
+county ones. Some cities are spelled more than one way, which would split one city into two; each now has one
+spelling:</p>
 {table(d["cities"])}
+<p>Stores also open and close throughout the history. That is real, not an error, and the models see it through the
+number of stores ordering:</p>
+{plot(fig_store_openings(d))}
 
 <h2 id="census">8. Census data lags sales</h2>
 <p>Census publishes county population about a year late and income about two years late. The latest published year
@@ -234,10 +344,16 @@ is carried forward, flagged, so every sales month has a reference value:</p>
 {table(d["census"])}
 
 <h2 id="checked">9. Checked and left as is</h2>
-<p><strong>Large-volume lines</strong> (6 liters or more) looked like errors but are genuine: pallet shippers and
-whole-cask purchases. <strong>Missing prices</strong> before September 2025 need no fix, because unit price is
-dollars divided by bottles. <strong>invoice_id</strong> changed meaning in September 2025, so lines are keyed by the
-new line_id.</p>
+<p><strong>Missing values.</strong> Blank values come and go by column and year. The state's bottle cost and retail
+price are blank before September 2025, which needs no fix because unit price is dollars divided by bottles. Blank
+counties affect a few percent of early records, and county comes from the store instead.</p>
+{plot(fig_blanks(d))}
+<p><strong>invoice_id changed meaning.</strong> Until August 2025 every order line had its own invoice_id; from
+September 1, 2025 one invoice_id covers a whole order, about 20 lines. Counting distinct invoice_ids would overstate
+orders about twentyfold before September 2025. Forecasts never use it: the warehouse gives every order line its own new
+ID, and the data dictionary warns that invoice_id identifies orders only from September 2025.</p>
+<p><strong>Large-volume records</strong> (6 liters or more) looked like errors but are genuine: pallet shippers and
+whole-cask purchases, kept as recorded.</p>
 {table(d["large_lines"], {"lines": comma, "liters": comma})}
 
 <footer>

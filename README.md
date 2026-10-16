@@ -33,13 +33,12 @@ about 13,000 distinct products. This data warehouse is intended to be representa
 with real volume, real seasonality and real data problems, but this example contains nothing confidential.
 
 **Clean data, fixed once.** The public data also has the usual problems that many other business datasets have, and
-those issues are documented in this project's
-[data exploration page](https://joehahn.github.io/demand-on-demand/data_exploration.html): the state's export repeats
+those issues are documented on this project's
+[data problems and fixes page](https://joehahn.github.io/demand-on-demand/data_fixes.html): the state's export repeats
 1.5 million rows; category codes were reassigned in 2016 and a category was recoded in 2022; 254 products were
 renumbered; a sleeve of 12 minis was counted as one bottle; liters were rounded down to whole liters for three
-months; cities are spelled several ways. The data loader, [load_data.py](load_data.py), fixes each one once and in the warehouse, and the
-[data fixes page](https://joehahn.github.io/demand-on-demand/data_fixes.html) shows before and after, so that
-every forecast reads clean data.
+months; cities are spelled several ways. The data loader, [load_data.py](load_data.py), fixes each one once and in the warehouse, and that
+page shows each one before and after, so that every forecast reads clean data.
 
 ## How the forecasting agent works
 
@@ -111,9 +110,10 @@ SQL that was executed in the database, and a one-sentence summary of results.
 ## See it live
 
 - **[Data exploration](https://joehahn.github.io/demand-on-demand/data_exploration.html)**: what 26 million orders look like: volume by day, month and
-  year, seasonality (flat statewide but 3x to 8x swings in slices like cream liqueurs and gift packs), and every known
-  data problem.
-- **[Data fixes](https://joehahn.github.io/demand-on-demand/data_fixes.html)**: each problem and the fix applied once in the warehouse.
+  year, seasonality (flat statewide but 3x to 8x swings in slices like cream liqueurs and gift packs), geography and the
+  largest categories, vendors and stores.
+- **[Data problems and fixes](https://joehahn.github.io/demand-on-demand/data_fixes.html)**: each known problem in the
+  published data, shown before and after its fix in the warehouse.
 - **[Data dictionary](https://joehahn.github.io/demand-on-demand/data_dictionary.html)**: every table and column, and what the
   forecasting agent is told about them at the beginning of each request.
 
