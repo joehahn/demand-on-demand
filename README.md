@@ -169,7 +169,8 @@ remembered.
 
 ```text
 Plot annual liquor sales of Hy-Vee vs Costco vs all other stores in Ankeny,
-with 2026 showing actuals plus forecast
+with 2026 showing actuals plus forecast,
+make connected-line chart not barchart
 ```
 
 The assistant builds this chart from the forecast it just made, with no new forecasting. Hy-Vee shrinks after 2020, Costco
