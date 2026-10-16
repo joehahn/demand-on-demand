@@ -142,10 +142,8 @@ calendar year in progress, and can select anything SQL can express, such as the 
 Suppose you manage the Hy-Vee stores in Ankeny and worry that your liquor sales are going down. Start Claude Code in this
 folder and paste these five requests one at a time. Claude Code is the assistant you talk to: it hands forecast
 requests to the forecasting agent (taking about 30 seconds to generate a forecast). It answers quick lookups and
-chart requests itself, from the database (read-only) or from the forecast just made. Other coding assistants that can run commands in this folder
-should be able to follow the same steps: the instructions they need are in [AGENTS.md](AGENTS.md). Chat-only
-assistants would reach the forecasting agent through an MCP server, which would sit between the first two boxes of
-Figure 1 (see [From any AI assistant](#from-any-ai-assistant)).
+chart requests itself, from the database (read-only) or from the forecast just made. Using a different AI
+assistant? See [From any AI assistant](#from-any-ai-assistant).
 
 **1. Confirm the worry**
 
