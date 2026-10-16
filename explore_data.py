@@ -286,7 +286,8 @@ def fig_top(df, title):
     t = df.sort_values("dollars")
     f = go.Figure(go.Bar(x=t.dollars, y=t.name.str.title(), orientation="h", marker_color=BLUE,
                          customdata=t.lines, hovertemplate="%{y}: $%{x:,.0f}, %{customdata:,} records<extra></extra>"))
-    return style(f, title, height=460).update_layout(hovermode="closest", margin=dict(l=260))
+    f = style(f, title, height=460).update_layout(hovermode="closest", margin=dict(l=260))
+    return f.update_xaxes(title="sales dollars, January 2016 to August 2026", tickprefix="$")
 
 
 def by_category(d):
