@@ -555,13 +555,10 @@ as the one beside it:</p>
 {fixed('checked', 'Very large volumes were checked and are genuine pallet and whole-cask purchases, so they are kept as recorded.')}
 
 <h2>A bottle is not always a bottle</h2>
-<p>The state counts a sleeve or pack of minis (for example, Tito's sleeve of 12 × 50 ml) as one "bottle". Figure 17
-follows the volume and price recorded for one of those selling units. The price (blue, right axis) holds at about $13
-throughout, so stores kept buying the same sleeves. The recorded volume (orange, left axis) tells a different story:
-until mid-2019 it was the whole sleeve's volume (about 700 ml), then it became one mini's (about 50 to 70 ml), and the
-remaining packs switched by August 2025. Nothing changed on the shelf; only the bookkeeping did. Read as published,
-mini volumes drop tenfold in 2019, and a "bottle" of minis is really a sleeve. (The dip to near zero from November 2025
-to January 2026 is a separate error: liters were rounded down to whole liters, Figure 18.)</p>
+<p>The state records a sleeve of minis (e.g. Tito's 12 × 50 ml) as one "bottle". Its price per sleeve stayed about
+$13 (blue), but its recorded volume fell from the whole sleeve (about 700 ml) to one mini (about 50 to 70 ml) in
+mid-2019 (orange). So only the bookkeeping changed, not what stores bought. The dip near zero in late 2025 is a
+separate rounding error (Figure 18).</p>
 {plot(fig_mini_units(d))}
 {fixed('units', 'Where the pack size is known, a sleeve or pack counts each mini as a bottle, and liters are bottles times one mini\'s volume. Items with no evidence of their pack size stay in selling units and are flagged.')}
 <p>Recorded liters vs bottles times bottle volume, statewide.</p>
