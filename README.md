@@ -117,7 +117,7 @@ SQL that was executed in the database, and a one-sentence summary of results.
 - **[Data dictionary](https://joehahn.github.io/demand-on-demand/data_dictionary.html)**: every table and column, and what the
   forecasting agent is told about them at the beginning of each request.
 
-**Example forecasts.** Each was made by the forecasting agent from the plain-English request shown.
+**Example forecasts.** Each was made by the forecasting agent from the following plain-English requests.
 Each request's dashboard shows how its request was interpreted, the resulting forecast chart and table with the
 forecast's 80% interval, the backtested forecast against actuals from one year prior, the table the model learns from,
 which features improved model accuracy, a map of the stores included, the 48 model configurations compared, every
