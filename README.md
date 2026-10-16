@@ -172,7 +172,7 @@ Plot annual liquor sales of Hy-Vee vs Costco vs all other stores in Ankeny, with
 ```
 
 A chart Claude Code builds from the forecast it just made, with no new forecasting. Hy-Vee shrinks after 2020, Costco
-climbs to about $2.1 million a year, and all the other stores keep growing.
+climbs to about $2.1 million a year, and all the other stores grow until 2024, then level off.
 
 **4. Measure it**
 
@@ -180,8 +180,8 @@ climbs to about $2.1 million a year, and all the other stores keep growing.
 Also overlay Hy-Vee's market share on that plot
 ```
 
-Hy-Vee held about 43 to 45% of Ankeny's liquor sales through 2021, then fell to 29% from 2022 on, the year Costco
-arrived. Hy-Vee lost about a third of its share in four years.
+Hy-Vee held about 43 to 45% of Ankeny's liquor sales through 2021, then lost share every year from 2022, the year
+Costco arrived: 37%, 32%, 30%, and 29% in 2025. Hy-Vee lost about a third of its share in four years.
 
 **5. Find the cause**
 
