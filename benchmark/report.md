@@ -7,6 +7,8 @@
 - Median monthly error (WAPE, weighted absolute percentage error: total absolute error divided by total actual sales): model 15.4%, baseline 16.0%
 - Volume matters: the 10 forecasts with the fewest sales records per month beat the baseline 3 times, the 10 with the most 9 times. With a handful of orders a month, one order more or less swings the total, and neither the model nor the baseline can predict that.
 
+![Relative error vs sales records per month: low-volume forecasts scatter around or above 1, high-volume ones mostly below](volume.svg)
+
 | forecast | horizon | sales records per month | relative error | model error | baseline error | model |
 |---|---|---|---|---|---|---|
 | American Brandies, Iowa, dollars, 12 months | 12 | 5,632 | 0.45 | 4.3% | 9.6% | ridge |

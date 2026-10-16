@@ -10,6 +10,8 @@ categories statewide and by county, vendors, and the statewide total. Each is wr
 as every forecast (dod/forecast.run): no AI calls, so the benchmark measures the forecasting, not the SQL. Writes
 benchmark/results.csv and benchmark/report.md. Each forecast takes about 10 to 20 seconds.
 """
+import html
+import math
 import pickle
 import random
 import re
@@ -42,6 +44,38 @@ def records_per_month(title):
     return pn.records / months
 
 
+def scatter_svg(ok):
+    """Relative error vs sales records per month (log scale), one dot per forecast, as a small standalone SVG."""
+    W, H, L, R, T, B = 640, 360, 60, 36, 20, 50          # size and margins in pixels
+    xs = ok.records_per_month.clip(lower=1)
+    x0, x1 = 0, math.ceil(math.log10(xs.max()))          # 1 to the next power of ten
+    y0, y1 = 0, max(1.6, math.ceil(ok.rel_mae.max() * 5) / 5)
+    px = lambda v: L + (math.log10(v) - x0) / (x1 - x0) * (W - L - R)
+    py = lambda v: H - B - (v - y0) / (y1 - y0) * (H - T - B)
+    grey, ink = "#9a9892", "#1f1e1c"
+    s = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" '
+         f'font-family="system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12">',
+         f'<rect width="{W}" height="{H}" fill="#ffffff"/>']
+    for k in range(x0, x1 + 1):                          # vertical gridlines at 1, 10, 100, ...
+        x = px(10 ** k)
+        s.append(f'<line x1="{x:.1f}" y1="{T}" x2="{x:.1f}" y2="{H - B}" stroke="#ececea"/>')
+        s.append(f'<text x="{x:.1f}" y="{H - B + 16}" text-anchor="middle" fill="{grey}">{10 ** k:,}</text>')
+    for k in range(int(y1 / 0.2) + 1):                   # horizontal gridlines every 0.2
+        v = k * 0.2
+        s.append(f'<line x1="{L}" y1="{py(v):.1f}" x2="{W - R}" y2="{py(v):.1f}" stroke="#ececea"/>')
+        s.append(f'<text x="{L - 8}" y="{py(v) + 4:.1f}" text-anchor="end" fill="{grey}">{v:.1f}</text>')
+    s.append(f'<line x1="{L}" y1="{py(1):.1f}" x2="{W - R}" y2="{py(1):.1f}" stroke="{grey}" stroke-dasharray="5 4"/>')
+    s.append(f'<text x="{W - R - 4}" y="{py(1) - 6:.1f}" text-anchor="end" fill="{grey}">baseline (same month last year)</text>')
+    for r in ok.itertuples():                             # blue beats the baseline, orange does not
+        color = "#2a78d6" if r.rel_mae < 1 else "#e8692e"
+        s.append(f'<circle cx="{px(max(r.records_per_month, 1)):.1f}" cy="{py(r.rel_mae):.1f}" r="5" fill="{color}" '
+                 f'fill-opacity="0.85"><title>{html.escape(r.forecast)}: {r.rel_mae:.2f}</title></circle>')
+    s.append(f'<text x="{(L + W - R) / 2}" y="{H - 12}" text-anchor="middle" fill="{ink}">sales records per month (log scale)</text>')
+    s.append(f'<text x="16" y="{(T + H - B) / 2}" text-anchor="middle" fill="{ink}" '
+             f'transform="rotate(-90 16 {(T + H - B) / 2})">relative error (below 1 beats the baseline)</text>')
+    (HERE / "volume.svg").write_text("\n".join(s) + "\n</svg>\n")
+
+
 def write_report(df):
     """benchmark/report.md from the results table (one row per sampled forecast)."""
     ok = df.dropna(subset=["rel_mae"])
@@ -56,6 +90,8 @@ def write_report(df):
           f"{(ok.nsmallest(10, 'records_per_month').rel_mae < 1).sum()} times, the 10 with the most "
           f"{(ok.nlargest(10, 'records_per_month').rel_mae < 1).sum()} times. With a handful of orders a month, one "
           f"order more or less swings the total, and neither the model nor the baseline can predict that.\n",
+          "![Relative error vs sales records per month: low-volume forecasts scatter around or above 1, high-volume "
+          "ones mostly below](volume.svg)\n",
           "| forecast | horizon | sales records per month | relative error | model error | baseline error | model |",
           "|---|---|---|---|---|---|---|"]
     for r in ok.sort_values("rel_mae").itertuples():
@@ -63,6 +99,7 @@ def write_report(df):
                   f"{r.baseline_error:.1%} | {r.model} |")
     for r in df[df.rel_mae.isna()].itertuples():
         md.append(f"| {r.forecast} | {r.horizon} | | not run: {r.error} | | | |")
+    scatter_svg(ok)
     (HERE / "report.md").write_text("\n".join(md) + "\n")
     print("\n".join(md[:7]))
 
