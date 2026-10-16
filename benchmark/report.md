@@ -7,7 +7,11 @@
 - Median monthly error (WAPE, weighted absolute percentage error: total absolute error divided by total actual sales): model 15.4%, baseline 16.0%
 - Volume matters: the 10 forecasts with the fewest sales records per month beat the baseline 3 times, the 10 with the most 9 times. With a handful of orders a month, one order more or less swings the total, and neither the model nor the baseline can predict that.
 
+**High-volume check.** 10 more forecasts were picked to have over 3,000 sales records a month (statewide and big-county categories, vendors and products; seed 1). They beat the baseline **6 of 10** times, median relative error **0.86**. With the random sample's high-volume forecasts, 14 of 18 forecasts over 3,000 records a month beat the baseline (ringed dots below are the high-volume set).
+
 ![Relative error vs sales records per month: low-volume forecasts scatter around or above 1, high-volume ones mostly below](volume.svg)
+
+## Random sample
 
 | forecast | horizon | sales records per month | relative error | model error | baseline error | model |
 |---|---|---|---|---|---|---|
@@ -41,3 +45,18 @@
 | Captain Morgan Original Spiced 1000 ml, Story County, bottles, 12 months | 12 | 18 | 1.27 | 63.8% | 49.8% | ridge |
 | 99 Bananas 100 ml, Woodbury County, liters, 12 months | 12 | 12 | 1.27 | 20.1% | 15.8% | ridge |
 | Kinky Blue Mini 50 ml, O'Brien County, liters, 6 months | 6 | 3 | 1.44 | 145.2% | 98.7% | lightgbm |
+
+## High-volume set (over 3,000 sales records a month)
+
+| forecast | horizon | sales records per month | relative error | model error | baseline error | model |
+|---|---|---|---|---|---|---|
+| Luxco Inc, Iowa, liters, 6 months | 6 | 15,041 | 0.33 | 2.4% | 7.3% | ridge |
+| Sazerac Company  Inc, Iowa, dollars, 12 months | 12 | 27,146 | 0.47 | 3.9% | 8.3% | ridge |
+| Cream Liqueurs, Iowa, bottles, 12 months | 12 | 4,054 | 0.68 | 7.0% | 10.3% | ridge |
+| All liquor, Black Hawk County, bottles, 12 months | 12 | 11,533 | 0.77 | 6.4% | 8.3% | ridge |
+| Mccormick Distilling Co., Iowa, liters, 12 months | 12 | 4,606 | 0.78 | 4.9% | 6.3% | ridge |
+| Blended Whiskies, Iowa, dollars, 6 months | 6 | 8,183 | 0.95 | 14.7% | 15.5% | ridge |
+| White Rum, Iowa, liters, 6 months | 6 | 4,280 | 1.03 | 7.5% | 7.2% | ridge |
+| Brown Forman Corp., Iowa, bottles, 6 months | 6 | 6,398 | 1.05 | 5.5% | 5.3% | ridge |
+| Canadian Whiskies, Iowa, dollars, 6 months | 6 | 20,234 | 1.06 | 15.2% | 14.4% | ridge |
+| American Cordials & Liqueur, Iowa, liters, 12 months | 12 | 4,510 | 1.07 | 9.3% | 8.7% | ridge |
