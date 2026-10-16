@@ -543,7 +543,7 @@ number (most are different bottle sizes, which are genuinely different products)
 {table(d["renumbered"].head(12).astype({"old_last_order": str, "new_first_order": str}), {"old_bottles": comma})}
 {fixed('renumbering', 'The loader links each old item number to its product\'s current number (a product family), so a product\'s history continues across a renumbering. Tito\'s minis are one series from 2016 on.')}
 
-<h2>Stores drift, open and close</h2>
+<h2>Store details change over time, and stores open and close</h2>
 <p>{int(sd.changed_name):,} of {int(sd.stores):,} stores changed name, {int(sd.changed_address):,} address,
 {int(sd.changed_city):,} city and {int(sd.changed_county):,} county; {rc['stores with no county']} have no county.
 City spellings that name the same city:</p>
