@@ -208,7 +208,7 @@ ask about. The tool shows where, how much and how far to trust each forecast; th
 
 ## What you can ask
 
-The five steps use all three kinds of request the assistant handles:
+The five market analysis steps mentioned above illustrate the three kinds of requests the assistant handles:
 
 | kind of request | example | what answers |
 |---|---|---|
