@@ -48,7 +48,7 @@ page shows each one before and after, so that every forecast reads clean data.
 
 **The AI decides what to forecast while fixed code handles everything else.** The forecasting agent (this example uses Claude Sonnet 5 via the Claude API) has four tools:
 (i) search the database for relevant products and places, (ii) try a test query on the data to see what it returns,
-(iii) ask the user a clarifying question, and (iv) submit its SQL query to the fixed code. Requests that are not forecasts, such as a quick lookup or a custom chart, never reach this agent: the assistant answers them itself, see [What you can ask](#what-you-can-ask). Take *"monthly forecast of
+(iii) ask the user a clarifying question, and (iv) submit its SQL query to the fixed code. The agent's tools are spelled out in [dod/tools.py](dod/tools.py). Requests that are not forecasts, such as a quick lookup or a custom chart, never reach this agent: the assistant answers them itself, see [What you can ask](#what-you-can-ask). Take *"monthly forecast of
 Tito's minis in Des Moines for the next 5 months"*. The search finds Tito's in seven bottle sizes, so the agent keeps
 only the 50 ml minis: the single mini and the mini 4-pack. "Des Moines" is trickier: it could mean the city (131
 stores), the city plus its neighbor West Des Moines (66 more), or all of Polk County, and a county-name search would
@@ -60,7 +60,7 @@ The agent's instructions, [dod/agent.py](dod/agent.py), warn it about the
 data's known peculiarities (product IDs and category codes that change at various times, and brand names written in
 more than one way, such as Crown Royal barrel picks listed as "BP CROWN ROYAL"), and also include a short glossary to
 help the agent disambiguate requests, such as defining "whiskey" to exclude whiskey liqueurs (like Fireball) and
-"minis" as 50 ml bottles. The agent's tools are spelled out in [dod/tools.py](dod/tools.py).
+"minis" as 50 ml bottles.
 
 **Fixed code does the arithmetic.** The agent's query only decides which records to pull from the database. Fixed
 code then aggregates them over all the selected products and stores (or separately for each group compared, such as
