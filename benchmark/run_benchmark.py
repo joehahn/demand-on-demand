@@ -92,7 +92,7 @@ if __name__ == "__main__":
           f"({ok.seconds.median():.0f}s median each).\n",
           f"- Beat \"same month last year\" on the 24-month test window: **{better} of {len(ok)}** ({better / len(ok):.0%})",
           f"- Median error relative to that baseline: **{ok.rel_mae.median():.2f}** (below 1 is better)",
-          f"- Median monthly error (WAPE): model {ok.model_error.median():.1%}, baseline {ok.baseline_error.median():.1%}\n",
+          f"- Median monthly error (WAPE, weighted absolute percentage error: total absolute error divided by total actual sales): model {ok.model_error.median():.1%}, baseline {ok.baseline_error.median():.1%}\n",
           "| forecast | horizon | relative error | model error | baseline error | model |", "|---|---|---|---|---|---|"]
     for r in ok.sort_values("rel_mae").itertuples():
         md.append(f"| {r.forecast} | {r.horizon} | {r.rel_mae:.2f} | {r.model_error:.1%} | {r.baseline_error:.1%} | {r.model} |")

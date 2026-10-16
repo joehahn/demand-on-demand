@@ -4,7 +4,7 @@
 
 - Beat "same month last year" on the 24-month test window: **18 of 30** (60%)
 - Median error relative to that baseline: **0.92** (below 1 is better)
-- Median monthly error (WAPE): model 15.4%, baseline 16.0%
+- Median monthly error (WAPE, weighted absolute percentage error: total absolute error divided by total actual sales): model 15.4%, baseline 16.0%
 
 | forecast | horizon | relative error | model error | baseline error | model |
 |---|---|---|---|---|---|
