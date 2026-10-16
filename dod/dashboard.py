@@ -1039,7 +1039,7 @@ kept or dropped on the same {units()}.</p>
 {exact_html(spec, res, panel)}
 
 <footer>
-Data: <a href="https://catalog.data.gov/dataset?q=iowa+liquor+sales">Iowa Liquor Sales</a>, State of Iowa, via the Iowa
+Data: <a href="https://data.iowa.gov/catalog?q=liquor+sales">Iowa Liquor Sales</a>, State of Iowa, via the Iowa
 Data Hub, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; modified (duplicates removed, aggregated).
 Census population: U.S. Census Bureau. Not endorsed by the State of Iowa. Orders through {panel.data_end:%Y-%m-%d}.<br>
 <a href="https://github.com/joehahn/demand-on-demand">demand-on-demand</a> by Joseph M. Hahn, Ph.D.,

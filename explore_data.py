@@ -548,7 +548,7 @@ number (most are different bottle sizes, which are genuinely different products)
 {int(sd.changed_city):,} city and {int(sd.changed_county):,} county; {rc['stores with no county']} have no county.
 City spellings that name the same city:</p>
 {table(d["city_variants"])}
-{fixed('cities', 'Each city gets one spelling in store.city, and the recorded spelling is kept in store.city_recorded.')}
+{fixed('cities', f"A store keeps its number for life, so its sales stay together through name and address changes; the warehouse uses each store's most recent name, address and county, and gives every city one spelling. The {rc['stores with no county']} stores with no county count in city and statewide requests but not county ones. Openings and closings are real, and the models see them through the number of stores ordering.")}
 {plot(fig_store_openings(d))}
 
 <h2>Outliers and odd lines</h2>
@@ -570,7 +570,7 @@ price is unchanged).</p>
 <h2>invoice_id changed meaning</h2>
 <p>Lines per invoice_id per month: one id per line until August 2025, one per order after.</p>
 {plot(fig_lines_per_invoice(d))}
-{fixed('checked', 'Every order line is keyed by a new line_id, and nothing counts orders by invoice_id, so the change of meaning has no effect.')}
+{fixed('checked', 'The warehouse gives every order line its own new ID and never counts orders by invoice_id, so the change of meaning has no effect.')}
 
 <h2>Geography: joins to Census reference data</h2>
 {plot(fig_counties(d))}
@@ -584,7 +584,7 @@ price is unchanged).</p>
 {plot(fig_top(d["top_stores"], "Top 15 stores by sales dollars"))}
 
 <footer>
-Data: <a href="https://catalog.data.gov/dataset?q=iowa+liquor+sales">Iowa Liquor Sales</a>, State of Iowa,
+Data: <a href="https://data.iowa.gov/catalog?q=liquor+sales">Iowa Liquor Sales</a>, State of Iowa,
 Alcohol Operations Bureau, via the Iowa Data Hub, licensed
 <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Modified: exact duplicate rows removed,
 values typed, aggregated. County population and income: U.S. Census Bureau (Population Estimates, SAIPE).
