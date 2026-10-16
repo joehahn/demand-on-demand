@@ -198,8 +198,8 @@ week:</p>
 the old one stopping. Each old number now belongs to a product family named after its current item, so the product's
 history is continuous. Tito's 50 ml mini, before and after:</p>
 {plot(fig_tm)}
-<p>The 20 largest renumberings:</p>
-{table(fams.head(20), {"old_bottles": comma})}
+<p>The 12 largest renumberings:</p>
+{table(fams.head(12), {"old_bottles": comma})}
 
 <h2 id="units">5. A sleeve of minis counted as one bottle</h2>
 <p>The state counts a sleeve or pack of 50 ml minis as one "bottle": Tito's mini (item 38194) sells at $19.20 per
