@@ -346,10 +346,18 @@ def fig_rtd_step(d):
 
 def fig_mini_units(d):
     m = d["mini_units"]
-    f = go.Figure([line(m.month, m.ml_per_unit, "ml per unit, as recorded", ORANGE),
-                   line(m.month, m.dollars_per_unit, "dollars per unit", BLUE)])
-    f.update_traces(hovertemplate="%{y:,.1f}")
-    return style(f, "Mini sleeves and packs: recorded volume and price per selling unit", legend=True)
+    # milliliters on the left axis, dollars on the right: the price stays flat while the recorded volume falls
+    ml = line(m.month, m.ml_per_unit, "ml per unit, as recorded (left)", ORANGE)
+    usd = line(m.month, m.dollars_per_unit, "dollars per unit (right)", BLUE)
+    ml.update(hovertemplate="%{y:,.0f} ml")
+    usd.update(yaxis="y2", hovertemplate="$%{y:,.2f}")
+    f = style(go.Figure([ml, usd]), "Mini sleeves: price per unit stayed flat while the recorded volume fell tenfold in 2019",
+              "ml per selling unit, as recorded", legend=True)
+    # both axes on round ticks that share gridlines (0-800 ml by 200, $0-16 by $4); legend below, clear of the title
+    return f.update_layout(margin=dict(r=60, b=70), yaxis=dict(range=[0, 800], dtick=200),
+                           yaxis2=dict(title="dollars per selling unit", overlaying="y", side="right", range=[0, 16],
+                                       dtick=4, tickprefix="$", showgrid=False, zeroline=False),
+                           legend=dict(orientation="h", y=-0.12, yanchor="top", x=0, xanchor="left"))
 
 
 def fig_liters_recorded(d):
@@ -547,8 +555,7 @@ as the one beside it:</p>
 {fixed('checked', 'Very large volumes were checked and are genuine pallet and whole-cask purchases, so they are kept as recorded.')}
 
 <h2>A bottle is not always a bottle</h2>
-<p>Volume and price per selling unit of minis sold in sleeves and packs (orange: volume drops tenfold in mid-2019 while
-price is unchanged).</p>
+<p>Volume and price per selling unit of minis sold in sleeves and packs.</p>
 {plot(fig_mini_units(d))}
 {fixed('units', 'Where the pack size is known, a sleeve or pack counts each mini as a bottle, and liters are bottles times one mini\'s volume. Items with no evidence of their pack size stay in selling units and are flagged.')}
 <p>Recorded liters vs bottles times bottle volume, statewide.</p>
