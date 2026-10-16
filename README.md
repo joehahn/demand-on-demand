@@ -231,9 +231,9 @@ misses included.
 
 ![Relative error vs bottles per month for 45 benchmark forecasts: low-volume forecasts scatter around or above 1, high-volume ones mostly below](benchmark/volume.svg)
 
-<p align="center"><em><b>Figure 3.</b> Each dot is one benchmark forecast: its error relative to "same month last year"
-(below the dashed line, the model is more accurate) against its sales volume. Blue dots beat the baseline, orange dots
-do not.</em></p>
+<p align="center"><em><b>Figure 3.</b> Each dot is one benchmark forecast: its error relative to the "same month last
+year" baseline model, plotted versus sales volume. When a forecast is below the dashed line, the ML model is more
+accurate. Blue dots beat the baseline model, orange dots do not.</em></p>
 
 - [evals/sql_report.md](evals/sql_report.md): the forecasting agent's SQL scored against an answer key: 34 requests (brands, categories, minis, cities, counties, a 207-store chain, weeks,
   quarters, a year, and requests it should decline), 3 runs each. The sales records its SQL selected, summed by month,
