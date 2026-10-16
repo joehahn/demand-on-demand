@@ -22,7 +22,7 @@ answer.
 ## The data
 
 The [Iowa Liquor Sales](https://data.iowa.gov/catalog?q=liquor+sales) dataset is published by the State of Iowa and
-made available via the [Iowa Data Hub](https://data.iowa.gov/). Iowa is an alcohol control state, so stores that sell liquor (spirits, not
+made available via the [Iowa Data Hub](https://data.iowa.gov/). Iowa is an alcohol control state, so stores that sell liquor (spirits not
 including beer or wine) must buy it from the state's Alcoholic Beverages Division (ABD). ABD tracks every one of those
 purchases and publishes each as one record at the link above: date, store, product, bottles, dollars and liters. So
 the "sales" here are what stores order, and are assumed here to be a close proxy for what those stores actually sell.
@@ -48,7 +48,7 @@ page shows each one before and after, so that every forecast reads clean data.
 
 **The AI decides what to forecast while fixed code handles everything else.** The forecasting agent (this example uses Claude Sonnet 5 via the Claude API) has four tools:
 (i) search the database for relevant products and places, (ii) try a test query on the data to see what it returns,
-(iii) ask the user a clarifying question, and (iv) submit its SQL query to the fixed code. Take *"monthly forecast of
+(iii) ask the user a clarifying question, and (iv) submit its SQL query to the fixed code. Requests that are not forecasts, such as a quick lookup or a custom chart, never reach this agent: the assistant answers them itself (see [What you can ask](#what-you-can-ask)). Take *"monthly forecast of
 Tito's minis in Des Moines for the next 5 months"*. The search finds Tito's in seven bottle sizes, so the agent keeps
 only the 50 ml minis: the single mini and the mini 4-pack. "Des Moines" is trickier: it could mean the city (131
 stores), the city plus its neighbor West Des Moines (66 more), or all of Polk County, and a county-name search would
