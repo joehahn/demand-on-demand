@@ -220,13 +220,21 @@ the request goes from the employee's assistant, through the MCP server, to the f
 forecasting agent's SQL, the models and the trust check stay in this governed, tested code, whichever assistant the
 firm uses.
 
-## Results
+## Evaluation
 
-- [benchmark/report.md](benchmark/report.md): 45 forecasts (products, categories, vendors and brands; counties and
-  statewide; bottles, dollars, liters; by month, quarter or year), run through the same fixed code as every forecast.
-  The model beat "same month last year" on 26, with a median error 8% lower. Volume decides it: under 1,000 bottles a
-  month it beat last year 2 times in 9, over 50,000 bottles a month 14 times in 21. Iowa liquor demand is very regular
-  year to year, so last year is a hard baseline. The report lists every forecast, the misses included.
+**Forecast accuracy** ([benchmark/report.md](benchmark/report.md)): 45 forecasts (products, categories, vendors and
+brands; counties and statewide; bottles, dollars, liters; by month, quarter or year), run through the same fixed code
+as every forecast. The model beat "same month last year" on 26, with a median error 8% lower. Volume decides it: under
+1,000 bottles a month it beat last year 2 times in 9, over 50,000 bottles a month 14 times in 21; see Figure 3. Iowa
+liquor demand is very regular year to year, so last year is a hard baseline. The report lists every forecast, the
+misses included.
+
+![Relative error vs bottles per month for 45 benchmark forecasts: low-volume forecasts scatter around or above 1, high-volume ones mostly below](benchmark/volume.svg)
+
+<p align="center"><em><b>Figure 3.</b> Each dot is one benchmark forecast: its error relative to "same month last year"
+(below the dashed line, the model is more accurate) against its sales volume. Blue dots beat the baseline, orange dots
+do not.</em></p>
+
 - [evals/sql_report.md](evals/sql_report.md): the forecasting agent's SQL scored against an answer key: 34 requests (brands, categories, minis, cities, counties, a 207-store chain, weeks,
   quarters, a year, and requests it should decline), 3 runs each. The sales records its SQL selected, summed by month,
   matched the key in every month in all 102 runs, and all 102 read the grain and horizon right.
