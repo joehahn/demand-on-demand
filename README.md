@@ -195,6 +195,14 @@ that went from nothing in 2023 to $1.1 million in 2025, while Sam's Club lost ab
 Five plain-English questions take a manager from "I think it's Costco" to a new set of competitors they didn't know to
 ask about. The tool shows where, how much and how far to trust each forecast; the person works out what to do.
 
+**What you can ask.** The five steps use all three kinds of request the assistant handles:
+
+| kind of request | example | who answers | how far to trust it |
+|---|---|---|---|
+| a forecast | "Monthly Tito's dollars in Polk County, next 6 months" | the forecasting agent, then the ML pipeline: a dashboard | SQL scored against an answer key; forecast backtested against last year |
+| a data question, as a table or a chart | "Plot mean Tito's dollars by month of year" | the assistant itself, with one read-only query on the warehouse | read-only, following the data dictionary, but its SQL is not scored against the answer key |
+| a chart or number about a forecast just made | "Plot annual sales with 2026 showing actuals plus forecast" | the assistant itself, from that forecast's saved results | exactly the dashboard's numbers: nothing is re-forecast or re-queried |
+
 **Other requests to try**
 
 - *Monthly liquor dollars for each Hy-Vee store in Ankeny, next 6 months*: one forecast per store, ranked.

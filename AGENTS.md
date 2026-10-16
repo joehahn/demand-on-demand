@@ -19,7 +19,9 @@ the browser (`open` on macOS), then reply in two or three sentences with the sum
 Ankeny"): answer it with one read-only query through the app's agent login: `from dod import db; db.query(sql)` (never
 an owner or administrator login), using the clean tables as the data dictionary describes them (products by
 family_item_no, categories by category_current, places by sales.store). Show the result as a short table and say what
-it shows; build no forecast. If a year is incomplete, say so.
+it shows; build no forecast. If a year is incomplete, say so. If the question asks for a chart (e.g. "plot mean
+Tito's dollars by month of year"), draw it from that query's result, not a second query: a short plotly script that
+saves out/lookups/<name>.html using `dod.viz.page` and `style`, open it, and say in one sentence what it shows.
 
 **A follow-up asking for a custom chart or number about a forecast already made** (e.g. "plot annual sales with this
 year's actuals plus forecast"): answer it from that forecast's saved results, not by forecasting or querying again.
