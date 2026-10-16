@@ -535,10 +535,13 @@ month, so 100% is a normal month and 300% is three times normal.</p>
 {fixed('categories', 'Retired code 1071100 maps to the live code 1071000, so Cocktails/RTD is one continuous series.')}
 
 <h2>One product, many item numbers</h2>
-<p>Tito's item numbers, then the largest of the {len(d["renumbered"])} renumbered items.</p>
+<p>The state sometimes gives a product a new item number. Tito's 50 ml mini was item 38180 until July 2020 and 38194
+after, so selecting today's number alone would lose four years of sales. The first table lists every Tito's item
+number (most are different bottle sizes, which are genuinely different products); the second lists the largest of the
+{len(d["renumbered"])} renumbered items.</p>
 {table(titos.rename(columns={"lines": "records"}), {"records": comma, "bottles": comma})}
 {table(d["renumbered"].head(12).astype({"old_last_order": str, "new_first_order": str}), {"old_bottles": comma})}
-{fixed('renumbering', 'Each old item number joins a product family named after its current item, so a product\'s history continues across a renumbering; Tito\'s minis are one series from 2016 on.')}
+{fixed('renumbering', 'The loader links each old item number to its product\'s current number (a product family), so a product\'s history continues across a renumbering. Tito\'s minis are one series from 2016 on.')}
 
 <h2>Stores drift, open and close</h2>
 <p>{int(sd.changed_name):,} of {int(sd.stores):,} stores changed name, {int(sd.changed_address):,} address,
