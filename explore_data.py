@@ -533,7 +533,8 @@ after, so selecting today's number alone would lose four years of sales. The tab
 <h2>Store details change over time, and stores open and close</h2>
 <p>{int(sd.changed_name):,} of {int(sd.stores):,} stores changed name, {int(sd.changed_address):,} address,
 {int(sd.changed_city):,} city and {int(sd.changed_county):,} county; {rc['stores with no county']} have no county.
-City spellings that name the same city:</p>
+Some cities are spelled more than one way, which would split one city into two. Each spelling below is the same city
+as the one beside it:</p>
 {table(d["city_variants"])}
 {fixed('cities', f"A store keeps its number for life, so its sales stay together through name and address changes; the warehouse uses each store's most recent name, address and county, and gives every city one spelling. The {rc['stores with no county']} stores with no county count in city and statewide requests but not county ones. Openings and closings are real, and the models see them through the number of stores ordering.")}
 {plot(fig_store_openings(d))}
